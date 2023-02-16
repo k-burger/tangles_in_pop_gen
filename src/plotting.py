@@ -46,7 +46,7 @@ def get_next_id(current_id, direction):
         return current_id + 2 ** level + 2
 
 
-def plot_dataset(data, colors, ax=None, eq_cuts=None, cmap=None, add_colorbar=True, pos=None, gt=None):
+def plot_dataset(data, colors, ax=None, eq_cuts=None, cmap=None, add_colorbar=True, gt=None, pos=None):
     if data.xs is not None:
         ax = plot_dataset_metric(
             data.xs, data.cs, colors, eq_cuts, ax, cmap, add_colorbar, gt)
@@ -100,7 +100,7 @@ def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt):
     if add_colorbar:
         ax = add_colorbar_to_ax(ax, cmap)
 
-    return ax
+    return ax, xs_embedded
 
 
 def labels_to_colors(ys, cmap):
@@ -117,6 +117,7 @@ def labels_to_colors(ys, cmap):
 
 
 def plot_soft_predictions(data, contracted_tree, eq_cuts=None, id_node=0, path=None):
+    global pos
     cmap_groundtruth = plt.cm.get_cmap('autumn')
     cmap_heatmap = plt.cm.get_cmap('Blues')
 
@@ -137,11 +138,13 @@ def plot_soft_predictions(data, contracted_tree, eq_cuts=None, id_node=0, path=N
         else:
             plt.show()
 
-    plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path,
-                              pos=pos)
+    if 'pos' in locals():
+        plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path, pos=pos)
+    else:
+        plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path, pos=None)
 
 
-def plot_soft_prediction_node(data, node, eq_cuts, id_node, cmap, path, pos):
+def plot_soft_prediction_node(data, node, eq_cuts, id_node, cmap, path, pos=None):
     colors = cmap(node.p)
 
     if eq_cuts is not None:
@@ -168,11 +171,11 @@ def plot_soft_prediction_node(data, node, eq_cuts, id_node, cmap, path, pos):
     if node.left_child is not None:
         id_left = get_next_id(id_node, 'left')
         plot_soft_prediction_node(
-            data, node.left_child, eq_cuts, id_left, cmap, path, pos=pos)
+            data, node.left_child, eq_cuts, id_left, cmap, path, pos)
     if node.right_child is not None:
         id_right = get_next_id(id_node, 'right')
         plot_soft_prediction_node(
-            data, node.right_child, eq_cuts, id_right, cmap, path, pos=pos)
+            data, node.right_child, eq_cuts, id_right, cmap, path, pos)
 
 
 def plot_hard_predictions(data, ys_predicted, path=None):
