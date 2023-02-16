@@ -9,7 +9,7 @@ from typing import Union, Optional
 from sklearn.neighbors import DistanceMetric
 from tqdm import tqdm
 
-from tangles.data_types import Cuts
+from src.data_types import Cuts
 
 
 class Orientation(object):

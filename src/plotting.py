@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from .utils import get_points_to_plot
+from src.utils import get_points_to_plot
 
 # Standard colors for uniform plots
 COLOR_SILVER = '#C0C0C0'

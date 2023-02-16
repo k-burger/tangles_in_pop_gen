@@ -280,6 +280,78 @@ def mean_manhattan_distance(xs, n_samples, cut):
 
     return expected_similarity
 
+def mean_manhattan_distance_weighted_mut_pos(xs, n_samples, mut_pos, cut):
+    """
+    This function computes the implicit order of a cut.
+    It is zero if the cut is either the whole set or the empty set
+
+    If n_samples if not None we do a montecarlo approximation of the value.
+
+    Parameters
+    ----------
+    xs : array of shape [n_points, n_features]
+        The points in our space
+    cut: array of shape [n_points]
+        The cut that we are considering
+    n_samples: int, optional (default=None)
+        The maximums number of points to take per orientation in the Monte Carlo approximation of the order
+
+    Returns
+    -------
+    expected_order, int
+        The average order for the cut
+    """
+
+    _, n_features = xs.shape
+    if np.all(cut) or np.all(~cut):
+        return 0
+
+    if not n_samples:
+
+        in_cut = xs[cut, :]
+        out_cut = xs[~cut, :]
+
+    else:
+
+        idx = np.arange(len(xs))
+
+        if n_samples <= len(idx[cut]):
+            idx_in = np.random.choice(idx[cut], size=n_samples, replace=False)
+            in_cut = xs[idx_in, :]
+        else:
+            in_cut = xs[cut, :]
+
+        if n_samples <= len(idx[~cut]):
+            idx_out = np.random.choice(idx[~cut], size=n_samples, replace=False)
+            out_cut = xs[idx_out, :]
+        else:
+            out_cut = xs[~cut, :]
+
+    metric = DistanceMetric.get_metric('manhattan')
+    distance = metric.pairwise(in_cut, out_cut)
+
+    n = len(cut)
+    sigma = np.sqrt(np.sqrt(n))
+
+    #print("cut:", cut)
+    #print("non cut:", ~cut)
+    #print("mut position:", mut_pos)
+
+    in_cut_pos = mut_pos[cut]
+    #print("in_cut_idx:", in_cut_pos)
+    out_cut_pos = mut_pos[~cut]
+    #print("out_cut_idx:", out_cut_pos)
+
+    distance_weights = np.exp(- np.array([[np.abs(i - j) for i in out_cut_pos] for j in in_cut_pos]) / (2*sigma))
+
+    distance = np.multiply(distance, distance_weights)
+
+    similarity = 1. / (distance / np.max(distance))
+    expected_similarity = np.mean(similarity)
+
+    return expected_similarity
+
+
 
 class BipartitionSimilarity():
     def __init__(self, all_bipartitions: np.ndarray) -> None:

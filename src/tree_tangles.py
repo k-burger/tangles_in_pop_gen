@@ -6,10 +6,10 @@ from networkx.drawing.nx_pydot import graphviz_layout
 import bitarray as ba
 import numpy as np
 
-from .tangles import Tangle, core_algorithm
-from .utils import compute_hard_predictions, matching_items, Orientation, normalize
-from .cost_functions import BipartitionSimilarity
-from .data_types import Cuts
+from src.tangles import Tangle, core_algorithm
+from src.utils import compute_hard_predictions, matching_items, Orientation, normalize
+from src.cost_functions import BipartitionSimilarity
+from src.data_types import Cuts
 
 MAX_CLUSTERS = 50
 
@@ -277,6 +277,59 @@ class TangleTree(object):
             plt.savefig(path, bbox_inches='tight')
         else:
             plt.show()
+
+    def print_tangles_tree_summary_hard_predictions(self, n, idx_bipartitions, ys_predicted):
+        tree = nx.Graph()
+        path_to_leaf_init = []
+        j = 0
+
+        # vector describing the presence of the samples in every tangles branch from root to leaf
+        path_to_leaf = self._get_path_to_leaf(tree, self.root, path_to_leaf_init, n)
+
+        # get an index sorting to display the samples later in ascending order
+        idx_sort = np.argsort(idx_bipartitions)
+        print("idx bipartitions:", idx_bipartitions)
+        print("sorted idx bipartitions:", idx_sort)
+
+        # if the tangles branch from the root to the leaf does not have the length n (number of samples),
+        # fill the vector indicating the presence of the samples from behind with -1 until it has a length of n.
+        for i in range(0,len(path_to_leaf)):
+            path_to_leaf[i] = np.array(path_to_leaf[i]).astype(int)
+            if len(path_to_leaf[i]) != n:
+                path_to_leaf[i] = np.append(path_to_leaf[i], (-1)*np.ones(n-len(path_to_leaf[i])))
+            path_to_leaf[i] = np.array(path_to_leaf[i]).astype(int)[idx_sort]
+
+        # get characteristics of mutations clustered into each leaf of the tangles tree
+        mut_nb = []     # number of mutations
+        mut_idx = []    # index of mutations (i.e. names of mutation)
+        mut_mean_pos = []   # mean position of mutations (i.e. mean index of mutations)
+        mut_var_pos = []    # variance of mutations (i.e. variance of index of mutations)
+        for k in range(0,len(path_to_leaf)):
+            mut_nb.append(np.count_nonzero(ys_predicted == k))
+            mut_idx.append(np.sort(np.where(np.array(ys_predicted) == k)[0]))
+            if np.count_nonzero(ys_predicted == k) != 0:
+                mut_mean_pos.append(np.round(np.mean(np.where(np.array(ys_predicted) == k)[0]), 1))
+                mut_var_pos.append(np.round(np.var((np.where(np.array(ys_predicted) == k)[0])), 1))
+            else:
+                mut_mean_pos.append(-1)     # no mutation clustered to this particular leaf
+                mut_var_pos.append(-1)      # no mutation clustered to this particular leaf
+
+        # print summary of the tangles tree (i.e. characteristics computed above)
+        print("summary tangles tree:")
+        for elem in path_to_leaf:
+            print(j, ": ", elem, ", nb of mutations: ", mut_nb[j], ", mutation idx: ", mut_idx[j],
+                  ", mean mutation position:", mut_mean_pos[j], ", var mutation position:", mut_var_pos[j])
+            j = j+1
+
+    def _get_path_to_leaf(self, tree, node, path_to_leaf, n):
+        if node.left_child is None and node.right_child is None:
+            path_to_leaf.append([node.tangle._specification[i] for i in range(0,n)])# if i in node.tangle._specification])
+
+        if node.left_child is not None:
+            left_subtree = self._get_path_to_leaf(tree, node.left_child, path_to_leaf, n)
+        if node.right_child is not None:
+            right_subtree = self._get_path_to_leaf(tree, node.right_child, path_to_leaf, n)
+        return path_to_leaf
 
     def _add_node_to_nx(self, tree, node, parent_id=None, direction=None):  # pragma: no cover
 

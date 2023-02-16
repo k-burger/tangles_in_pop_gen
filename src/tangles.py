@@ -2,8 +2,8 @@ from copy import deepcopy
 from itertools import combinations
 from bitarray import bitarray
 
-from .utils import subset
-from .data_types import Cuts
+from src.utils import subset
+from src.data_types import Cuts
 
 
 def pad_bitarray(b, n):

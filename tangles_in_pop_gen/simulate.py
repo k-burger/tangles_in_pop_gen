@@ -212,7 +212,7 @@ class Simulated_Data:
 use_this_script_for_sim = True
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
-    n = 10              # sample size
+    n = 4              # sample size
     rep = 1             # number of repetitions during simulation
     theta = 17          # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation
     rho = 1             # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation
@@ -220,7 +220,7 @@ if use_this_script_for_sim == True:
     save_G = True       # set True to save genotype matrix during simulation, False otherwise
     print_ts = True     # set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
     save_ts = True      # set True to save the tree sequence during simulation, False otherwise
-    filepath = "tangles_in_pop_gen/data/"
+    filepath = "data/"
 
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
 
