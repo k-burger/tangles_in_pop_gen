@@ -134,7 +134,7 @@ n = 10 #4 15 10
 rho = 1 #1 3 1
 # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
 theta = 17 #30 #30 50 30
-agreement = 3
+agreement = 5
 seed = 17 #42 #90 42 42
 noise = 0
 data_already_simulated = True  # True or False, states if data object should be simulated or loaded

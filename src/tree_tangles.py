@@ -323,7 +323,7 @@ class TangleTree(object):
 
     def _get_path_to_leaf(self, tree, node, path_to_leaf, n):
         if node.left_child is None and node.right_child is None:
-            path_to_leaf.append([node.tangle._specification[i] for i in range(0,n)])# if i in node.tangle._specification])
+            path_to_leaf.append([node.tangle._specification[i] for i in range(0,len(node.tangle._specification))])
 
         if node.left_child is not None:
             left_subtree = self._get_path_to_leaf(tree, node.left_child, path_to_leaf, n)

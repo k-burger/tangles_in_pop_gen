@@ -48,7 +48,7 @@ class Simulated_Data:
         num_mutations = []
         tree_length = []
         num_trees = []
-        seed_vec = list(range(int(seed+2), int(seed+rep+2)))
+        seed_vec = list(range(int(self.seed+2), int(self.seed+self.rep+2)))
 
 
         # check if dataset is simulated for training:
@@ -69,33 +69,33 @@ class Simulated_Data:
 
         # if training data, take in each iteration new theta to simulate
         if train:
-            numpy.random.seed(seed - 1)
+            numpy.random.seed(self.seed - 1)
             theta = numpy.array(numpy.random.uniform(0, 100, rep))
             multi_theta = theta
         else:
-            theta = self.theta*numpy.ones(rep)
+            theta = self.theta*numpy.ones(self.rep)
             multi_theta = theta
 
         if rho_train:
-            numpy.random.seed(seed - 2)
-            rho = numpy.array(numpy.random.uniform(0, 50, rep))
+            numpy.random.seed(self.seed - 2)
+            rho = numpy.array(numpy.random.uniform(0, 50, self.rep))
             multi_rho = rho
         else:
-            rho = self.rho*numpy.ones(rep)
+            rho = self.rho*numpy.ones(self.rep)
             multi_rho = rho
 
         # simulate a datasets of size rep
-        for i in range(0, rep):
+        for i in range(0, self.rep):
             # set seed
             rng = numpy.random.default_rng(seed_vec[i])
             seeds = rng.integers(1, 2 ** 31 - 1, size=2)
 
-            ts = msprime.sim_ancestry(n, sequence_length=1, discrete_genome=False, population_size=0.5,
+            ts = msprime.sim_ancestry(self.n, sequence_length=1, discrete_genome=False, population_size=0.5,
                                       recombination_rate=rho[i], random_seed=seeds[0], ploidy=1)
             tree_sequence = msprime.sim_mutations(ts, rate=theta[i], random_seed=seeds[1], discrete_genome=False)
 
 
-            if save_ts:
+            if self.save_ts:
                 multi_ts.append(tree_sequence)
 
             num_mutations.append(tree_sequence.num_mutations)
@@ -118,7 +118,7 @@ class Simulated_Data:
             # get genotype matrix
             G = tree_sequence.genotype_matrix()
             # potentially save the genotype matrix:
-            if save_G:
+            if self.save_G:
                 multi_G.append(G)
             assert G.shape[1] == self.n
 
@@ -126,8 +126,8 @@ class Simulated_Data:
             # sum over columns of the genotype matrix
             a = G.sum(axis=1)
             # site frequency spectrum
-            S = numpy.zeros((n - 1,), dtype=int)
-            for j in range(0, n - 1):
+            S = numpy.zeros((self.n - 1,), dtype=int)
+            for j in range(0, self.n - 1):
                 S[j] = collections.Counter(a)[j + 1]
 
             # save the SFS and the theta used for simulation
@@ -143,7 +143,6 @@ class Simulated_Data:
         #print("mean number of trees:", numpy.mean(num_trees))
 
         # assign properties
-        self.seed = seed_vec
         self.true_thetas = multi_theta
         self.G = multi_G
         self.SFS = multi_SFS
@@ -152,13 +151,13 @@ class Simulated_Data:
         self.ts = multi_ts
 
         # save object
-        filename = (filepath + "sim_n_" + str(n) + "_rep_" + str(
-            rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(seed))
-        if print_ts and rep==1:
+        filename = (self.filepath + "sim_n_" + str(self.n) + "_rep_" + str(
+            self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(self.seed))
+        if self.print_ts and self.rep==1:
             filename_svg = filename + ".svg"
             SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True,
                                      symbol_size=5, y_label=[]))
-        elif print_ts and rep>1:
+        elif self.print_ts and self.rep>1:
             warnings.warn(
                 'you try to print the ts but rep>1. only print svg if save_svg==True and rep==1.',
                 stacklevel=1)
