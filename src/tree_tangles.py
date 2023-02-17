@@ -493,6 +493,20 @@ class ContractedTangleTree(TangleTree):
     def _contract_subtree(self, parent, node):
         return self._contract_subtree_iterative(parent, node)
 
+    def print_summary(self, node, loc=''):
+        if node:
+            self.print_summary(node.left_child, loc + 'l')
+            self.print_node(node, loc)
+            self.print_summary(node.right_child, loc + 'r')
+        else:
+            return
+
+    def print_node(self, node, loc):
+        if node == self.root:
+            return
+        else:
+            print(loc, ": ", np.argwhere(node.p > 0.5).flatten())
+
 
 def process_split(node):
     node_id = node.last_cut_added_id if node.last_cut_added_id else -1

@@ -280,7 +280,7 @@ def mean_manhattan_distance(xs, n_samples, cut):
 
     return expected_similarity
 
-def mean_manhattan_distance_weighted_mut_pos(xs, n_samples, mut_pos, cut):
+def mean_manhattan_distance_weighted_mut_pos(xs, n_samples, mut_pos, f, cut):
     """
     This function computes the implicit order of a cut.
     It is zero if the cut is either the whole set or the empty set
@@ -331,7 +331,7 @@ def mean_manhattan_distance_weighted_mut_pos(xs, n_samples, mut_pos, cut):
     distance = metric.pairwise(in_cut, out_cut)
 
     n = len(cut)
-    sigma = np.sqrt(np.sqrt(n))
+    sigma = f(n)
 
     #print("cut:", cut)
     #print("non cut:", ~cut)
@@ -344,6 +344,7 @@ def mean_manhattan_distance_weighted_mut_pos(xs, n_samples, mut_pos, cut):
 
     distance_weights = np.exp(- np.array([[np.abs(i - j) for i in out_cut_pos] for j in in_cut_pos]) / (2*sigma))
 
+    #distance_weights = 1
     distance = np.multiply(distance, distance_weights)
 
     similarity = 1. / (distance / np.max(distance))

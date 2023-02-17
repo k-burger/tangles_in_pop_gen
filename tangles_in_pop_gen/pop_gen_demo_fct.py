@@ -57,7 +57,7 @@ def tangles_in_pop_gen(sim_data, n, rho, theta, agreement, seed, noise_param, ou
     print("\tFound {} unique bipartitions".format(len(bipartitions.values)), flush=True)
     print("\tCalculating costs if bipartitions", flush=True)
     bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
-                                                 partial(cost_functions.mean_manhattan_distance_weighted_mut_pos, data.xs, None, mut_pos))
+                                                 partial(cost_functions.mean_manhattan_distance_weighted_mut_pos, data.xs, None, mut_pos, lambda x: 0.07))
     np.save("data/mutation_labels", bipartitions.names)
     loaded = np.load("data/mutation_labels.npy", allow_pickle=True)
     print("Tangle algorithm", flush=True)
@@ -120,11 +120,13 @@ def tangles_in_pop_gen(sim_data, n, rho, theta, agreement, seed, noise_param, ou
         # plot tree summary
         tangles_tree.print_tangles_tree_summary_hard_predictions(n, bipartitions.names, ys_predicted)
 
+        contracted_tree.print_summary(contracted_tree.root)
+
         # plot soft predictions
         plotting.plot_soft_predictions(data=data,
-                                       contracted_tree=contracted_tree)
-                                       #eq_cuts=bipartitions.equations,
-                                       #path=output_directory / 'soft_clustering')
+                                       contracted_tree=contracted_tree,
+                                       eq_cuts=bipartitions.equations,
+                                       path=output_directory / 'soft_clustering')
 
 
 n = 10 #4 15 10
@@ -132,10 +134,10 @@ n = 10 #4 15 10
 rho = 1 #1 3 1
 # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
 theta = 17 #30 #30 50 30
-agreement = 1
+agreement = 3
 seed = 17 #42 #90 42 42
 noise = 0
-data_already_simulated = False  # True or False, states if data object should be simulated or loaded
+data_already_simulated = True  # True or False, states if data object should be simulated or loaded
 
 # new parameters that need to be set to load/simulate appropriate data set
 rep = 1         # number of repetitions during simulation
@@ -145,12 +147,12 @@ save_ts = True  # set True to save the tree sequence during simulation, False ot
 filepath = "data/"  # filepath to the folder where the data is to be saved/loaded.
 
 ## This generates the data object and either simulates or loads the data sets
-data = simulate.Simulated_Data(n, rep, theta, rho, seed)
+data = simulate.Simulated_Data(n, rep, theta, rho, seed, save_G=save_G, print_ts=print_ts, save_ts=save_ts, filepath=filepath)
 if data_already_simulated == False:
-    data.sim_data(n, rep, theta, rho, seed, save_G=save_G, print_ts=print_ts, save_ts=save_ts, filepath=filepath)
+    data.sim_data()
     print("Data has been simulated.")
 else:
-    data.load_data(n, rep, theta, rho, seed, filepath=filepath)
+    data.load_data()
     print("Data has been loaded.")
 
 output_directory = Path('output_tangles_in_pop_gen')

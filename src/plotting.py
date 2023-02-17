@@ -97,6 +97,9 @@ def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt):
         # vmin=0, vmax=1, edgecolor='black')
         sc = ax.scatter(xs_embedded[:, 0], xs_embedded[:, 1], color=colors)
 
+    for i, txt in enumerate(xs_embedded):
+        ax.annotate(i, (xs_embedded[i, 0], xs_embedded[i, 1]))
+
     if add_colorbar:
         ax = add_colorbar_to_ax(ax, cmap)
 
@@ -117,7 +120,6 @@ def labels_to_colors(ys, cmap):
 
 
 def plot_soft_predictions(data, contracted_tree, eq_cuts=None, id_node=0, path=None):
-    global pos
     cmap_groundtruth = plt.cm.get_cmap('autumn')
     cmap_heatmap = plt.cm.get_cmap('Blues')
 

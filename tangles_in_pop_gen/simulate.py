@@ -37,7 +37,7 @@ class Simulated_Data:
         self.true_rhos = true_rhos
         self.ts = ts
 
-    def sim_data(self, n, rep, theta, rho, seed, save_G=True, print_ts=False, save_ts=False, filepath=""):
+    def sim_data(self):
         multi_SFS = []  # list to save the SFS
         multi_total_length = []  # list to save the total tree lengths
         multi_G = []  # list to save the genotype matrices
@@ -52,20 +52,20 @@ class Simulated_Data:
 
 
         # check if dataset is simulated for training:
-        if theta == 'rand':
+        if self.theta == 'rand':
             train = True
             theta_str = "random-100"
         else:
             train = False
-            theta_str = str(theta)
+            theta_str = str(self.theta)
 
 
-        if rho == 'rand':
+        if self.rho == 'rand':
             rho_train = True
             rho_str = "random-50"
         else:
             rho_train = False
-            rho_str = str(rho)
+            rho_str = str(self.rho)
 
         # if training data, take in each iteration new theta to simulate
         if train:
@@ -73,7 +73,7 @@ class Simulated_Data:
             theta = numpy.array(numpy.random.uniform(0, 100, rep))
             multi_theta = theta
         else:
-            theta = theta*numpy.ones(rep)
+            theta = self.theta*numpy.ones(rep)
             multi_theta = theta
 
         if rho_train:
@@ -81,7 +81,7 @@ class Simulated_Data:
             rho = numpy.array(numpy.random.uniform(0, 50, rep))
             multi_rho = rho
         else:
-            rho = rho*numpy.ones(rep)
+            rho = self.rho*numpy.ones(rep)
             multi_rho = rho
 
         # simulate a datasets of size rep
@@ -120,7 +120,7 @@ class Simulated_Data:
             # potentially save the genotype matrix:
             if save_G:
                 multi_G.append(G)
-            assert G.shape[1] == n
+            assert G.shape[1] == self.n
 
             # calculate site frequency spectrum from genotype matrix
             # sum over columns of the genotype matrix
@@ -155,7 +155,7 @@ class Simulated_Data:
         filename = (filepath + "sim_n_" + str(n) + "_rep_" + str(
             rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(seed))
         if print_ts and rep==1:
-            filename_svg = filename + "_svg"
+            filename_svg = filename + ".svg"
             SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True,
                                      symbol_size=5, y_label=[]))
         elif print_ts and rep>1:
@@ -166,24 +166,24 @@ class Simulated_Data:
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
 
 
-    def load_data(self, n, rep, theta, rho, seed, filepath):
+    def load_data(self):
         # covert theta and rho_scenario into str to load correct data
-        if theta == 'rand':
+        if self.theta == 'rand':
             train = True
             theta_str = "random-100"
         else:
             train = False
-            theta_str = str(theta)
+            theta_str = str(self.theta)
 
-        if rho == 'rand':
+        if self.rho == 'rand':
             rho_train = True
             rho_str = "random-50"
         else:
             rho_train = False
-            rho_str = str(rho)
+            rho_str = str(self.rho)
 
         # load saved data
-        filename = (filepath + "sim_n_" + str(n) + "_rep_" + str(rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(seed))
+        filename = (self.filepath + "sim_n_" + str(self.n) + "_rep_" + str(self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(self.seed))
         with open(filename, 'rb') as inp:
             loaded_data = pickle.load(inp)  # could be changed to self=pickle.load(inp) or similar to save memory.
 
@@ -207,9 +207,7 @@ class Simulated_Data:
                 stacklevel=1)
 
 
-
-
-use_this_script_for_sim = True
+use_this_script_for_sim = False
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
     n = 4              # sample size
@@ -221,15 +219,14 @@ if use_this_script_for_sim == True:
     print_ts = True     # set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
     save_ts = True      # set True to save the tree sequence during simulation, False otherwise
     filepath = "data/"
-
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
 
     ## This generates the data object and either simulates the properties or loads if it already exists.
-    data = Simulated_Data(n, rep, theta, rho, seed)
+    data = Simulated_Data(n, rep, theta, rho, seed, save_G=save_G, print_ts=print_ts, save_ts=save_ts, filepath=filepath)
     if data_already_simulated == False:
-        data.sim_data(n, rep, theta, rho, seed, save_G=save_G, print_ts=print_ts, save_ts=save_ts, filepath=filepath)
+        data.sim_data()
     else:
-        data.load_data(n, rep, theta, rho, seed, filepath=filepath)
+        data.load_data()
 
 
 print("simulation done.")
