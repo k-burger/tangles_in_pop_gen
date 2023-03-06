@@ -155,9 +155,7 @@ class Simulated_Data:
             self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(self.seed))
         if self.print_ts and self.rep==1:
             filename_svg = filename + ".svg"
-            SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True,
-                                       # set time_scale="rank" for larger n
-                                       symbol_size=5, y_label=[]))
+            SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, symbol_size=5, y_label=[]))
             # for larger n, use the following instead of the SVG print command above:
             #wide_fmt = (3000, 250) #this sets the format of the plot, for smaller/larger n decrease/increase first entry (x-axis).
             #SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, time_scale="rank",  #used time_scale="rank" for better visualization of large tree sequences
