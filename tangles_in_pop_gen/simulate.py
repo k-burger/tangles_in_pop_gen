@@ -156,7 +156,12 @@ class Simulated_Data:
         if self.print_ts and self.rep==1:
             filename_svg = filename + ".svg"
             SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True,
-                                     symbol_size=5, y_label=[]))
+                                       # set time_scale="rank" for larger n
+                                       symbol_size=5, y_label=[]))
+            # for larger n, use the following instead of the SVG print command above:
+            #wide_fmt = (3000, 250) #this sets the format of the plot, for smaller/larger n decrease/increase first entry (x-axis).
+            #SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, time_scale="rank",  #used time_scale="rank" for better visualization of large tree sequences
+            #                         symbol_size=5, y_label=[], size=wide_fmt))
         elif self.print_ts and self.rep>1:
             warnings.warn(
                 'you try to print the ts but rep>1. only print svg if save_svg==True and rep==1.',
@@ -206,13 +211,13 @@ class Simulated_Data:
                 stacklevel=1)
 
 
-use_this_script_for_sim = False
+use_this_script_for_sim = True
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
-    n = 4              # sample size
+    n = 40              # sample size
     rep = 1             # number of repetitions during simulation
-    theta = 17          # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation
-    rho = 1             # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation
+    theta = 30          # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation
+    rho = 0.5             # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation
     seed = 17           # starting seed for simulation (based on this seed, multiple seeds will be generated)
     save_G = True       # set True to save genotype matrix during simulation, False otherwise
     print_ts = True     # set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
