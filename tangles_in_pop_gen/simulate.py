@@ -14,6 +14,7 @@ import random
 import pickle
 import warnings
 from IPython.display import SVG
+import tskit
 
 
 class Simulated_Data:
@@ -92,7 +93,16 @@ class Simulated_Data:
 
             ts = msprime.sim_ancestry(self.n, sequence_length=1, discrete_genome=False, population_size=0.5,
                                       recombination_rate=rho[i], random_seed=seeds[0], ploidy=1)
+
+            for p in ts.provenances():
+                print(p)
+
             tree_sequence = msprime.sim_mutations(ts, rate=theta[i], random_seed=seeds[1], discrete_genome=False)
+            print("actual seed ts simulation:", seeds[0])
+            print("actual seed mutation simulation:", seeds[1])
+            ts.dump("data/ts_n_10_rho_1_theta_17")
+            tree_sequence.dump("data/ts_with_mutation_n_10_rho_1_theta_17")
+
 
 
             if self.save_ts:
@@ -155,17 +165,18 @@ class Simulated_Data:
             self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(self.seed))
         if self.print_ts and self.rep==1:
             filename_svg = filename + ".svg"
-            SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, symbol_size=5, y_label=[]))
+            #SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, symbol_size=5, y_label=[]))
             # for larger n, use the following instead of the SVG print command above:
-            #wide_fmt = (3000, 250) #this sets the format of the plot, for smaller/larger n decrease/increase first entry (x-axis).
-            #SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, time_scale="rank",  #used time_scale="rank" for better visualization of large tree sequences
-            #                         symbol_size=5, y_label=[], size=wide_fmt))
+            wide_fmt = (3000, 250) #this sets the format of the plot, for smaller/larger n decrease/increase first entry (x-axis).
+            SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, time_scale="rank",  #used time_scale="rank" for better visualization of large tree sequences
+                                     symbol_size=5, y_label=[], size=wide_fmt))
         elif self.print_ts and self.rep>1:
             warnings.warn(
                 'you try to print the ts but rep>1. only print svg if save_svg==True and rep==1.',
                 stacklevel=1)
         with open(filename, 'wb') as outp:  # overwrites any existing file.
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
+
 
 
     def load_data(self):
@@ -212,10 +223,10 @@ class Simulated_Data:
 use_this_script_for_sim = True
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
-    n = 40              # sample size
+    n = 10              # sample size
     rep = 1             # number of repetitions during simulation
-    theta = 30          # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation
-    rho = 0.5             # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation
+    theta = 17          # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation
+    rho = 1             # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation
     seed = 17           # starting seed for simulation (based on this seed, multiple seeds will be generated)
     save_G = True       # set True to save genotype matrix during simulation, False otherwise
     print_ts = True     # set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
@@ -231,4 +242,4 @@ if use_this_script_for_sim == True:
         data.load_data()
 
 
-print("simulation done.")
+#print("simulation done.")
