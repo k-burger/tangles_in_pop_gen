@@ -1,7 +1,7 @@
 import numpy as np
 
-from tangles.tree_tangles import get_hard_predictions
-from tangles.loading import load_GMM
+from src.tree_tangles import get_hard_predictions
+from src.loading import load_GMM
 from sklearn.metrics import pairwise_distances
 
 

@@ -58,7 +58,6 @@ def plot_dataset(data, colors, ax=None, eq_cuts=None, cmap=None, add_colorbar=Tr
 
 
 def add_colorbar_to_ax(ax, cmap):
-
     cb = plt.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin=0, vmax=1), cmap=cmap),
                       ax=ax, orientation='vertical', shrink=0.7)
     cb.ax.set_title('p', y=-.05)
@@ -96,6 +95,8 @@ def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt):
     else:
         # vmin=0, vmax=1, edgecolor='black')
         sc = ax.scatter(xs_embedded[:, 0], xs_embedded[:, 1], color=colors)
+
+    ax.spines[['right', 'top', 'left', 'bottom']].set_visible(True)
 
     for i, txt in enumerate(xs_embedded):
         ax.annotate(i, (xs_embedded[i, 0], xs_embedded[i, 1]))
@@ -141,9 +142,11 @@ def plot_soft_predictions(data, contracted_tree, eq_cuts=None, id_node=0, path=N
             plt.show()
 
     if 'pos' in locals():
-        plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path, pos=pos)
+        plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path,
+                                  pos=pos)
     else:
-        plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path, pos=None)
+        plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path,
+                                  pos=None)
 
 
 def plot_soft_prediction_node(data, node, eq_cuts, id_node, cmap, path, pos=None):
@@ -255,6 +258,38 @@ def plot_cuts(data, cuts, nb_cuts_to_plot, path):
             plt.close(fig)
         else:
             plt.show()
+
+
+def plot_cuts_in_one(data, cuts, path=None):
+    plt.style.use('ggplot')
+    cmap_cut = plt.cm.get_cmap('Blues')
+    plt.ioff()
+
+    if path is not None:
+        path = path
+        path.mkdir(parents=True, exist_ok=True)
+
+    value_cuts = cuts.values
+    order_cuts = cuts.costs
+    eq_cuts = cuts.equations
+
+    pos = None
+
+    fig, axes = plt.subplots(2, 5, figsize=(20, 8))
+
+    for i, ax in enumerate(axes.flat):
+        color_cut = labels_to_colors(value_cuts[i], cmap=cmap_cut)
+        ax_out, _ = plot_dataset(data, color_cut, ax=ax,
+                                 add_colorbar=False, pos=pos)
+        ax_out[0].set_title(f'Cut {cuts.names[i]} of order: {order_cuts[i]}', fontsize=8)
+
+    plt.subplots_adjust(wspace=0.05, hspace=0.05)
+    plt.tight_layout()
+    if path is not None:
+        fig.savefig(path / "all_cuts.png")
+        plt.close(fig)
+    else:
+        plt.show()
 
 
 def plot_cut(data, cut, order, eq, pos):
