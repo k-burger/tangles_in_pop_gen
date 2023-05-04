@@ -1,5 +1,5 @@
 from multiprocessing.sharedctypes import Value
-from tangles.data_types import Cuts
+from src.data_types import Cuts
 import numpy as np
 import pytest
 
