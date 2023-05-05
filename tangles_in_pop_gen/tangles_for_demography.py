@@ -131,6 +131,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
                                        eq_cuts=bipartitions.equations,
                                        path=output_directory / 'soft_clustering')
 
+        # matrices = contracted_tree.to_matrix()
+        # print(matrices)
 
 n = 15  # 4 15 10 # anzahl individuen (wenn n hoch dann theta auch hoch, rho eher
 # runter)

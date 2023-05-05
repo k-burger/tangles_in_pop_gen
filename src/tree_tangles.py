@@ -5,6 +5,7 @@ from networkx.drawing.nx_pydot import graphviz_layout
 
 import bitarray as ba
 import numpy as np
+from typing import Dict
 
 from src.tangles import Tangle, core_algorithm
 from src.utils import compute_hard_predictions, matching_items, Orientation, normalize
@@ -83,7 +84,7 @@ class ContractedTangleNode(TangleNode):
 
         self.p = None
 
-    def get_characterizing_cut_values(self, characterizing_cuts: dict[int, Orientation]) -> dict[int, np.ndarray]:
+    def get_characterizing_cut_values(self, characterizing_cuts: Dict[int, Orientation]) -> Dict[int, np.ndarray]:
         """
         Returns the values of the cuts in the characterizing cuts dictionary, with the orientation. 
         IDs are changed to IDs of the unsorted cuts.
@@ -507,6 +508,24 @@ class ContractedTangleTree(TangleTree):
         else:
             print(loc, ": ", np.argwhere(node.p > 0.5).flatten())
 
+    def to_matrix(self):
+        return self._write_to_mat(self.root, -1, [])
+
+    def _write_to_mat(self, node, index, matrices):
+        if index == -1:
+            matrices = self._write_to_mat(node.left_child, index + 1, matrices)
+            matrices = self._write_to_mat(node.right_child, index + 1, matrices)
+
+        if index >= len(matrices):
+            matrices.append(node.p.reshape(-1,1))
+        else:
+            matrices[index] = np.concatenate([matrices[index], node.p.reshape(-1,1)], axis=1)
+
+        if node.left_child is not None and node.right_child is not None:
+                matrices = self._write_to_mat(node.left_child, index + 1, matrices)
+                matrices = self._write_to_mat(node.right_child, index + 1, matrices)
+
+        return matrices
 
 def process_split(node):
     node_id = node.last_cut_added_id if node.last_cut_added_id else -1
