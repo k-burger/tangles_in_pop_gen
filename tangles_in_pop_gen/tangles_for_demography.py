@@ -16,7 +16,7 @@ from src.tree_tangles import ContractedTangleTree, tangle_computation, \
     compute_soft_predictions_children  # , mut_props_per_terminal_node, get_terminal_node_properties
 from src.utils import compute_hard_predictions, compute_mindset_prediciton
 
-import simulate
+import simulate_with_demography
 
 """
 Simple script for exemplary use of the tangle framework.
@@ -30,40 +30,35 @@ The execution is divided in the following steps
 """
 
 
-def tangles_in_pop_gen(sim_data, n, rho, theta, agreement, seed, noise_param, output_directory='', plot=True):
-    xs = sim_data.G[0]
-    nb_mut = xs.shape[0]
+def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
+                       output_directory='', plot=True):
+    xs = np.transpose(sim_data.G[0])
+    n = xs.shape[0]
+    nb_mut = xs.shape[1]
     print("n:", n)
-    print("mutations:", nb_mut)
+    print("number of mutations:", nb_mut)
     mut_pos = sim_data.ts[0].tables.sites.position
-
-    noise = noise_param / xs.shape[-2]
-    flip_count = 0
-    np.random.seed(seed)
-    noise_per_question = np.random.rand(xs.shape[-2], xs.shape[-1])
-    flip_question = noise_per_question < noise
-    xs[flip_question] = np.logical_not(xs[flip_question])
-    flip_count = flip_count + np.count_nonzero(flip_question)
-    print("number of flips:", flip_count)
-    print(xs)
-    
-    # xs[14,2] = 1
-    # xs[44,0] = 1
-
+    #print("mut pos:", mut_pos)
+    #print("G:", xs)
     data = data_types.Data(xs=xs)
-    # print("Preprocessing data", flush=True)
 
     # calculate your bipartitions we use the binary questions/features directly as bipartitions
     # print("\tGenerating set of bipartitions", flush=True)
-    bipartitions = data_types.Cuts(values=(data.xs == True).T, names=np.array(list(range(0, data.xs.shape[1]))))
+    bipartitions = data_types.Cuts(values=(data.xs == True).T,
+                                   names=np.array(list(range(0, data.xs.shape[1]))))
 
     print("\tFound {} unique bipartitions".format(len(bipartitions.values)), flush=True)
     print("\tCalculating costs if bipartitions", flush=True)
     bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
                                                      partial(
-                                                         cost_functions.mean_manhattan_distance_weighted_mut_pos,
-                                                         data.xs, None, mut_pos,
-                                                         lambda x: 0.07))
+                                                         cost_functions.mean_manhattan_distance,
+                                                         data.xs, None))
+    # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
+    #                                                  partial(
+    #                                                      cost_functions.mean_manhattan_distance_weighted_mut_pos,
+    #                                                      data.xs, None, mut_pos,
+    #                                                      lambda x: 0.07))
+
     np.save("data/mutation_labels", bipartitions.names)
     loaded = np.load("data/mutation_labels.npy", allow_pickle=True)
     print("Tangle algorithm", flush=True)
@@ -113,16 +108,20 @@ def tangles_in_pop_gen(sim_data, n, rho, theta, agreement, seed, noise_param, ou
         print("Plotting the data.", flush=True)
         output_directory.mkdir(parents=True, exist_ok=True)
         ## plot the tree
-        filename1 = "tree_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(theta) + "_seed_" + str(
+        filename1 = "tree_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
+            theta) + "_seed_" + str(
             seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
-        filename2 = "contracted_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(theta) + "_seed_" + str(
+        filename2 = "contracted_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
+            theta) + "_seed_" + str(
             seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
         tangles_tree.plot_tree(path=output_directory / filename1)
         ## plot contracted tree
         contracted_tree.plot_tree(path=output_directory / filename2)
 
         # plot tree summary
-        tangles_tree.print_tangles_tree_summary_hard_predictions(n, bipartitions.names, ys_predicted)
+        tangles_tree.print_tangles_tree_summary_hard_predictions(nb_mut,
+                                                                 bipartitions.names,
+                                                                 ys_predicted)
 
         contracted_tree.print_summary(contracted_tree.root)
 
@@ -132,29 +131,33 @@ def tangles_in_pop_gen(sim_data, n, rho, theta, agreement, seed, noise_param, ou
                                        eq_cuts=bipartitions.equations,
                                        path=output_directory / 'soft_clustering')
 
+
 n = 15  # 4 15 10 # anzahl individuen (wenn n hoch dann theta auch hoch, rho eher
 # runter)
 # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
 rho = 1  # 1 3 1 recombination
 # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
 theta = 17  # 30 #30 50 30 # mutationsrate
-agreement = 1
+agreement = 3
 seed = 17  # 42 #90 42 42
 noise = 0
-data_already_simulated = True  # True or False, states if data object should be simulated or loaded
+data_already_simulated = False  # True or False, states if data object should be
+# simulated or loaded
 
 # new parameters that need to be set to load/simulate appropriate data set
 rep = 1  # number of repetitions during simulation
 save_G = True  # set True to save genotype matrix during simulation, False otherwise
 print_ts = True  # (set small for large n) set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
 save_ts = True  # set True to save the tree sequence during simulation, False otherwise
-filepath = "data/"  # filepath to the folder where the data is to be saved/loaded.
+filepath = "data/with_demography/"  # filepath to the folder where the data is to be
+# saved/loaded.
 
 ## This generates the data object and either simulates or loads the data sets
-data = simulate.Simulated_Data(n, rep, theta, rho, seed,
-                                                 save_G=save_G,
-                                print_ts=print_ts, save_ts=save_ts,
-                               filepath=filepath)
+data = simulate_with_demography.Simulated_Data_With_Demography(n, rep, theta, rho, seed,
+                                                               save_G=save_G,
+                                                               print_ts=print_ts,
+                                                               save_ts=save_ts,
+                                                               filepath=filepath)
 if data_already_simulated == False:
     data.sim_data()
     print("Data has been simulated.")
@@ -164,4 +167,4 @@ else:
 
 output_directory = Path('output_tangles_in_pop_gen')
 plot = True
-tangles_in_pop_gen(data, n, rho, theta, agreement, seed, noise, output_directory, plot=True)
+tangles_in_pop_gen(data, rho, theta, agreement, seed, output_directory, plot=True)

@@ -88,13 +88,14 @@ class Simulated_Data_With_Demography:
 
         # define demography
         demography = msprime.Demography()
-        demography.add_population(name="A", initial_size=0.1)
-        demography.add_population(name="B", initial_size=0.1)
-        demography.add_population(name="C", initial_size=0.1)
-        demography.add_population(name="AB", initial_size=0.1)
-        demography.add_population(name="ABC", initial_size=0.1)
-        demography.add_population_split(time=0.1, derived=["A", "B"], ancestral="AB")
-        demography.add_population_split(time=0.2, derived=["AB", "C"], ancestral="ABC")
+        demography.add_population(name="A", initial_size=0.5)
+        demography.add_population(name="B", initial_size=0.5)
+        demography.add_population(name="C", initial_size=0.5)
+        demography.add_population(name="AB", initial_size=0.5)
+        demography.add_population(name="ABC", initial_size=0.5)
+        demography.add_population_split(time=0.5, derived=["A", "B"], ancestral="AB")
+        demography.add_population_split(time=1, derived=["AB", "C"], ancestral="ABC")
+        demography.set_symmetric_migration_rate(["B", "C"], 0.5)
 
         # simulate a datasets of size rep
         for i in range(0, self.rep):
@@ -102,8 +103,8 @@ class Simulated_Data_With_Demography:
             rng = numpy.random.default_rng(seed_vec[i])
             seeds = rng.integers(1, 2 ** 31 - 1, size=2)
 
-            ts = msprime.sim_ancestry(samples={"A": 3, "B": 3, "C": 3,
-                                               "AB": 3, "ABC": 3},
+            ts = msprime.sim_ancestry(samples={"A": 5, "B": 5, "C": 5,
+                                               "AB": 0, "ABC": 0},
                                       sequence_length=1,
                                       discrete_genome=False,# population_size=0.5,
                                       recombination_rate=rho[i], random_seed=seeds[
@@ -181,7 +182,7 @@ class Simulated_Data_With_Demography:
         self.ts = multi_ts
 
         # save object
-        filename = (self.filepath + "sim_demography_n_" + str(self.n) + "_rep_" + str(
+        filename = (self.filepath + "sim_with_demography_n_" + str(self.n) + "_rep_" + str(
             self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(
             self.seed))
         if self.print_ts and self.rep==1:
@@ -217,7 +218,7 @@ class Simulated_Data_With_Demography:
             rho_str = str(self.rho)
 
         # load saved data
-        filename = (self.filepath + "sim_demography_n_" + str(self.n) + "_rep_" + str(
+        filename = (self.filepath + "sim_with_demography_n_" + str(self.n) + "_rep_" + str(
             self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(
             self.seed))
         with open(filename, 'rb') as inp:
@@ -243,18 +244,19 @@ class Simulated_Data_With_Demography:
                 stacklevel=1)
 
 
-use_this_script_for_sim = True
+use_this_script_for_sim = False
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
     n = 15              # sample size
     rep = 1             # number of repetitions during simulation
     theta = 17          # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation
-    rho = 1             # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation
+    rho = 1             # rho=int for constant theta in rep simulations, rho='rand'
+    # for random theta in (0,100) in every simulation
     seed = 17           # starting seed for simulation (based on this seed, multiple seeds will be generated)
     save_G = True       # set True to save genotype matrix during simulation, False otherwise
     print_ts = True     # set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
     save_ts = True      # set True to save the tree sequence during simulation, False otherwise
-    filepath = "data/"
+    filepath = "data/with_demography/"
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
 
     ## This generates the data object and either simulates the properties or loads if it already exists.
