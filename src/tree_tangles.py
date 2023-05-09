@@ -513,17 +513,23 @@ class ContractedTangleTree(TangleTree):
 
     def _write_to_mat(self, node, index, matrices):
         if index == -1:
-            matrices = self._write_to_mat(node.left_child, index + 1, matrices)
-            matrices = self._write_to_mat(node.right_child, index + 1, matrices)
-
-        if index >= len(matrices):
+            pass
+        elif index >= len(matrices):
             matrices.append(node.p.reshape(-1,1))
         else:
             matrices[index] = np.concatenate([matrices[index], node.p.reshape(-1,1)], axis=1)
 
+        print(node)
+
         if node.left_child is not None and node.right_child is not None:
-                matrices = self._write_to_mat(node.left_child, index + 1, matrices)
-                matrices = self._write_to_mat(node.right_child, index + 1, matrices)
+            matrices = self._write_to_mat(node.left_child, index + 1, matrices)
+            matrices = self._write_to_mat(node.right_child, index + 1, matrices)
+
+        print(index)
+
+
+
+        print(matrices)
 
         return matrices
 
