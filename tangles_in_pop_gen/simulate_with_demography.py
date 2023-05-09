@@ -14,7 +14,7 @@ import random
 import pickle
 import warnings
 from IPython.display import SVG
-import tskit
+# import tskit
 
 
 class Simulated_Data_With_Demography:
