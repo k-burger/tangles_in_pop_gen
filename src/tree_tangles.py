@@ -509,13 +509,7 @@ class ContractedTangleTree(TangleTree):
             print(loc, ": ", np.argwhere(node.p > 0.5).flatten())
 
     def to_matrix(self):
-        queue = []
-        if self.root.left_child.last_cut_added_id < self.root.right_child.last_cut_added_id:
-            queue.append(self.root.left_child)
-            queue.append(self.root.right_child)
-        else:
-            queue.append(self.root.right_child)
-            queue.append(self.root.left_child)
+        queue = [self.root]
         return self._write_to_mat(queue, 1, {})
 
     def _write_to_mat(self, queue, index, matrices):
