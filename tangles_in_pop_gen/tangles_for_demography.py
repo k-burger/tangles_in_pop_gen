@@ -131,19 +131,19 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
                                        eq_cuts=bipartitions.equations,
                                        path=output_directory / 'soft_clustering')
 
-        # matrices = contracted_tree.to_matrix()
-        # print(matrices)
+        matrices = contracted_tree.to_matrix()
+        print(matrices)
 
-n = 15  # 4 15 10 # anzahl individuen (wenn n hoch dann theta auch hoch, rho eher
+n = 40  # 4 15 10 # anzahl individuen (wenn n hoch dann theta auch hoch, rho eher
 # runter)
 # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-rho = 1  # 1 3 1 recombination
+rho = 0.5  # 1 3 1 recombination
 # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
 theta = 17  # 30 #30 50 30 # mutationsrate
 agreement = 3
-seed = 17  # 42 #90 42 42
+seed = 42  # 42 #90 42 42
 noise = 0
-data_already_simulated = False  # True or False, states if data object should be
+data_already_simulated = True # True or False, states if data object should be
 # simulated or loaded
 
 # new parameters that need to be set to load/simulate appropriate data set

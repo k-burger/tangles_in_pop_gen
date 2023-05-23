@@ -509,29 +509,40 @@ class ContractedTangleTree(TangleTree):
             print(loc, ": ", np.argwhere(node.p > 0.5).flatten())
 
     def to_matrix(self):
-        return self._write_to_mat(self.root, -1, [])
-
-    def _write_to_mat(self, node, index, matrices):
-        if index == -1:
-            pass
-        elif index >= len(matrices):
-            matrices.append(node.p.reshape(-1,1))
+        queue = []
+        if self.root.left_child.last_cut_added_id < self.root.right_child.last_cut_added_id:
+            queue.append(self.root.left_child)
+            queue.append(self.root.right_child)
         else:
-            matrices[index] = np.concatenate([matrices[index], node.p.reshape(-1,1)], axis=1)
+            queue.append(self.root.right_child)
+            queue.append(self.root.left_child)
+        return self._write_to_mat(queue, 1, {})
 
-        print(node)
+    def _write_to_mat(self, queue, index, matrices):
+        try:
+            node = queue[0]
+            queue = queue[1:]
+        except:
+            return matrices
 
         if node.left_child is not None and node.right_child is not None:
-            matrices = self._write_to_mat(node.left_child, index + 1, matrices)
-            matrices = self._write_to_mat(node.right_child, index + 1, matrices)
+            if index in matrices.keys():
+                matrices[index] = np.concatenate([matrices[index], node.left_child.p.reshape(-1, 1)], axis=1)
+            else:
+                matrices[index] = node.left_child.p.reshape(-1, 1)
+            matrices[index] = np.concatenate([matrices[index], node.right_child.p.reshape(-1, 1)], axis=1)
 
-        print(index)
+            if node.left_child.last_cut_added_id < node.right_child.last_cut_added_id:
+                queue.append(node.left_child)
+                queue.append(node.right_child)
+            else:
+                queue.append(node.right_child)
+                queue.append(node.left_child)
 
-
-
-        print(matrices)
+        matrices = self._write_to_mat(queue, index + 1, matrices)
 
         return matrices
+
 
 def process_split(node):
     node_id = node.last_cut_added_id if node.last_cut_added_id else -1
