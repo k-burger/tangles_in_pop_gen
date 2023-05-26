@@ -17,6 +17,9 @@ from src.tree_tangles import ContractedTangleTree, tangle_computation, \
 from src.utils import compute_hard_predictions, compute_mindset_prediciton
 
 import simulate_with_demography
+import admixture_plot
+import pickle
+
 
 """
 Simple script for exemplary use of the tangle framework.
@@ -133,15 +136,17 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
 
         matrices = contracted_tree.to_matrix()
         print(matrices)
+        admixture_plot.admixture_like_plot(matrices)
+        # with open('saved_soft_matrices.pkl', 'wb') as f:
+        #     pickle.dump(matrices, f)
 
-n = 40  # 4 15 10 # anzahl individuen (wenn n hoch dann theta auch hoch, rho eher
-# runter)
+n = 40      #15     # anzahl individuen
 # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-rho = 0.5  # 1 3 1 recombination
+rho = 0.5   #1      # recombination
 # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-theta = 17  # 30 #30 50 30 # mutationsrate
+theta = 17          # mutationsrate
 agreement = 3
-seed = 42  # 42 #90 42 42
+seed = 42   #17
 noise = 0
 data_already_simulated = True # True or False, states if data object should be
 # simulated or loaded
