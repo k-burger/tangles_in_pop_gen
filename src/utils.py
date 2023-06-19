@@ -1,6 +1,7 @@
 from __future__ import annotations
 import hashlib
 import json
+import multiprocessing
 
 import numpy as np
 from sklearn.manifold import TSNE
@@ -179,9 +180,14 @@ def compute_cost(bipartitions, cost_function, verbose=True):
     if verbose:
         print("Computing costs of cuts...")
 
-    cost_bipartitions = np.zeros(len(bipartitions.values), dtype=float)
-    for i_cut, cut in enumerate(tqdm(bipartitions.values, disable=not verbose)):
-        cost_bipartitions[i_cut] = cost_function(cut)
+    pool = multiprocessing.Pool()
+    cost_bipartitions = np.array(pool.map(cost_function, bipartitions.values))
+    pool.close()
+
+    # cost_bipartitions = np.zeros(len(bipartitions.values), dtype=float)
+    # for i_cut, cut in enumerate(tqdm(bipartitions.values, disable=not verbose)):
+    #     cost_bipartitions[i_cut] = cost_function(cut)
+
     return cost_bipartitions
 
 
