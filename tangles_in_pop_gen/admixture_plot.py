@@ -224,6 +224,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, plot_ADMIXTURE = Fa
         plt.savefig('ADMIXTURE_plot_n_' + str(n) + '_a_' + str(agreement)
                     +'new_colors.pdf')
         plt.show()
+        print("admixture like plots done.")
 
 # this function works, but is not cleaned up yet. Basically the same as the function
 # above, just that the tangles plot and ADMIXTURE plot are now plotted together s.t.
