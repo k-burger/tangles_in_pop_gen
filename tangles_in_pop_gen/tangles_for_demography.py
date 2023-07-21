@@ -131,9 +131,9 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
         # plot soft predictions
         plotting.plot_soft_predictions(data=data,
-                                      contracted_tree=contracted_tree,
-                                      eq_cuts=bipartitions.equations,
-                                      path=output_directory / 'soft_clustering')
+                                       contracted_tree=contracted_tree,
+                                       eq_cuts=bipartitions.equations,
+                                       path=output_directory / 'soft_clustering')
 
         matrices = contracted_tree.to_matrix()
         print("matrices done.")
@@ -146,6 +146,16 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         # with open('saved_soft_matrices.pkl', 'wb') as f:
         #     pickle.dump(matrices, f)
 
+n = 40      #15     # anzahl individuen
+# rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
+rho = 0.5   #1      # recombination
+# theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
+theta = 17          # mutationsrate
+agreement = 3
+seed = 42   #17
+noise = 0
+data_already_simulated = True # True or False, states if data object should be
+# simulated or loaded
 
 if __name__ == '__main__':
     n = 800 #40      #15     # anzahl individuen
@@ -170,10 +180,10 @@ if __name__ == '__main__':
 
     ## This generates the data object and either simulates or loads the data sets
     data = simulate_with_demography.Simulated_Data_With_Demography(n, rep, theta, rho, seed,
-                                                               save_G=save_G,
-                                                               print_ts=print_ts,
-                                                               save_ts=save_ts,
-                                                               filepath=filepath)
+                                                                   save_G=save_G,
+                                                                   print_ts=print_ts,
+                                                                   save_ts=save_ts,
+                                                                   filepath=filepath)
     if data_already_simulated == False:
         data.sim_data()
         print("Data has been simulated.")
