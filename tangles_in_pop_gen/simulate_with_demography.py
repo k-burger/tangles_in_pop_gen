@@ -15,11 +15,15 @@ import pickle
 import warnings
 from IPython.display import SVG
 # import tskit
+#import demesdraw
+#import matplotlib.pyplot as plt
 
 
 class Simulated_Data_With_Demography:
     def __init__(self, n, rep, theta, rho, seed, save_G=True, print_ts=False,
-                 save_ts=False, filepath="", SFS=[], total_tree_length=[], G=[], true_thetas=[], true_rhos=[], ts=[]):
+                 save_ts=False, filepath="", SFS=[], total_tree_length=[], G=[],
+                 true_thetas=[], true_rhos=[], ts=[], indv_pop=[],
+                 admixture_filename=[]):
         # parameters that need to be set and are not a result of the simulation:
         self.n = n
         self.rep = rep
@@ -38,6 +42,8 @@ class Simulated_Data_With_Demography:
         self.true_thetas = true_thetas
         self.true_rhos = true_rhos
         self.ts = ts
+        self.indv_pop = indv_pop
+        self.admixture_filename = admixture_filename
 
     def sim_data(self):
         multi_SFS = []  # list to save the SFS
@@ -86,16 +92,55 @@ class Simulated_Data_With_Demography:
             rho = self.rho*numpy.ones(self.rep)
             multi_rho = rho
 
-        # define demography
+        # define demography for 3 populations
+        # demography = msprime.Demography()
+        # demography.add_population(name="A", initial_size=0.5)
+        # demography.add_population(name="B", initial_size=0.5)
+        # demography.add_population(name="C", initial_size=0.5)
+        # demography.add_population(name="AB", initial_size=0.5)
+        # demography.add_population(name="ABC", initial_size=0.5)
+        # demography.add_population_split(time=0.5, derived=["A", "B"], ancestral="AB")
+        # demography.add_population_split(time=1, derived=["AB", "C"], ancestral="ABC")
+        # demography.set_symmetric_migration_rate(["B", "C"], 0.5)
+
+        # define demography for 8 populations
         demography = msprime.Demography()
         demography.add_population(name="A", initial_size=0.5)
         demography.add_population(name="B", initial_size=0.5)
         demography.add_population(name="C", initial_size=0.5)
+        demography.add_population(name="D", initial_size=0.5)
+        demography.add_population(name="E", initial_size=0.5)
+        demography.add_population(name="F", initial_size=0.5)
+        demography.add_population(name="G", initial_size=0.5)
+        demography.add_population(name="H", initial_size=0.5)
         demography.add_population(name="AB", initial_size=0.5)
-        demography.add_population(name="ABC", initial_size=0.5)
-        demography.add_population_split(time=0.5, derived=["A", "B"], ancestral="AB")
-        demography.add_population_split(time=1, derived=["AB", "C"], ancestral="ABC")
-        demography.set_symmetric_migration_rate(["B", "C"], 0.5)
+        demography.add_population(name="CD", initial_size=0.5)
+        demography.add_population(name="ABCD", initial_size=0.5)
+        demography.add_population(name="EF", initial_size=0.5)
+        demography.add_population(name="EFG", initial_size=0.5)
+        demography.add_population(name="EFGH", initial_size=0.5)
+        demography.add_population(name="ABCDEFGH", initial_size=0.5)
+        demography.add_population_split(time=2/7, derived=["A", "B"], ancestral="AB")
+        demography.add_population_split(time=4 / 7, derived=["E", "F"], ancestral="EF")
+        demography.add_population_split(time=6/7, derived=["C", "D"], ancestral="CD")
+        demography.add_population_split(time=8 / 7, derived=["EF", "G"],
+                                        ancestral="EFG")
+        demography.add_population_split(time=10/7, derived=["AB", "CD"],
+                                        ancestral="ABCD")
+        demography.add_population_split(time=12/7, derived=["EFG", "H"],
+                                        ancestral="EFGH")
+        demography.add_population_split(time=2, derived=["ABCD", "EFGH"],
+                                        ancestral="ABCDEFGH")
+        demography.set_symmetric_migration_rate(["A", "E"], 0.5)
+
+        size = 100
+
+        # graph = msprime.Demography.to_demes(demography)
+        # fig, ax = plt.subplots()  # use plt.rcParams["figure.figsize"]
+        # demesdraw.tubes(graph, ax=ax, seed=1)
+        # filename_short = (self.filepath + "demographic_structure_n_" + str(self.n))
+        # plt.savefig(filename_short + '.pdf')
+        # plt.show()
 
         # simulate a datasets of size rep
         for i in range(0, self.rep):
@@ -103,8 +148,8 @@ class Simulated_Data_With_Demography:
             rng = numpy.random.default_rng(seed_vec[i])
             seeds = rng.integers(1, 2 ** 31 - 1, size=2)
 
-            ts = msprime.sim_ancestry(samples={"A": 5, "B": 5, "C": 5,
-                                               "AB": 0, "ABC": 0},
+            ts = msprime.sim_ancestry(samples={"A": size, "B": size, "C": size, "D": size,
+                                               "E": size, "F": size, "G": size, "H": size},
                                       sequence_length=1,
                                       discrete_genome=False,# population_size=0.5,
                                       recombination_rate=rho[i], random_seed=seeds[
@@ -120,6 +165,13 @@ class Simulated_Data_With_Demography:
             #tree_sequence.dump("data/ts_with_mutation_n_10_rho_1_theta_17")
 
 
+            print("ts.individuals_population:", tree_sequence.individuals_population)
+            print("num_migration:", tree_sequence.num_migrations)
+            indv_names = [f"{i}indv" for i in range(tree_sequence.num_samples)]
+            admixture_filename = ("n_" +str(self.n) +"_rep_" + str(self.rep) + "_rho_" + rho_str +
+                                  "_theta_" + theta_str + "_seed_" + str(self.seed))
+            with open("admixture/data/"+admixture_filename+".vcf", "w") as vcf_file:
+                tree_sequence.write_vcf(vcf_file, individual_names=indv_names)
 
             if self.save_ts:
                 multi_ts.append(tree_sequence)
@@ -134,7 +186,7 @@ class Simulated_Data_With_Demography:
 
             num_trees.append(m)
             print("num trees:", num_trees)
-            print("tree length:", tree_length)
+            #print("tree length:", tree_length)
 
             # get mean total tree length and save as entry of multi_total_length
             mean_tot_branch_length = 0
@@ -157,9 +209,7 @@ class Simulated_Data_With_Demography:
             # sum over columns of the genotype matrix
             a = G.sum(axis=1)
             # site frequency spectrum
-            S = numpy.zeros((self.n - 1,), dtype=int)
-            for j in range(0, self.n - 1):
-                S[j] = collections.Counter(a)[j + 1]
+            S = numpy.bincount(a, None, self.n)[1:self.n]
 
             # save the SFS and the theta used for simulation
             multi_SFS.append(S)
@@ -180,6 +230,8 @@ class Simulated_Data_With_Demography:
         self.total_tree_length = multi_total_length
         self.true_rhos = multi_rho
         self.ts = multi_ts
+        self.indv_pop = tree_sequence.individuals_population
+        self.admixture_filename = admixture_filename
 
         # save object
         filename = (self.filepath + "sim_with_demography_n_" + str(self.n) + "_rep_" + str(
@@ -232,6 +284,8 @@ class Simulated_Data_With_Demography:
         self.total_tree_length = loaded_data.total_tree_length
         self.true_rhos = loaded_data.true_rhos
         self.ts = loaded_data.ts
+        self.indv_pop = loaded_data.indv_pop
+        self.admixture_filename = loaded_data.admixture_filename
 
         # check if genotype matrix and ts have been saved during simulated:
         if self.G == []:
@@ -247,14 +301,17 @@ class Simulated_Data_With_Demography:
 use_this_script_for_sim = False
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
-    n = 15              # sample size
+    n = 80              # sample size
     rep = 1             # number of repetitions during simulation
-    theta = 17          # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation
-    rho = 1             # rho=int for constant theta in rep simulations, rho='rand'
+    theta = 55          # theta=int for constant theta in rep simulations,
+    # theta='rand' for random theta in (0,100) in every simulation
+    rho = 55            # rho=int for constant theta in rep simulations, rho='rand'
     # for random theta in (0,100) in every simulation
-    seed = 17           # starting seed for simulation (based on this seed, multiple seeds will be generated)
+    seed = 42           # starting seed for simulation (based on this seed, multiple
+    # seeds will be generated)
     save_G = True       # set True to save genotype matrix during simulation, False otherwise
-    print_ts = True     # set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
+    print_ts = False     # set True if ts should be printed during simulation, this is
+    # only possible if rep==1. For large data sets, this step slows down the program noticeably.
     save_ts = True      # set True to save the tree sequence during simulation, False otherwise
     filepath = "data/with_demography/"
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
@@ -267,5 +324,4 @@ if use_this_script_for_sim == True:
     else:
         data.load_data()
 
-
-#print("simulation done.")
+print("simulation done.")

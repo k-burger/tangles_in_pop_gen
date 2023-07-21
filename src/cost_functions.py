@@ -273,12 +273,110 @@ def mean_manhattan_distance(xs, n_samples, cut):
             out_cut = xs[~cut, :]
 
     metric = DistanceMetric.get_metric('manhattan')
-
+    print("len incut:", len(in_cut))
+    print("len incut[0]:", len(in_cut[0]))
+    #print("shape incut:", in_cut.shape())
+    print("len outcut:", len(out_cut))
+    print("len outcut[0]:", len(out_cut[0]))
+    #print("shape out:", out_cut.shape())
     distance = metric.pairwise(in_cut, out_cut)
+    print("len distance:", len(distance))
+    print("len distance[0]:",len(distance[0]))
     similarity = 1. / (distance / np.max(distance))
     expected_similarity = np.mean(similarity)
-
     return expected_similarity
+
+def mean_fst_distance(xs, n_samples, cut):
+    """
+    This function computes the implicit order of a cut.
+    It is zero if the cut is either the whole set or the empty set
+
+    If n_samples if not None we do a montecarlo approximation of the value.
+
+    Parameters
+    ----------
+    xs : array of shape [n_points, n_features]
+        The points in our space
+    cut: array of shape [n_points]
+        The cut that we are considering
+    n_samples: int, optional (default=None)
+        The maximums number of points to take per orientation in the Monte Carlo approximation of the order
+
+    Returns
+    -------
+    expected_order, int
+        The average order for the cut
+    """
+
+    _, n_features = xs.shape
+    if np.all(cut) or np.all(~cut):
+        return 0
+
+    if not n_samples:
+        in_cut = xs[cut, :]
+        out_cut = xs[~cut, :]
+
+    else:
+
+        idx = np.arange(len(xs))
+
+        if n_samples <= len(idx[cut]):
+            idx_in = np.random.choice(idx[cut], size=n_samples, replace=False)
+            in_cut = xs[idx_in, :]
+        else:
+            in_cut = xs[cut, :]
+
+        if n_samples <= len(idx[~cut]):
+            idx_out = np.random.choice(
+                idx[~cut], size=n_samples, replace=False)
+            out_cut = xs[idx_out, :]
+        else:
+            out_cut = xs[~cut, :]
+
+    metric = DistanceMetric.get_metric('manhattan')
+    #print("len incut:", len(in_cut))
+    #print("len incut[0]:", len(in_cut[0]))
+    #print("shape incut:", in_cut.shape())
+    #print("len outcut:", len(out_cut))
+    #print("len outcut[0]:", len(out_cut[0]))
+    #print("shape out:", out_cut.shape())
+    distance_in_out = np.mean(metric.pairwise(in_cut, out_cut))
+    distance_in = np.mean(metric.pairwise(in_cut, in_cut))
+    distance_out = np.mean(metric.pairwise(out_cut, out_cut))
+    #total_dist = np.mean(metric.pairwise(xs, xs))
+    print("total dist done.")
+    #print("len distance:", distance_in)
+    #print("len distance[0]:",len(distance_in[0]))
+    fst_1 = (distance_in_out - distance_in)/distance_in_out
+    #print("fst_1:", fst_1)
+    fst_2 = (distance_in_out - distance_out)/distance_in_out
+    #print("I am here.")
+    #print("fst_2:", fst_2)
+    #print("max fst:", np.max([fst_1, fst_2]))
+    fst = 1. / (np.sum([fst_1, fst_2]))
+    #print("fst:", fst)
+    # if fst < 1:
+    #     print("fst:", fst)
+    #     print("distance in:", distance_in)
+    #     print("len in cut:", len(in_cut))
+    #     print("len in cut:", len(in_cut[0]))
+    #     print("distance out:", distance_out)
+    #     print("total dist:", total_dist)
+    #     print("fst_1:", fst_1)
+    #     print("fst_2:", fst_2)
+    #
+    # if fst == 1:
+    #     print("fst:", fst)
+    #     print("distance in:", distance_in)
+    #     print("len in cut:", len(in_cut))
+    #     print("len in cut:", len(in_cut[0]))
+    #     print("distance out:", distance_out)
+    #     print("total dist:", total_dist)
+    #     print("fst_1:", fst_1)
+    #     print("fst_2:", fst_2)
+    #similarity = 1. / (distance / np.max(distance))
+    #expected_similarity = np.mean(similarity)
+    return fst #expected_similarity
 
 def mean_manhattan_distance_weighted_mut_pos(xs, n_samples, mut_pos, f, cut):
     """
