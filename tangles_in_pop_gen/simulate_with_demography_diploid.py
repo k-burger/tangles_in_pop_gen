@@ -19,13 +19,13 @@ from IPython.display import SVG
 #import matplotlib.pyplot as plt
 
 
-class Simulated_Data_With_Demography:
-    def __init__(self, n, rep, theta, rho, seed, save_G=True, print_ts=False,
+class Simulated_Data_With_Demography_Diploid:
+    def __init__(self, n_diploid, rep, theta, rho, seed, save_G=True, print_ts=False,
                  save_ts=False, filepath="", SFS=[], total_tree_length=[], G=[],
                  true_thetas=[], true_rhos=[], ts=[], indv_pop=[],
                  admixture_filename=[]):
         # parameters that need to be set and are not a result of the simulation:
-        self.n = n
+        self.n = n_diploid
         self.rep = rep
         self.theta = theta
         self.rho = rho
@@ -46,6 +46,7 @@ class Simulated_Data_With_Demography:
         self.admixture_filename = admixture_filename
 
     def sim_data(self):
+        #n_haploid = 2*self.n    # get haploid sample size
         multi_SFS = []  # list to save the SFS
         multi_total_length = []  # list to save the total tree lengths
         multi_G = []  # list to save the genotype matrices
@@ -105,21 +106,21 @@ class Simulated_Data_With_Demography:
 
         # define demography for 8 populations
         demography = msprime.Demography()
-        demography.add_population(name="A", initial_size=0.5)
-        demography.add_population(name="B", initial_size=0.5)
-        demography.add_population(name="C", initial_size=0.5)
-        demography.add_population(name="D", initial_size=0.5)
-        demography.add_population(name="E", initial_size=0.5)
-        demography.add_population(name="F", initial_size=0.5)
-        demography.add_population(name="G", initial_size=0.5)
-        demography.add_population(name="H", initial_size=0.5)
-        demography.add_population(name="AB", initial_size=0.5)
-        demography.add_population(name="CD", initial_size=0.5)
-        demography.add_population(name="ABCD", initial_size=0.5)
-        demography.add_population(name="EF", initial_size=0.5)
-        demography.add_population(name="EFG", initial_size=0.5)
-        demography.add_population(name="EFGH", initial_size=0.5)
-        demography.add_population(name="ABCDEFGH", initial_size=0.5)
+        demography.add_population(name="A", initial_size=0.25)
+        demography.add_population(name="B", initial_size=0.25)
+        demography.add_population(name="C", initial_size=0.25)
+        demography.add_population(name="D", initial_size=0.25)
+        demography.add_population(name="E", initial_size=0.25)
+        demography.add_population(name="F", initial_size=0.25)
+        demography.add_population(name="G", initial_size=0.25)
+        demography.add_population(name="H", initial_size=0.25)
+        demography.add_population(name="AB", initial_size=0.25)
+        demography.add_population(name="CD", initial_size=0.25)
+        demography.add_population(name="ABCD", initial_size=0.25)
+        demography.add_population(name="EF", initial_size=0.25)
+        demography.add_population(name="EFG", initial_size=0.25)
+        demography.add_population(name="EFGH", initial_size=0.25)
+        demography.add_population(name="ABCDEFGH", initial_size=0.25)
         demography.add_population_split(time=2/7, derived=["A", "B"], ancestral="AB")
         demography.add_population_split(time=4 / 7, derived=["E", "F"], ancestral="EF")
         demography.add_population_split(time=6/7, derived=["C", "D"], ancestral="CD")
@@ -131,9 +132,12 @@ class Simulated_Data_With_Demography:
                                         ancestral="EFGH")
         demography.add_population_split(time=2, derived=["ABCD", "EFGH"],
                                         ancestral="ABCDEFGH")
-        demography.set_symmetric_migration_rate(["A", "E"], 0.5)
+        #demography.set_symmetric_migration_rate(["A", "B", "C", "D", "E", "F", "G",
+        #                                         "H"],
+        #                                        0.5)
+        demography.set_symmetric_migration_rate(["A", "E"],0.5)
 
-        size = 100
+        size = self.n // 8   # constant population size for 8 simulated populations
 
         # graph = msprime.Demography.to_demes(demography)
         # fig, ax = plt.subplots()  # use plt.rcParams["figure.figsize"]
@@ -152,13 +156,15 @@ class Simulated_Data_With_Demography:
                                                "E": size, "F": size, "G": size, "H": size},
                                       sequence_length=1,
                                       discrete_genome=False,# population_size=0.5,
-                                      recombination_rate=rho[i], random_seed=seeds[
-                    0], demography=demography, ploidy=1)
+                                      recombination_rate=rho[i]/1, random_seed=seeds[
+                    0], demography=demography, ploidy=2)
 
             #for p in ts.provenances():
             #    print(p)
 
-            tree_sequence = msprime.sim_mutations(ts, rate=theta[i], random_seed=seeds[1], discrete_genome=False)
+            tree_sequence = msprime.sim_mutations(ts, rate=theta[i]/1,
+                                                  random_seed=seeds[1],
+                                                  discrete_genome=False)
             #print("actual seed ts simulation:", seeds[0])
             #print("actual seed mutation simulation:", seeds[1])
             #ts.dump("data/ts_n_10_rho_1_theta_17")
@@ -167,7 +173,8 @@ class Simulated_Data_With_Demography:
 
             print("ts.individuals_population:", tree_sequence.individuals_population)
             print("num_migration:", tree_sequence.num_migrations)
-            indv_names = [f"{i}indv" for i in range(tree_sequence.num_samples)]
+            indv_names = [f"{i}indv" for i in range(self.n)]
+            print("indv_names:", indv_names)
             admixture_filename = ("n_" +str(self.n) +"_rep_" + str(self.rep) + "_rho_" + rho_str +
                                   "_theta_" + theta_str + "_seed_" + str(self.seed))
             with open("admixture/data/"+admixture_filename+".vcf", "w") as vcf_file:
@@ -199,7 +206,15 @@ class Simulated_Data_With_Demography:
             print("mean total branch length:", mean_tot_branch_length)
 
             # get genotype matrix
-            G = tree_sequence.genotype_matrix()
+            G_haploid = tree_sequence.genotype_matrix()
+            print("n diploid in sim:", self.n)
+            # array with indices of rows to sum
+            column_indices = numpy.arange(self.n) * 2
+            # sum rows and create new numpy ndarray
+            G = G_haploid[:,column_indices] + G_haploid[:,column_indices + 1]
+            print("G_haploid:\n", G_haploid)
+            print("G:\n", G)
+            print("G.shape[1]:", G.shape[1])
             # potentially save the genotype matrix:
             if self.save_G:
                 multi_G.append(G)
@@ -301,11 +316,11 @@ class Simulated_Data_With_Demography:
 use_this_script_for_sim = False
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
-    n = 800              # sample size
+    n = 8              # sample size
     rep = 1             # number of repetitions during simulation
-    theta = 55          # theta=int for constant theta in rep simulations,
+    theta = 0.25          # theta=int for constant theta in rep simulations,
     # theta='rand' for random theta in (0,100) in every simulation
-    rho = 55            # rho=int for constant theta in rep simulations, rho='rand'
+    rho = 0            # rho=int for constant theta in rep simulations, rho='rand'
     # for random theta in (0,100) in every simulation
     seed = 42           # starting seed for simulation (based on this seed, multiple
     # seeds will be generated)
@@ -317,12 +332,14 @@ if use_this_script_for_sim == True:
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
 
     ## This generates the data object and either simulates the properties or loads if it already exists.
-    data = Simulated_Data_With_Demography(n, rep, theta, rho, seed, save_G=save_G,
+    data = Simulated_Data_With_Demography_Diploid(n, rep, theta, rho, seed, save_G=save_G,
                           print_ts=print_ts, save_ts=save_ts, filepath=filepath)
     if data_already_simulated == False:
         data.sim_data()
     else:
         data.load_data()
 
+    print("G:", data.G)
 
-print("simulation done.")
+
+    print("simulation done.")

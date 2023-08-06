@@ -286,6 +286,258 @@ def mean_manhattan_distance(xs, n_samples, cut):
     expected_similarity = np.mean(similarity)
     return expected_similarity
 
+def HWE_divergence(xs, n_samples, cut):
+    """
+    This function computes the implicit order of a cut.
+    It is zero if the cut is either the whole set or the empty set
+
+    If n_samples if not None we do a montecarlo approximation of the value.
+
+    Parameters
+    ----------
+    xs : array of shape [n_points, n_features]
+        The points in our space
+    cut: array of shape [n_points]
+        The cut that we are considering
+    n_samples: int, optional (default=None)
+        The maximums number of points to take per orientation in the Monte Carlo approximation of the order
+
+    Returns
+    -------
+    expected_order, int
+        The average order for the cut
+    """
+
+    _, n_features = xs.shape
+    if np.all(cut) or np.all(~cut):
+        return 0
+
+    if not n_samples:
+        in_cut = xs[cut, :]
+        out_cut = xs[~cut, :]
+
+    else:
+
+        idx = np.arange(len(xs))
+
+        if n_samples <= len(idx[cut]):
+            idx_in = np.random.choice(idx[cut], size=n_samples, replace=False)
+            in_cut = xs[idx_in, :]
+        else:
+            in_cut = xs[cut, :]
+
+        if n_samples <= len(idx[~cut]):
+            idx_out = np.random.choice(
+                idx[~cut], size=n_samples, replace=False)
+            out_cut = xs[idx_out, :]
+        else:
+            out_cut = xs[~cut, :]
+    #print("xs:", xs)
+    #print("len(xs):", len(xs))
+    #print("in cut:", in_cut)
+    #print("len(in):", len(in_cut))
+    #print("out cut:", out_cut)
+    #print("len(out):", len(out_cut))
+    #print("num mutations:", xs.shape[1])
+
+    F_in = []
+    F_out = []
+    normalization = 0
+    for m in range(0, xs.shape[1]):
+        #print("########## mutation ", m, " ##########")
+        #print("in cut:", in_cut)
+        #print("out cut:", out_cut)
+        p_in = (1 / (2 * len(in_cut))) * np.sum(in_cut[:,m])
+        p_out = (1 / (2 * len(out_cut))) * np.sum(out_cut[:,m])
+        #print("p_in:", p_in)
+        #print("p_out:", p_out)
+        expected_H_in = 2*p_in*(1-p_in)
+        expected_H_out = 2 * p_out * (1 - p_out)
+        #print("expected_H_in:", expected_H_in)
+        #print("expected_H_out:", expected_H_out)
+        x_in = (1 /len(in_cut)) * np.count_nonzero(in_cut[:,m]==1)
+        x_out = (1 /len(out_cut)) * np.count_nonzero(out_cut[:,m]==1)
+        #print("x_in:", x_in)
+        #print("x_out:", x_out)
+        F_in.append(pow(x_in - expected_H_in, 2))
+        F_out.append(pow(x_out - expected_H_out, 2))
+        #print("F_in:", F_in)
+        #print("F_out:", F_out)
+        normalization += pow(p_in -p_out, 2)
+        #print("normalization:", normalization)
+    print("normalization:", normalization)
+    normalization = normalization/xs.shape[1]
+    print("normalization mean:", normalization)
+    #print("final normalization:", normalization)
+    HWE_div = (sum(F_in) + sum(F_out))/(normalization*xs.shape[1])
+    print("HWE_div:", HWE_div)
+    return HWE_div
+
+def FST_observed(xs, n_samples, cut):
+    """
+    This function computes the implicit order of a cut.
+    It is zero if the cut is either the whole set or the empty set
+
+    If n_samples if not None we do a montecarlo approximation of the value.
+
+    Parameters
+    ----------
+    xs : array of shape [n_points, n_features]
+        The points in our space
+    cut: array of shape [n_points]
+        The cut that we are considering
+    n_samples: int, optional (default=None)
+        The maximums number of points to take per orientation in the Monte Carlo approximation of the order
+
+    Returns
+    -------
+    expected_order, int
+        The average order for the cut
+    """
+
+    _, n_features = xs.shape
+    if np.all(cut) or np.all(~cut):
+        return 0
+
+    if not n_samples:
+        in_cut = xs[cut, :]
+        out_cut = xs[~cut, :]
+
+    else:
+
+        idx = np.arange(len(xs))
+
+        if n_samples <= len(idx[cut]):
+            idx_in = np.random.choice(idx[cut], size=n_samples, replace=False)
+            in_cut = xs[idx_in, :]
+        else:
+            in_cut = xs[cut, :]
+
+        if n_samples <= len(idx[~cut]):
+            idx_out = np.random.choice(
+                idx[~cut], size=n_samples, replace=False)
+            out_cut = xs[idx_out, :]
+        else:
+            out_cut = xs[~cut, :]
+
+    F_in = []
+    F_out = []
+    #print("len(xs):", len(xs))
+    count = 0
+    for m in range(0, xs.shape[1]):
+        #print("########## mutation ", m, " ##########")
+        x = (1 / len(xs)) * np.count_nonzero(xs[:, m] == 1)
+        x_in = (1 /len(in_cut)) * np.count_nonzero(in_cut[:,m]==1)
+        x_out = (1 /len(out_cut)) * np.count_nonzero(out_cut[:,m]==1)
+        #print("x:", x)
+        #print("x_in:", x_in)
+        #print("x_out:", x_out)
+        if x == 0:
+            F_in.append(1)
+            F_out.append(1)
+            count += 1
+        else:
+            F_in.append(x_in/x)
+            F_out.append(x_out/x)
+        #print("F_in:", F_in)
+        #print("F_out:", F_out)
+    FST_obs = 1/(0.5*(np.abs((1-(sum(F_in)/xs.shape[1]))) + np.abs((1-(sum(
+        F_out)/xs.shape[
+        1])))))
+    print("FST_obs:", FST_obs)
+    if count >0:
+        print("observed x=0:", count)
+    return FST_obs
+
+def FST_expected(xs, n_samples, cut):
+    """
+    This function computes the implicit order of a cut.
+    It is zero if the cut is either the whole set or the empty set
+
+    If n_samples if not None we do a montecarlo approximation of the value.
+
+    Parameters
+    ----------
+    xs : array of shape [n_points, n_features]
+        The points in our space
+    cut: array of shape [n_points]
+        The cut that we are considering
+    n_samples: int, optional (default=None)
+        The maximums number of points to take per orientation in the Monte Carlo approximation of the order
+
+    Returns
+    -------
+    expected_order, int
+        The average order for the cut
+    """
+
+    _, n_features = xs.shape
+    if np.all(cut) or np.all(~cut):
+        return 0
+
+    if not n_samples:
+        in_cut = xs[cut, :]
+        out_cut = xs[~cut, :]
+
+    else:
+
+        idx = np.arange(len(xs))
+
+        if n_samples <= len(idx[cut]):
+            idx_in = np.random.choice(idx[cut], size=n_samples, replace=False)
+            in_cut = xs[idx_in, :]
+        else:
+            in_cut = xs[cut, :]
+
+        if n_samples <= len(idx[~cut]):
+            idx_out = np.random.choice(
+                idx[~cut], size=n_samples, replace=False)
+            out_cut = xs[idx_out, :]
+        else:
+            out_cut = xs[~cut, :]
+    #print("xs:", xs)
+    #print("len(xs):", len(xs))
+    #print("in cut:", in_cut)
+    #print("len(in):", len(in_cut))
+    #print("out cut:", out_cut)
+    #print("len(out):", len(out_cut))
+    #print("num mutations:", xs.shape[1])
+
+    F_in = []
+    F_out = []
+    for m in range(0, xs.shape[1]):
+        # print("########## mutation ", m, " ##########")
+        p_in = (1 / (2 * len(in_cut))) * np.sum(in_cut[:, m])
+        p_out = (1 / (2 * len(out_cut))) * np.sum(out_cut[:, m])
+        p = ((len(in_cut) / len(xs)) * p_in) + ((len(out_cut) / len(xs)) * p_out)
+        F_in.append(np.abs(1 - ((p_in * (1-p_in))/(p*(1-p)))))
+        F_out.append(np.abs(1 - ((p_out * (1-p_out))/(p*(1-p)))))
+        #print("F_in:", F_in)
+        #print("F_out:", F_out)
+
+    FST_exp = 0.5*((np.sum(F_in)/xs.shape[1]) + (np.sum(F_out)/xs.shape[1]))
+    # print("FST_exp:", FST_exp)
+    # p_in = (1 / (2 * len(in_cut) * xs.shape[1])) * np.sum(in_cut)
+    # p_out = (1 / (2 * len(out_cut) * xs.shape[1])) * np.sum(out_cut)
+    # p = ((len(in_cut) / len(xs)) * p_in) + ((len(out_cut) / len(xs)) * p_out)
+    # print("p_in:", p_in)
+    # print("p_out:", p_out)
+    # print("p:", p)
+    # F_in = 1 - ((p_in * (1-p_in))/(p*(1-p)))
+    # F_out = 1 - ((p_out * (1-p_out))/(p*(1-p)))
+    # FST_exp = np.maximum(np.abs(F_in),np.abs(F_out))
+    # print("F_in:", F_in)
+    # print("F_out:", F_out)
+    print("FST_exp:", 1/FST_exp)
+    return 1/FST_exp
+
+def HWE_FST_exp(xs, n_samples, cut):
+    HWE = HWE_divergence(xs, n_samples, cut)
+    FST = FST_expected(xs, n_samples, cut)
+    print("HWE:", HWE)
+    print("FST:", FST)
+    return 0.5*(HWE + FST)
+
 def mean_fst_distance(xs, n_samples, cut):
     """
     This function computes the implicit order of a cut.

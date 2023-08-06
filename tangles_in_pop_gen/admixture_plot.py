@@ -14,8 +14,8 @@ import subprocess
 # level-wise (regarding the tangles tree). We also have to input the population
 # memberships (from simulation) to plot accordingly. The agreement is given to
 # distinguish the saved plots in the end. The comparison to ADMIXTURE can be turned off.
-def admixture_like_plot(matrices, pop_membership, agreement, plot_ADMIXTURE = False,
-                        ADMIXTURE_file_name=""):
+def admixture_like_plot(matrices, pop_membership, agreement, seed,
+                        plot_ADMIXTURE = False, ADMIXTURE_file_name="", cost_fct = ""):
     n = np.array(matrices[1]).shape[0]      # number of samples
     nb_plots = len(matrices)                # number of plots to generate
     mtx_keys = list(matrices.keys())        # get keys of the matrices dictionary
@@ -95,6 +95,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, plot_ADMIXTURE = Fa
 
     # Sorting individuals within predefined populations according to their membership
     # in the main cluster of the population in the lowest level:
+    print("len(pop_membership:", len(pop_membership))
     if len(pop_membership) != n:
         warnings.warn(
             'Population membership for individuals does not add up.',
@@ -136,7 +137,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, plot_ADMIXTURE = Fa
 
     # stacked bar plots:
     fig, axs = plt.subplots(nb_plots, figsize=(10, 40))
-    fig.suptitle('Tangles', fontsize=20)
+    #fig.suptitle('Tangles', fontsize=20)
     fig.tight_layout()
     # Create the grid
     for subplot in axs:
@@ -169,7 +170,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, plot_ADMIXTURE = Fa
     #plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
     plt.subplots_adjust(wspace=0, hspace=0.1)
     plt.savefig('admixture_like_plot_n_' +str(n) +'_a_' +str(agreement)
-                +'_new_colors.pdf')
+                + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
     plt.show()
 
     if plot_ADMIXTURE == True:
@@ -180,7 +181,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, plot_ADMIXTURE = Fa
             return
 
         fig, axs = plt.subplots(nb_plots, figsize=(10, 40))
-        fig.suptitle('ADMIXTURE', fontsize=20)
+        #fig.suptitle('ADMIXTURE', fontsize=20)
         fig.tight_layout()
         # Create the grid
         for subplot in axs:
@@ -222,7 +223,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, plot_ADMIXTURE = Fa
         # plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
         plt.subplots_adjust(wspace=0, hspace=0.1)
         plt.savefig('ADMIXTURE_plot_n_' + str(n) + '_a_' + str(agreement)
-                    +'new_colors.pdf')
+                    + '_seed_' + str(seed) +'_diploid.pdf')
         plt.show()
         print("admixture like plots done.")
 
