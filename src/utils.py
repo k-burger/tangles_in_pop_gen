@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.manifold import TSNE
 from typing import Union, Optional
 
+from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import DistanceMetric
 from tqdm import tqdm
 
@@ -155,10 +156,46 @@ def get_points_to_plot(xs, cs):
 def subset(a, b):
     return (a & b).count() == a.count()
 
+def precompute_cost_and_order_cuts(bipartitions, cost_function, verbose=True):
+    costs = precompute_cost(bipartitions, cost_function, verbose=verbose)
+    return order_cuts(bipartitions, costs)
+
 
 def compute_cost_and_order_cuts(bipartitions, cost_functions, verbose=True):
     costs = compute_cost(bipartitions, cost_functions, verbose=verbose)
     return order_cuts(bipartitions, costs)
+
+
+def precompute_cost(bipartitions, cost_function, verbose=True):
+    """
+    Compute the cost of a series of cuts and returns a cost array.
+
+    Parameters
+    ----------
+    cuts: Cuts
+        where cuts.values has shape (n_questions, n_datapoints)
+    cost_function: function
+        callable that calculates the cost of a single cut, which is an ndarray of shape
+        (n_datapoints)
+
+    Returns
+    -------
+    cost: ndarray of shape (n_questions) containing the costs of each cut as entries
+    """
+    if verbose:
+        print("Computing costs of cuts...")
+
+    pool = multiprocessing.Pool()
+    cost_bipartitions = np.array(pool.map(cost_function, bipartitions.values))
+    pool.close()
+
+
+
+    # cost_bipartitions = np.zeros(len(bipartitions.values), dtype=float)
+    # for i_cut, cut in enumerate(tqdm(bipartitions.values, disable=not verbose)):
+    #     cost_bipartitions[i_cut] = cost_function(cut)
+
+    return cost_bipartitions
 
 
 def compute_cost(bipartitions, cost_function, verbose=True):

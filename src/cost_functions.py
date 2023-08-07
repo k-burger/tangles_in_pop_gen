@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 from sklearn.metrics import pairwise_distances
 
@@ -279,6 +281,38 @@ def mean_manhattan_distance(xs, n_samples, cut):
     expected_similarity = np.mean(similarity)
 
     return expected_similarity
+
+
+def nromalized_mean_distances(distances, cut):
+    idx = np.arange(len(cut))
+    in_cut = idx[cut]
+    out_cut = idx[~cut]
+
+    idxs = list(itertools.product(in_cut, out_cut))
+
+    distance = np.array([distances[idx] for idx in idxs])
+
+    similarity = 1. / (distance / np.max(distance))
+    return np.mean(similarity)
+
+
+def all_pairs_manhattan_distance(xs):
+    """
+    This function computes all pairwise distances.
+
+    Parameters
+    ----------
+    xs : array of shape [n_points, n_features]
+        The points in our space
+
+    Returns
+    -------
+    distances, [double, double]
+        All pairwise distances
+    """
+
+    return pairwise_distances(xs, xs, metric='manhattan', n_jobs=-1)
+
 
 def mean_manhattan_distance_weighted_mut_pos(xs, n_samples, mut_pos, f, cut):
     """

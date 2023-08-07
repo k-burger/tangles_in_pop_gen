@@ -52,11 +52,17 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
 
     print("\tFound {} unique bipartitions".format(len(bipartitions.values)), flush=True)
     print("\tCalculating costs if bipartitions", flush=True)
-    bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
-                                                     partial(
-                                                         cost_functions.mean_manhattan_distance,
-                                                         data.xs, None))
+    bipartitions = utils.precompute_cost_and_order_cuts(bipartitions,
+                                                        partial(cost_functions.nromalized_mean_distances,
+                                                                cost_functions.all_pairs_manhattan_distance(xs))
+                                                        )
+
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
+    #                                                  partial(
+    #                                                      cost_functions.mean_manhattan_distance,
+    #                                                      data.xs, None))
+
+    # # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
     #                                                  partial(
     #                                                      cost_functions.mean_manhattan_distance_weighted_mut_pos,
     #                                                      data.xs, None, mut_pos,
