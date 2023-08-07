@@ -189,8 +189,6 @@ def precompute_cost(bipartitions, cost_function, verbose=True):
     cost_bipartitions = np.array(pool.map(cost_function, bipartitions.values))
     pool.close()
 
-
-
     # cost_bipartitions = np.zeros(len(bipartitions.values), dtype=float)
     # for i_cut, cut in enumerate(tqdm(bipartitions.values, disable=not verbose)):
     #     cost_bipartitions[i_cut] = cost_function(cut)
@@ -214,6 +212,7 @@ def compute_cost(bipartitions, cost_function, verbose=True):
     -------
     cost: ndarray of shape (n_questions) containing the costs of each cut as entries
     """
+
     if verbose:
         print("Computing costs of cuts...")
 

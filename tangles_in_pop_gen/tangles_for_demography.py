@@ -17,8 +17,10 @@ from src.tree_tangles import ContractedTangleTree, tangle_computation, \
 from src.utils import compute_hard_predictions, compute_mindset_prediciton
 
 import simulate_with_demography
+import simulate_with_demography_diploid
 import admixture_plot
 import pickle
+import warnings
 
 
 """
@@ -33,38 +35,62 @@ The execution is divided in the following steps
 """
 
 
-def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
-                       output_directory='', plot=True):
-    xs = np.transpose(sim_data.G[0])
-    n = xs.shape[0]
+def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
+                       output_directory='', plot=True, plot_ADMIXTURE=False,
+                       ADMIXTURE_filename = ""):
+    print("started")
+    xs = np.transpose(sim_data.G[0])    # diploid genotype matrix
+    n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
-    print("n:", n)
+    print("n diploid:", n)
     print("number of mutations:", nb_mut)
     mut_pos = sim_data.ts[0].tables.sites.position
+
+    # if (n_haploid % 2) == 1:
+    #     warnings.warn(
+    #         'sample size must be even as we consider diploid individuals!',
+    #         stacklevel=1)
+    #
+    # # for diploid individuals, always sum two rows of genotype matrix:
+    # n = n_haploid // 2   # number of diploid individuals (as integer)
+    # print("n diploid:", n)
+    # # array with indices of rows to sum
+    # row_indices = np.arange(n) * 2
+    # # sum rows and create new numpy ndarray
+    # xs = xs_haploid[row_indices] + xs_haploid[row_indices + 1]
+    # print("xs:\n", xs)
+
     #print("mut pos:", mut_pos)
     #print("G:", xs)
     data = data_types.Data(xs=xs)
 
     # calculate your bipartitions we use the binary questions/features directly as bipartitions
     # print("\tGenerating set of bipartitions", flush=True)
-    bipartitions = data_types.Cuts(values=(data.xs == True).T,
+    # bipartitions = data_types.Cuts(values=(data.xs == True).T,
+    #                                names=np.array(list(range(0, data.xs.shape[1]))))
+
+    bipartitions = data_types.Cuts(values=(data.xs > 0).T,
                                    names=np.array(list(range(0, data.xs.shape[1]))))
 
     print("\tFound {} unique bipartitions".format(len(bipartitions.values)), flush=True)
     print("\tCalculating costs if bipartitions", flush=True)
-    bipartitions = utils.precompute_cost_and_order_cuts(bipartitions,
-                                                        partial(cost_functions.nromalized_mean_distances,
-                                                                cost_functions.all_pairs_manhattan_distance(xs))
-                                                        )
+
+    # Speed up bei paarweiser Kostenfuntkinon
+    # bipartitions = utils.precompute_cost_and_order_cuts(bipartitions,
+    #                                                     partial(cost_functions.normalized_mean_distances,
+    #                                                             cost_functions.all_pairs_manhattan_distance(xs))
+    #                                                     )
+
+    bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
+                                                     partial(
+                                                         cost_functions.HWE_FST_exp,
+                                                         data.xs, None))
+    cost = "HWE_FST_exp" # FST_expected FST_observed  HWE_divergence
+    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
     #                                                  partial(
-    #                                                      cost_functions.mean_manhattan_distance,
-    #                                                      data.xs, None))
-
-    # # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
-    #                                                  partial(
-    #                                                      cost_functions.mean_manhattan_distance_weighted_mut_pos,
+    #                                                         cost_functions.mean_manhattan_distance_weighted_mut_pos,
     #                                                      data.xs, None, mut_pos,
     #                                                      lambda x: 0.07))
 
@@ -78,7 +104,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
                                       verbose=3  # print everything
                                       )
 
-    plot_cuts_in_one(data, bipartitions, Path('tmp'))
+    #plot_cuts_in_one(data, bipartitions, Path('tmp'))
 
     print("Built tree has {} leaves".format(len(tangles_tree.maximals)), flush=True)
     # postprocess tree
@@ -89,7 +115,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(0)
+    contracted_tree.prune(1)
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
@@ -123,52 +149,60 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed,
         filename2 = "contracted_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
             theta) + "_seed_" + str(
             seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
-        tangles_tree.plot_tree(path=output_directory / filename1)
-        ## plot contracted tree
-        contracted_tree.plot_tree(path=output_directory / filename2)
-
-        # plot tree summary
-        tangles_tree.print_tangles_tree_summary_hard_predictions(nb_mut,
-                                                                 bipartitions.names,
-                                                                 ys_predicted)
-
-        contracted_tree.print_summary(contracted_tree.root)
-
-        # plot soft predictions
-        plotting.plot_soft_predictions(data=data,
-                                       contracted_tree=contracted_tree,
-                                       eq_cuts=bipartitions.equations,
-                                       path=output_directory / 'soft_clustering')
+        # tangles_tree.plot_tree(path=output_directory / filename1)
+        # # plot contracted tree
+        # contracted_tree.plot_tree(path=output_directory / filename2)
+        #
+        # # plot tree summary
+        # tangles_tree.print_tangles_tree_summary_hard_predictions(nb_mut,
+        #                                                         bipartitions.names,
+        #                                                         ys_predicted)
+        #
+        # contracted_tree.print_summary(contracted_tree.root)
+        #
+        # # plot soft predictions
+        # plotting.plot_soft_predictions(data=data,
+        #                                contracted_tree=contracted_tree,
+        #                                eq_cuts=bipartitions.equations,
+        #                                path=output_directory / 'soft_clustering')
 
         matrices = contracted_tree.to_matrix()
-        print(matrices)
-        admixture_plot.admixture_like_plot(matrices)
+        #print(matrices)
+        print("matrices done.")
+        #print(matrices)
+        admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
+                                           plot_ADMIXTURE=plot_ADMIXTURE,
+                                           ADMIXTURE_file_name=ADMIXTURE_filename,
+                                           cost_fct = cost)
+
+        print("admixture like plot done.")
         # with open('saved_soft_matrices.pkl', 'wb') as f:
         #     pickle.dump(matrices, f)
 
-
 if __name__ == '__main__':
-    n = 40      #15     # anzahl individuen
+    n = 800 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 0.5   #1      # recombination
+    rho = 100# 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 17          # mutationsrate
-    agreement = 3
-    seed = 42   #17
+    theta = 100  # 55      # mutationsrate
+    agreement = 33
+    seed = 42#42# 42   #17
     noise = 0
-    data_already_simulated = True # True or False, states if data object should be
+    data_already_simulated = False # True or False, states if data object should be
     # simulated or loaded
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
     save_G = True  # set True to save genotype matrix during simulation, False otherwise
-    print_ts = True  # (set small for large n) set True if ts should be printed during simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
+    print_ts = False  # (set small for large n) set True if ts should be printed during
+    # simulation, this is only possible if rep==1. For large data sets, this step slows down the program noticeably.
     save_ts = True  # set True to save the tree sequence during simulation, False otherwise
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 
     ## This generates the data object and either simulates or loads the data sets
-    data = simulate_with_demography.Simulated_Data_With_Demography(n, rep, theta, rho, seed,
+    data = simulate_with_demography_diploid.Simulated_Data_With_Demography_Diploid(n,
+                                                                                 rep, theta, rho, seed,
                                                                    save_G=save_G,
                                                                    print_ts=print_ts,
                                                                    save_ts=save_ts,
@@ -180,6 +214,18 @@ if __name__ == '__main__':
         data.load_data()
         print("Data has been loaded.")
 
+    plot_ADMIXTURE = False
+    ADMIXTURE_filename = data.admixture_filename
+
     output_directory = Path('output_tangles_in_pop_gen')
     plot = True
-    tangles_in_pop_gen(data, rho, theta, agreement, seed, output_directory, plot=True)
+
+    # indv_pop_diploid_indices = np.arange(n//2) * 2
+    # pop_membership = data.indv_pop[indv_pop_diploid_indices]
+    # print("pop membership:", pop_membership)
+
+    tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop,
+    output_directory, plot=True, plot_ADMIXTURE=plot_ADMIXTURE,
+                       ADMIXTURE_filename=ADMIXTURE_filename)
+
+    print("all done.")
