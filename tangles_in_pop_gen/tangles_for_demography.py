@@ -18,6 +18,7 @@ from src.utils import compute_hard_predictions, compute_mindset_prediciton
 
 import simulate_with_demography
 import simulate_with_demography_diploid
+import benchmark_data
 import admixture_plot
 import pickle
 import warnings
@@ -36,15 +37,27 @@ The execution is divided in the following steps
 
 
 def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
+                       out_of_africa,
                        output_directory='', plot=True, plot_ADMIXTURE=False,
                        ADMIXTURE_filename = ""):
     print("started")
     xs = np.transpose(sim_data.G[0])    # diploid genotype matrix
+    print("number of mutations before zero column deletion:", xs.shape[1])
+    num_zero = 0
+    columns_to_delete = []
+    for m in range(0, xs.shape[1]):
+        if np.sum(xs[:, m]) == 0:
+            columns_to_delete.append(m)
+            num_zero = num_zero + 1
+    xs = np.delete(xs, columns_to_delete, axis=1)
+    print("num zero columns deleted:", num_zero)
+    count_larger_2 = np.count_nonzero(xs > 4)
+    print("count larger 2:", count_larger_2)
     n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
     print("n diploid:", n)
-    print("number of mutations:", nb_mut)
-    mut_pos = sim_data.ts[0].tables.sites.position
+    print("number of mutations after zero column deletion:", nb_mut)
+    #mut_pos = sim_data.ts[0].tables.sites.position
 
     # if (n_haploid % 2) == 1:
     #     warnings.warn(
@@ -83,9 +96,9 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
                                                      partial(
-                                                         cost_functions.HWE_FST_exp,
+                                                         cost_functions.FST_expected,
                                                          data.xs, None))
-    cost = "HWE_FST_exp" # FST_expected FST_observed  HWE_divergence
+    cost = "FST_expected" # FST_expected FST_observed  HWE_divergence
     # mean_manhattan_distance HWE_FST_exp FST_Wikipedia
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
@@ -149,28 +162,29 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         filename2 = "contracted_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
             theta) + "_seed_" + str(
             seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
-        # tangles_tree.plot_tree(path=output_directory / filename1)
-        # # plot contracted tree
-        # contracted_tree.plot_tree(path=output_directory / filename2)
-        #
-        # # plot tree summary
-        # tangles_tree.print_tangles_tree_summary_hard_predictions(nb_mut,
-        #                                                         bipartitions.names,
-        #                                                         ys_predicted)
-        #
-        # contracted_tree.print_summary(contracted_tree.root)
-        #
-        # # plot soft predictions
-        # plotting.plot_soft_predictions(data=data,
-        #                                contracted_tree=contracted_tree,
-        #                                eq_cuts=bipartitions.equations,
-        #                                path=output_directory / 'soft_clustering')
+        tangles_tree.plot_tree(path=output_directory / filename1)
+        # plot contracted tree
+        contracted_tree.plot_tree(path=output_directory / filename2)
+
+        # plot tree summary
+        tangles_tree.print_tangles_tree_summary_hard_predictions(nb_mut,
+                                                                bipartitions.names,
+                                                                ys_predicted)
+
+        contracted_tree.print_summary(contracted_tree.root)
+
+        # plot soft predictions
+        plotting.plot_soft_predictions(data=data,
+                                       contracted_tree=contracted_tree,
+                                       eq_cuts=bipartitions.equations,
+                                       path=output_directory / 'soft_clustering')
 
         matrices = contracted_tree.to_matrix()
         #print(matrices)
         print("matrices done.")
         #print(matrices)
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
+                                           out_of_africa,
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct = cost)
@@ -180,7 +194,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 800 # 800 #40      #15     # anzahl individuen
+    n = 90 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
     rho = 100# 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
@@ -190,6 +204,8 @@ if __name__ == '__main__':
     noise = 0
     data_already_simulated = False # True or False, states if data object should be
     # simulated or loaded
+    out_of_africa = False
+    readVCF = True
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
@@ -200,19 +216,42 @@ if __name__ == '__main__':
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 
-    ## This generates the data object and either simulates or loads the data sets
-    data = simulate_with_demography_diploid.Simulated_Data_With_Demography_Diploid(n,
+    if out_of_africa == True:
+        rho = -1
+        theta = -1
+        data = benchmark_data.SimulateOutOfAfrica(
+            n, seed, save_G=save_G, print_ts=print_ts, save_ts=save_ts,
+            filepath=filepath)
+        if data_already_simulated == False:
+            data.sim_data()
+            print("Data has been simulated.")
+        else:
+            data.load_data()
+            print("Data has been loaded.")
+    elif readVCF == True:
+        rho = -1
+        theta = -1
+        data = benchmark_data.ReadVCF('gen0_chr22_train.vcf',
+                                     'admixture/data/')
+        data.load_data()
+    else:
+        ## This generates the data object and either simulates or loads the data sets
+        data = simulate_with_demography_diploid.Simulated_Data_With_Demography_Diploid(n,
                                                                                  rep, theta, rho, seed,
                                                                    save_G=save_G,
                                                                    print_ts=print_ts,
                                                                    save_ts=save_ts,
                                                                    filepath=filepath)
-    if data_already_simulated == False:
-        data.sim_data()
-        print("Data has been simulated.")
-    else:
-        data.load_data()
-        print("Data has been loaded.")
+        if data_already_simulated == False:
+            data.sim_data()
+            print("Data has been simulated.")
+        else:
+            data.load_data()
+            print("Data has been loaded.")
+
+
+    
+
 
     plot_ADMIXTURE = False
     ADMIXTURE_filename = data.admixture_filename
@@ -224,7 +263,7 @@ if __name__ == '__main__':
     # pop_membership = data.indv_pop[indv_pop_diploid_indices]
     # print("pop membership:", pop_membership)
 
-    tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop,
+    tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop, out_of_africa,
     output_directory, plot=True, plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)
 

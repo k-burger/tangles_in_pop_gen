@@ -14,7 +14,7 @@ import subprocess
 # level-wise (regarding the tangles tree). We also have to input the population
 # memberships (from simulation) to plot accordingly. The agreement is given to
 # distinguish the saved plots in the end. The comparison to ADMIXTURE can be turned off.
-def admixture_like_plot(matrices, pop_membership, agreement, seed,
+def admixture_like_plot(matrices, pop_membership, agreement, seed, out_of_africa,
                         plot_ADMIXTURE = False, ADMIXTURE_file_name="", cost_fct = ""):
     n = np.array(matrices[1]).shape[0]      # number of samples
     nb_plots = len(matrices)                # number of plots to generate
@@ -24,6 +24,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
     y_plot = []                             # list of soft pred to be plotted on y-axis
     color_order = []                        # list to save consistent order of colors
     colors_per_plot = []                    # list of colors for each bar plot
+    #nb_plots = 12
 
     # create list of colors to plot from (cyclic color palette). If number of plots
     # is less 24, choose colors in specific order to increase color contrast. If more
@@ -86,7 +87,10 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
                     'The data is not processed correctly because the current script '
                     'cannot determine the correct branching order.',
                     stacklevel=1)
-                return
+                # return
+                nb_plots = i
+                print("new number of plots:", nb_plots)
+                break
 
             # append soft predictions for the considered level:
             y_plot.append(copy.deepcopy(y))  # Make a copy of y and append the copy to y_plot
@@ -101,6 +105,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
             'Population membership for individuals does not add up.',
             stacklevel=1)
         return
+
     pop_sizes = np.bincount(pop_membership) # population sizes
     nb_pop = len(pop_sizes)                 # number of populations
     pop_member_idx = []                     # list with boundaries of population affiliation
@@ -146,7 +151,10 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
         subplot.set_yticks([])
         subplot.set_xticks([])
         subplot.set_xticks([((x+0.5)*n/nb_pop-0.5) for x in range(0,nb_pop)])
-        subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
+        if out_of_africa == True:
+            subplot.set_xticklabels(['YRI', 'CEU', 'CHB'])
+        else:
+            subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
 
 
     # Stacked bar chart with loop
@@ -169,11 +177,18 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
     #plt.set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
     #plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
     plt.subplots_adjust(wspace=0, hspace=0.1)
-    plt.savefig('admixture_like_plot_n_' +str(n) +'_a_' +str(agreement)
+    if out_of_africa == True:
+        plt.savefig('tangles_out_of_africa_n_' + str(n) + '_a_' + str(agreement)
+                    + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
+    else:
+        plt.savefig('admixture_like_plot_n_' +str(n) +'_a_' +str(agreement)
                 + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
     plt.show()
 
     if plot_ADMIXTURE == True:
+        if nb_plots > 12:
+            print("restricted number of ADMIXTURE plots to 12.")
+            nb_plots = 12
         if ADMIXTURE_file_name == "":
             warnings.warn(
                 'Specify file name for ADMIXTURE!',
@@ -192,7 +207,10 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
             subplot.set_xticks([])
             subplot.set_xticks(
                 [((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
-            subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
+            if out_of_africa == True:
+                subplot.set_xticklabels(['YRI', 'CEU', 'CHB'])
+            else:
+                subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
         # ADMIXTURE stacked bar plot:
         for j in range(0, nb_plots):
             K = j+2
@@ -222,8 +240,12 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
         # plt.set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
         # plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
         plt.subplots_adjust(wspace=0, hspace=0.1)
-        plt.savefig('ADMIXTURE_plot_n_' + str(n) + '_a_' + str(agreement)
-                    + '_seed_' + str(seed) +'_diploid.pdf')
+        if out_of_africa == True:
+            plt.savefig('ADMIXTURE_out_of_africa_n_' + str(n) + '_a_' + str(agreement)
+                        + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
+        else:
+            plt.savefig('ADMIXTURE_plot_n_' + str(n) + '_a_' + str(agreement)
+                        + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
         plt.show()
         print("admixture like plots done.")
 

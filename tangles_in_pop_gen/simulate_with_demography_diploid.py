@@ -132,9 +132,9 @@ class Simulated_Data_With_Demography_Diploid:
                                         ancestral="EFGH")
         demography.add_population_split(time=2, derived=["ABCD", "EFGH"],
                                         ancestral="ABCDEFGH")
-        #demography.set_symmetric_migration_rate(["A", "B", "C", "D", "E", "F", "G",
-        #                                         "H"],
-        #                                        0.5)
+        # demography.set_symmetric_migration_rate(["A", "B", "C", "D", "E", "F", "G",
+        #                                          "H"],
+        #                                         0.1)
         demography.set_symmetric_migration_rate(["A", "E"],0.5)
 
         size = self.n // 8   # constant population size for 8 simulated populations

@@ -524,6 +524,11 @@ def FST_expected(xs, n_samples, cut):
     #print("out cut:", out_cut)
     #print("len(out):", len(out_cut))
     #print("num mutations:", xs.shape[1])
+    num_zero = 0
+    for m in range(0, xs.shape[1]):
+        if np.sum(xs[:, m]) == 0:
+            num_zero = num_zero + 1
+            print("num zero:", num_zero)
 
     F_in = []
     F_out = []
@@ -532,8 +537,24 @@ def FST_expected(xs, n_samples, cut):
         p_in = (1 / (2 * len(in_cut))) * np.sum(in_cut[:, m])
         p_out = (1 / (2 * len(out_cut))) * np.sum(out_cut[:, m])
         p = ((len(in_cut) / len(xs)) * p_in) + ((len(out_cut) / len(xs)) * p_out)
+        # if p == 0:
+        #     print("FAIL!!!")
+        # if p_in == 0:
+        #     print("p_in FAIL!!!")
+        # if p_out == 0:
+        #     print("p_out FAIL!!!")
         F_in.append(np.abs(1 - ((p_in * (1-p_in))/(p*(1-p)))))
+        # if np.isnan(np.abs(1 - ((p_in * (1-p_in))/(p*(1-p))))):
+        #     print("p_in Fail:", p_in)
+        #     print("p_out:", p_out)
+        #     print(xs[:,m])
+        #     print("p Fail:", p)
         F_out.append(np.abs(1 - ((p_out * (1-p_out))/(p*(1-p)))))
+        # if np.isnan(np.abs(1 - ((p_out * (1-p_out))/(p*(1-p))))):
+        #     print("p_out Fail:", p_out)
+        #     print("p_in :", p_in)
+        #     print(xs[:, m])
+        #     print("p Fail:", p)
         #print("F_in:", F_in)
         #print("F_out:", F_out)
 
@@ -550,6 +571,7 @@ def FST_expected(xs, n_samples, cut):
     # FST_exp = np.maximum(np.abs(F_in),np.abs(F_out))
     # print("F_in:", F_in)
     # print("F_out:", F_out)
+    print("FST:", FST_exp)
     print("FST_exp:", 1/FST_exp)
     return 1/FST_exp
 
