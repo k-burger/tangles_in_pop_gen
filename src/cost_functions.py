@@ -492,43 +492,10 @@ def FST_expected(xs, n_samples, cut):
     expected_order, int
         The average order for the cut
     """
-
-    _, n_features = xs.shape
-    if np.all(cut) or np.all(~cut):
-        return 0
-
-    if not n_samples:
-        in_cut = xs[cut, :]
-        out_cut = xs[~cut, :]
-
-    else:
-
-        idx = np.arange(len(xs))
-
-        if n_samples <= len(idx[cut]):
-            idx_in = np.random.choice(idx[cut], size=n_samples, replace=False)
-            in_cut = xs[idx_in, :]
-        else:
-            in_cut = xs[cut, :]
-
-        if n_samples <= len(idx[~cut]):
-            idx_out = np.random.choice(
-                idx[~cut], size=n_samples, replace=False)
-            out_cut = xs[idx_out, :]
-        else:
-            out_cut = xs[~cut, :]
-    #print("xs:", xs)
-    #print("len(xs):", len(xs))
-    #print("in cut:", in_cut)
-    #print("len(in):", len(in_cut))
-    #print("out cut:", out_cut)
-    #print("len(out):", len(out_cut))
-    #print("num mutations:", xs.shape[1])
-    num_zero = 0
-    for m in range(0, xs.shape[1]):
-        if np.sum(xs[:, m]) == 0:
-            num_zero = num_zero + 1
-            print("num zero:", num_zero)
+    #_, n_features = xs.shape
+    #idx = np.arange(len(cut))
+    in_cut = xs[cut, :]
+    out_cut = xs[~cut, :]
 
     F_in = []
     F_out = []
@@ -571,9 +538,29 @@ def FST_expected(xs, n_samples, cut):
     # FST_exp = np.maximum(np.abs(F_in),np.abs(F_out))
     # print("F_in:", F_in)
     # print("F_out:", F_out)
-    print("FST:", FST_exp)
-    print("FST_exp:", 1/FST_exp)
+    #print("FST:", FST_exp)
+    #print("FST_exp:", 1/FST_exp)
     return 1/FST_exp
+
+def FST_expected_fast(xs, n_samples, cut):
+    in_cut = xs[cut, :]
+    out_cut = xs[~cut, :]
+    #print("xs in cost:", xs)
+
+    len_xs = len(xs)
+    len_in_cut = len(in_cut)
+    len_out_cut = len(out_cut)
+
+    p_in = (1 / (2 * len_in_cut)) * np.sum(in_cut, axis=0)
+    p_out = (1 / (2 * len_out_cut)) * np.sum(out_cut, axis=0)
+    p = ((len_in_cut / len_xs) * p_in) + ((len_out_cut / len_xs) * p_out)
+
+    F_in = np.abs(1 - ((p_in * (1 - p_in)) / (p * (1 - p))))
+    F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
+
+    FST_exp = 0.5 * ((np.sum(F_in) / xs.shape[1]) + (np.sum(F_out) / xs.shape[1]))
+    #print("FST exp:", FST_exp)
+    return 1 / FST_exp
 
 def HWE_FST_exp(xs, n_samples, cut):
     HWE = HWE_divergence(xs, n_samples, cut)
