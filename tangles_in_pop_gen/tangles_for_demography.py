@@ -22,6 +22,7 @@ import benchmark_data
 import admixture_plot
 import pickle
 import warnings
+import time
 
 
 """
@@ -37,7 +38,7 @@ The execution is divided in the following steps
 
 
 def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
-                       out_of_africa,
+                       data_generation_mode,
                        output_directory='', plot=True, plot_ADMIXTURE=False,
                        ADMIXTURE_filename = ""):
     print("started")
@@ -94,11 +95,15 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                             cost_functions.all_pairs_manhattan_distance(xs))
     #                                                     )
 
+    start = time.time()
+    print("time started")
     bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
                                                      partial(
-                                                         cost_functions.FST_expected,
+                                                         cost_functions.FST_expected_fast,
                                                          data.xs, None))
-    cost = "FST_expected" # FST_expected FST_observed  HWE_divergence
+    end = time.time()
+    print("time needed:", end - start)
+    cost = "FST_fast" # FST_expected FST_observed  HWE_divergence
     # mean_manhattan_distance HWE_FST_exp FST_Wikipedia
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
@@ -156,35 +161,35 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("Plotting the data.", flush=True)
         output_directory.mkdir(parents=True, exist_ok=True)
         ## plot the tree
-        filename1 = "tree_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
-            theta) + "_seed_" + str(
-            seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
-        filename2 = "contracted_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
-            theta) + "_seed_" + str(
-            seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
-        tangles_tree.plot_tree(path=output_directory / filename1)
-        # plot contracted tree
-        contracted_tree.plot_tree(path=output_directory / filename2)
-
-        # plot tree summary
-        tangles_tree.print_tangles_tree_summary_hard_predictions(nb_mut,
-                                                                bipartitions.names,
-                                                                ys_predicted)
-
-        contracted_tree.print_summary(contracted_tree.root)
+        # filename1 = "tree_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
+        #     theta) + "_seed_" + str(
+        #     seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
+        # filename2 = "contracted_n_" + str(n) + "_rho_" + str(rho) + "_theta_" + str(
+        #     theta) + "_seed_" + str(
+        #     seed) + "_agreement_" + str(agreement) + "_noise_" + str(noise) + ".svg"
+        # tangles_tree.plot_tree(path=output_directory / filename1)
+        # # plot contracted tree
+        # contracted_tree.plot_tree(path=output_directory / filename2)
+        #
+        # # plot tree summary
+        # tangles_tree.print_tangles_tree_summary_hard_predictions(nb_mut,
+        #                                                         bipartitions.names,
+        #                                                         ys_predicted)
+        #
+        # contracted_tree.print_summary(contracted_tree.root)
 
         # plot soft predictions
-        plotting.plot_soft_predictions(data=data,
-                                       contracted_tree=contracted_tree,
-                                       eq_cuts=bipartitions.equations,
-                                       path=output_directory / 'soft_clustering')
+        # plotting.plot_soft_predictions(data=data,
+        #                                contracted_tree=contracted_tree,
+        #                                eq_cuts=bipartitions.equations,
+        #                                path=output_directory / 'soft_clustering')
 
         matrices = contracted_tree.to_matrix()
         #print(matrices)
         print("matrices done.")
         #print(matrices)
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           out_of_africa,
+                                           data_generation_mode,
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct = cost)
@@ -194,7 +199,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 90 # 800 #40      #15     # anzahl individuen
+    n = 800 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
     rho = 100# 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
@@ -204,8 +209,7 @@ if __name__ == '__main__':
     noise = 0
     data_already_simulated = False # True or False, states if data object should be
     # simulated or loaded
-    out_of_africa = False
-    readVCF = True
+    data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
@@ -216,7 +220,7 @@ if __name__ == '__main__':
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 
-    if out_of_africa == True:
+    if data_generation_mode == 'out_of_adrica':
         rho = -1
         theta = -1
         data = benchmark_data.SimulateOutOfAfrica(
@@ -228,12 +232,14 @@ if __name__ == '__main__':
         else:
             data.load_data()
             print("Data has been loaded.")
-    elif readVCF == True:
+
+    elif data_generation_mode == 'readVCF':
         rho = -1
         theta = -1
         data = benchmark_data.ReadVCF('gen0_chr22_train.vcf',
                                      'admixture/data/')
         data.load_data()
+
     else:
         ## This generates the data object and either simulates or loads the data sets
         data = simulate_with_demography_diploid.Simulated_Data_With_Demography_Diploid(n,
@@ -253,7 +259,7 @@ if __name__ == '__main__':
     
 
 
-    plot_ADMIXTURE = False
+    plot_ADMIXTURE = True
     ADMIXTURE_filename = data.admixture_filename
 
     output_directory = Path('output_tangles_in_pop_gen')
@@ -263,7 +269,7 @@ if __name__ == '__main__':
     # pop_membership = data.indv_pop[indv_pop_diploid_indices]
     # print("pop membership:", pop_membership)
 
-    tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop, out_of_africa,
+    tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop, data_generation_mode,
     output_directory, plot=True, plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)
 

@@ -14,7 +14,7 @@ import subprocess
 # level-wise (regarding the tangles tree). We also have to input the population
 # memberships (from simulation) to plot accordingly. The agreement is given to
 # distinguish the saved plots in the end. The comparison to ADMIXTURE can be turned off.
-def admixture_like_plot(matrices, pop_membership, agreement, seed, out_of_africa,
+def admixture_like_plot(matrices, pop_membership, agreement, seed, data_generation_mode,
                         plot_ADMIXTURE = False, ADMIXTURE_file_name="", cost_fct = ""):
     n = np.array(matrices[1]).shape[0]      # number of samples
     nb_plots = len(matrices)                # number of plots to generate
@@ -151,7 +151,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, out_of_africa
         subplot.set_yticks([])
         subplot.set_xticks([])
         subplot.set_xticks([((x+0.5)*n/nb_pop-0.5) for x in range(0,nb_pop)])
-        if out_of_africa == True:
+        if data_generation_mode == 'out_of_africa':
             subplot.set_xticklabels(['YRI', 'CEU', 'CHB'])
         else:
             subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
@@ -177,11 +177,8 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, out_of_africa
     #plt.set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
     #plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
     plt.subplots_adjust(wspace=0, hspace=0.1)
-    if out_of_africa == True:
-        plt.savefig('tangles_out_of_africa_n_' + str(n) + '_a_' + str(agreement)
-                    + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
-    else:
-        plt.savefig('admixture_like_plot_n_' +str(n) +'_a_' +str(agreement)
+    plt.savefig('plots/tangles_plot_'+ data_generation_mode +'_n_' +str(n)
+                +'_a_' + str(agreement)
                 + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
     plt.show()
 
@@ -207,7 +204,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, out_of_africa
             subplot.set_xticks([])
             subplot.set_xticks(
                 [((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
-            if out_of_africa == True:
+            if data_generation_mode == 'out_of_africa':
                 subplot.set_xticklabels(['YRI', 'CEU', 'CHB'])
             else:
                 subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
@@ -240,12 +237,9 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, out_of_africa
         # plt.set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
         # plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
         plt.subplots_adjust(wspace=0, hspace=0.1)
-        if out_of_africa == True:
-            plt.savefig('ADMIXTURE_out_of_africa_n_' + str(n) + '_a_' + str(agreement)
-                        + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
-        else:
-            plt.savefig('ADMIXTURE_plot_n_' + str(n) + '_a_' + str(agreement)
-                        + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
+        plt.savefig('plots/ADMIXTURE_plot_' + data_generation_mode + '_n_' + str(n)
+                    + '_a_' + str(agreement)
+                    + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
         plt.show()
         print("admixture like plots done.")
 
