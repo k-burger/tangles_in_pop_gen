@@ -510,20 +510,22 @@ class ContractedTangleTree(TangleTree):
 
     def to_matrix(self):
         queue = [self.root]
-        return self._write_to_mat(queue, 1, {})
+        return self._write_to_mat(queue, 1, {}, {})
 
-    def _write_to_mat(self, queue, index, matrices):
+    def _write_to_mat(self, queue, index, matrices, char_cuts):
         try:
             node = queue[0]
             queue = queue[1:]
         except:
-            return matrices
+            return matrices, char_cuts
 
         if node.left_child is not None and node.right_child is not None:
             if index in matrices.keys():
                 matrices[index] = np.concatenate([matrices[index], node.left_child.p.reshape(-1, 1)], axis=1)
+                char_cuts[index] = np.concatenate([char_cuts[index], node.left_child.characterizing_cuts], axis=1)
             else:
                 matrices[index] = node.left_child.p.reshape(-1, 1)
+                char_cuts[index] = node.left_child.characterizing_cuts
             matrices[index] = np.concatenate([matrices[index], node.right_child.p.reshape(-1, 1)], axis=1)
 
             if node.left_child.last_cut_added_id < node.right_child.last_cut_added_id:
@@ -533,9 +535,9 @@ class ContractedTangleTree(TangleTree):
                 queue.append(node.right_child)
                 queue.append(node.left_child)
 
-        matrices = self._write_to_mat(queue, index + 1, matrices)
+        matrices = self._write_to_mat(queue, index + 1, matrices, char_cuts)
 
-        return matrices
+        return matrices, char_cuts
 
 
 def process_split(node):

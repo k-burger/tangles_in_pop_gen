@@ -184,7 +184,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #                                eq_cuts=bipartitions.equations,
         #                                path=output_directory / 'soft_clustering')
 
-        matrices = contracted_tree.to_matrix()
+        matrices, char_cuts = contracted_tree.to_matrix()
         #print(matrices)
         print("matrices done.")
         #print(matrices)
@@ -192,7 +192,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                            data_generation_mode,
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
-                                           cost_fct = cost)
+                                           cost_fct=cost)
 
         print("admixture like plot done.")
         # with open('saved_soft_matrices.pkl', 'wb') as f:
