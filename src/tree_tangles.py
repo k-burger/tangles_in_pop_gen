@@ -535,7 +535,7 @@ class ContractedTangleTree(TangleTree):
                 queue.append(node.right_child)
                 queue.append(node.left_child)
 
-        matrices = self._write_to_mat(queue, index + 1, matrices, char_cuts)
+        matrices, char_cuts = self._write_to_mat(queue, index + 1, matrices, char_cuts)
 
         return matrices, char_cuts
 
