@@ -374,6 +374,44 @@ def HWE_divergence(xs, n_samples, cut):
     return HWE_div
 
 
+def HWE_divergence_fast(xs, n_samples, cut):
+    """
+    This function computes the implicit order of a cut.
+    It is zero if the cut is either the whole set or the empty set
+
+    If n_samples if not None we do a montecarlo approximation of the value.
+
+    Parameters
+    ----------
+    xs : array of shape [n_points, n_features]
+        The points in our space
+
+    Returns
+    -------
+    distances, [double, double]
+        All pairwise distances
+    """
+
+    in_cut = xs[cut, :]
+    out_cut = xs[~cut, :]
+
+    p_in = (1 / (2 * len(in_cut))) * np.sum(in_cut, axis=0)
+    p_out = (1 / (2 * len(out_cut))) * np.sum(out_cut, axis=0)
+    expected_H_in = 2 * p_in * (1 - p_in)
+    expected_H_out = 2 * p_out * (1 - p_out)
+    x_in = (1 / len(in_cut)) * np.count_nonzero(in_cut == 1, axis=0)
+    x_out = (1 / len(out_cut)) * np.count_nonzero(out_cut == 1, axis=0)
+    F_in = np.power(x_in - expected_H_in, 2)
+    F_out = np.power(x_out - expected_H_out, 2)
+    normalization = np.sum(np.power(p_in - p_out, 2))
+    HWE_div = (np.sum(F_in) + np.sum(F_out)) / normalization
+    return HWE_div
+
+
+
+
+
+
 def normalized_mean_distances(distances, cut):
     idx = np.arange(len(cut))
     in_cut = idx[cut]

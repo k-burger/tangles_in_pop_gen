@@ -99,11 +99,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("time started")
     bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
                                                      partial(
-                                                         cost_functions.FST_expected_fast,
+                                                         cost_functions.HWE_divergence_fast,
                                                          data.xs, None))
     end = time.time()
     print("time needed:", end - start)
-    cost = "FST_fast" # FST_expected FST_observed  HWE_divergence
+    cost = "HWE_fast" # FST_expected FST_observed  HWE_divergence
     # mean_manhattan_distance HWE_FST_exp FST_Wikipedia
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
@@ -119,8 +119,9 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("\tBuilding the tangle search tree", flush=True)
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
-                                      verbose=3  # print everything
-                                      )
+                                      verbose=3)#,  # print everything
+                                      # max_clusters=3) #funktioniert für 3, aber ab 4
+    # nicht mehr?
 
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
 
@@ -187,7 +188,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         matrices, char_cuts = contracted_tree.to_matrix()
         #print(matrices)
         print("matrices done.")
-        #print(matrices)
+        print("matrices:", matrices)
+        print("char cuts:", char_cuts)
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
                                            data_generation_mode,
                                            plot_ADMIXTURE=plot_ADMIXTURE,
@@ -209,7 +211,7 @@ if __name__ == '__main__':
     noise = 0
     data_already_simulated = False # True or False, states if data object should be
     # simulated or loaded
-    data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
+    data_generation_mode = 'sim' # readVCF  out_of_africa sim
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
