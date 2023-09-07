@@ -588,9 +588,14 @@ def FST_expected_fast(xs, n_samples, cut):
     len_xs = len(xs)
     len_in_cut = len(in_cut)
     len_out_cut = len(out_cut)
+    if len_out_cut == 0:
+        print("FAIL! len out cut zero")
+        print(len_out_cut)
+        print(len_in_cut)
 
     p_in = (1 / (2 * len_in_cut)) * np.sum(in_cut, axis=0)
     p_out = (1 / (2 * len_out_cut)) * np.sum(out_cut, axis=0)
+
     p = ((len_in_cut / len_xs) * p_in) + ((len_out_cut / len_xs) * p_out)
 
     F_in = np.abs(1 - ((p_in * (1 - p_in)) / (p * (1 - p))))

@@ -44,20 +44,28 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("started")
     xs = np.transpose(sim_data.G[0])    # diploid genotype matrix
     print("number of mutations before zero column deletion:", xs.shape[1])
-    num_zero = 0
-    columns_to_delete = []
+    num_zero_mut = 0
+    num_n_mut = 0
+    columns_to_delete_0 = []
+    columns_to_delete_n = []
     for m in range(0, xs.shape[1]):
         if np.sum(xs[:, m]) == 0:
-            columns_to_delete.append(m)
-            num_zero = num_zero + 1
-    xs = np.delete(xs, columns_to_delete, axis=1)
-    print("num zero columns deleted:", num_zero)
+            columns_to_delete_0.append(m)
+            num_zero_mut = num_zero_mut + 1
+    xs = np.delete(xs, columns_to_delete_0, axis=1)
+    for m in range(0, xs.shape[1]):
+        if np.all(xs[:, m] > 0):
+            columns_to_delete_n.append(m)
+            num_n_mut = num_n_mut + 1
+    xs = np.delete(xs, columns_to_delete_n, axis=1)
+    print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
+    print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
     count_larger_2 = np.count_nonzero(xs > 4)
     print("count larger 2:", count_larger_2)
     n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
     print("n diploid:", n)
-    print("number of mutations after zero column deletion:", nb_mut)
+    print("number of mutations after mutation deletion:", nb_mut)
     #mut_pos = sim_data.ts[0].tables.sites.position
 
     # if (n_haploid % 2) == 1:
@@ -99,11 +107,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("time started")
     bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
                                                      partial(
-                                                         cost_functions.HWE_divergence_fast,
+                                                         cost_functions.FST_expected_fast,
                                                          data.xs, None))
     end = time.time()
     print("time needed:", end - start)
-    cost = "HWE_fast" # FST_expected FST_observed  HWE_divergence
+    cost = "FST_fast" # FST_expected FST_observed  HWE_divergence
     # mean_manhattan_distance HWE_FST_exp FST_Wikipedia
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
@@ -203,15 +211,15 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 if __name__ == '__main__':
     n = 800 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 100# 55 0.5   #1      # recombination
+    rho = 300# 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 100  # 55      # mutationsrate
+    theta = 300  # 55      # mutationsrate
     agreement = 33
-    seed = 42#42# 42   #17
+    seed = 17#42# 42   #17
     noise = 0
     data_already_simulated = False # True or False, states if data object should be
     # simulated or loaded
-    data_generation_mode = 'sim' # readVCF  out_of_africa sim
+    data_generation_mode = 'out_of_africa' # readVCF  out_of_africa sim
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
@@ -261,7 +269,7 @@ if __name__ == '__main__':
     
 
 
-    plot_ADMIXTURE = True
+    plot_ADMIXTURE = False
     ADMIXTURE_filename = data.admixture_filename
 
     output_directory = Path('output_tangles_in_pop_gen')

@@ -13,6 +13,8 @@ import collections
 import random
 import pickle
 import warnings
+
+import numpy as np
 import stdpopsim
 from IPython.display import SVG
 import allel
@@ -71,17 +73,21 @@ class SimulateOutOfAfrica:
         print(model.num_populations)
         print(model.num_sampling_populations)
         print([pop.name for pop in model.populations])
-        contig = species.get_contig("chr22", mutation_rate=model.mutation_rate)
+        contig = species.get_contig("chr22",
+                                    mutation_rate=9.35e-6)#model.mutation_rate)
         # default is a flat genetic map
         print("mean recombination rate:",
               f"{contig.recombination_map.mean_rate:.3}")
         print("mean mutation rate:", contig.mutation_rate)
         print("model mutation rate:", model.mutation_rate)
         size = self.n // 3
+        print("size:", size)
         samples = {"YRI": size, "CHB": size, "CEU": size}
+        #samples = model.get_samples(10, 0, 10)
         engine = stdpopsim.get_engine("msprime")
         tree_sequence = engine.simulate(model, contig, samples, seed=self.seed)
         print("num sites:", tree_sequence.num_sites)
+        print("n in fact:", tree_sequence.num_samples)
 
 
         print("ts.individuals_population:", tree_sequence.individuals_population)
@@ -120,6 +126,19 @@ class SimulateOutOfAfrica:
 
         # get genotype matrix
         G_haploid = tree_sequence.genotype_matrix()
+        count_haploid_0 = numpy.count_nonzero(G_haploid == 0)
+        print("G_haploid count 0:", count_haploid_0)
+        count_haploid_1 = numpy.count_nonzero(G_haploid == 1)
+        print("G_haploid count 1:", count_haploid_1)
+        count_haploid_2 = numpy.count_nonzero(G_haploid == 2)
+        print("G_haploid count 2:", count_haploid_2)
+        count_haploid_3 = numpy.count_nonzero(G_haploid == 3)
+        print("G_haploid count 3:", count_haploid_3)
+        count_haploid_4 = numpy.count_nonzero(G_haploid == 4)
+        print("G_haploid count 4:", count_haploid_4)
+        count_haploid_larger_4 = numpy.count_nonzero(G_haploid > 4)
+        print("count_larger_4 G_haploid:", count_haploid_larger_4)
+        #print("where 2:", np.where(G_haploid == 2))
         print("n diploid in sim:", self.n)
         # array with indices of rows to sum
         column_indices = numpy.arange(self.n) * 2
@@ -127,10 +146,20 @@ class SimulateOutOfAfrica:
         G = G_haploid[:, column_indices] + G_haploid[:, column_indices + 1]
         print("G_haploid:\n", G_haploid)
         print("G.shape[1] haploid:", G_haploid.shape[1])
-        count_larger_1 = numpy.count_nonzero(G_haploid == 4)
-        print("count_larger_1:", count_larger_1)
+        count_0 = numpy.count_nonzero(G == 0)
+        print("G count 0:", count_0)
+        count_1 = numpy.count_nonzero(G == 1)
+        print("G count 1:", count_1)
+        count_2 = numpy.count_nonzero(G == 2)
+        print("G count 2:", count_2)
+        count_3 = numpy.count_nonzero(G == 3)
+        print("G count 3:", count_3)
+        count_4 = numpy.count_nonzero(G == 4)
+        print("G count 4:", count_4)
+        count_larger_4 = numpy.count_nonzero(G > 4)
+        print("count_larger_4 G:", count_larger_4)
         print("G:\n", G)
-        print("G.shape[1]:", G.shape[1])
+        print("G.shape[1] diploid:", G.shape[1])
         # potentially save the genotype matrix:
         if self.save_G:
             multi_G.append(G)
@@ -253,7 +282,7 @@ class ReadVCF:
 
 
 
-use_this_script_for_sim = False
+use_this_script_for_sim = True
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
     n = 15              # sample size
@@ -267,15 +296,15 @@ if use_this_script_for_sim == True:
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
 
     ## This generates the data object and either simulates the properties or loads if it already exists.
-    #data = SimulateOutOfAfrica(n, seed, save_G=save_G,
-    #                      print_ts=print_ts, save_ts=save_ts, filepath=filepath)
-    # if data_already_simulated == False:
-    #     data.sim_data()
-    # else:
-    #     data.load_data()
+    data = SimulateOutOfAfrica(n, seed, save_G=save_G,
+                         print_ts=print_ts, save_ts=save_ts, filepath=filepath)
+    if data_already_simulated == False:
+        data.sim_data()
+    else:
+        data.load_data()
 
-    data = ReadVCF('out_of_africa_n_15_seed_42.vcf', 'admixture/data/')
-    data.load_data()
+    # data = ReadVCF('out_of_africa_n_15_seed_42.vcf', 'admixture/data/')
+    # data.load_data()
 
 
     print("final G:", data.G)
