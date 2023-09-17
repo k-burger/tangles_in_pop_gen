@@ -25,9 +25,8 @@ import matplotlib.pyplot as plt
 
 class SimulateOutOfAfrica:
     def __init__(self, n_diploid, seed, save_G=True, print_ts=False,
-                 save_ts=False, filepath="", SFS=[], total_tree_length=[], G=[],
-                 true_thetas=[], true_rhos=[], ts=[], indv_pop=[],
-                 admixture_filename=[]):
+                 save_ts=False, filepath="", SFS=[], total_tree_length=[], G=[], ts=[],
+                 indv_pop=[], mutation_id=[],admixture_filename=[]):
         # parameters that need to be set and are not a result of the simulation:
         self.n = n_diploid
         self.seed = seed
@@ -40,10 +39,9 @@ class SimulateOutOfAfrica:
         self.SFS = SFS
         self.total_tree_length = total_tree_length
         self.G = G
-        self.true_thetas = true_thetas
-        self.true_rhos = true_rhos
         self.ts = ts
         self.indv_pop = indv_pop
+        self.mutation_id = mutation_id
         self.admixture_filename = admixture_filename
 
     def sim_data(self):
@@ -51,10 +49,7 @@ class SimulateOutOfAfrica:
         multi_SFS = []  # list to save the SFS
         multi_total_length = []  # list to save the total tree lengths
         multi_G = []  # list to save the genotype matrices
-        multi_theta = []  # list to save theta used for simulating
-        multi_rho = []  # list to save rho used for simulating
         multi_ts = []  # list to save the tree sequences
-
         num_mutations = []
         tree_length = []
         num_trees = []
@@ -74,7 +69,7 @@ class SimulateOutOfAfrica:
         print(model.num_sampling_populations)
         print([pop.name for pop in model.populations])
         contig = species.get_contig("chr22",
-                                    mutation_rate=9.35e-6)#model.mutation_rate)
+                                    mutation_rate=2.35e-8)#model.mutation_rate)
         # default is a flat genetic map
         print("mean recombination rate:",
               f"{contig.recombination_map.mean_rate:.3}")
@@ -126,6 +121,21 @@ class SimulateOutOfAfrica:
 
         # get genotype matrix
         G_haploid = tree_sequence.genotype_matrix()
+
+        # restrict to biallic sites:
+        mutations_in_sim = np.arange(G_haploid.shape[0])
+        print("num mutations before:", mutations_in_sim)
+        rows_to_delete_biallelic = []
+        num_multiallelic_sites = 0
+        for m in range(0, G_haploid.shape[0]):
+            if np.any(G_haploid[m, :] > 1):
+                rows_to_delete_biallelic.append(m)
+                num_multiallelic_sites = num_multiallelic_sites + 1
+        G_haploid = np.delete(G_haploid, rows_to_delete_biallelic, axis=0)
+        mutations_in_sim = np.delete(mutations_in_sim, rows_to_delete_biallelic)
+        print("deleted multiallelic sites:", num_multiallelic_sites)
+
+
         count_haploid_0 = numpy.count_nonzero(G_haploid == 0)
         print("G_haploid count 0:", count_haploid_0)
         count_haploid_1 = numpy.count_nonzero(G_haploid == 1)
@@ -138,7 +148,12 @@ class SimulateOutOfAfrica:
         print("G_haploid count 4:", count_haploid_4)
         count_haploid_larger_4 = numpy.count_nonzero(G_haploid > 4)
         print("count_larger_4 G_haploid:", count_haploid_larger_4)
-        #print("where 2:", np.where(G_haploid == 2))
+        print("where > 1:", np.where(G_haploid > 1))
+        print("number of remutations:", len(np.unique(np.where(G_haploid >
+                                                                          1)[0])))
+        print("number of betroffene idv. (haploid):", len(np.unique(np.where(G_haploid >
+                                                               1)[1])))
+        print("difference nb mut & sites:", num_mutations[0] - tree_sequence.num_sites)
         print("n diploid in sim:", self.n)
         # array with indices of rows to sum
         column_indices = numpy.arange(self.n) * 2
@@ -160,6 +175,25 @@ class SimulateOutOfAfrica:
         print("count_larger_4 G:", count_larger_4)
         print("G:\n", G)
         print("G.shape[1] diploid:", G.shape[1])
+
+        # delete mutations in G that are either carried by no indv. or by every indv.:
+        num_zero_mut = 0
+        num_n_mut = 0
+        rows_to_delete_0 = []
+        rows_to_delete_n = []
+        for m in range(0, G.shape[0]):
+            if np.sum(G[m, :]) == 0:
+                rows_to_delete_0.append(m)
+                num_zero_mut = num_zero_mut + 1
+        G = np.delete(G, rows_to_delete_0, axis=0)
+        mutations_in_sim = np.delete(mutations_in_sim, rows_to_delete_0)
+        for m in range(0, G.shape[0]):
+            if np.all(G[m,:] > 0):
+                rows_to_delete_n.append(m)
+                num_n_mut = num_n_mut + 1
+        xs = np.delete(G, rows_to_delete_n, axis=0)
+        mutations_in_sim = np.delete(mutations_in_sim, rows_to_delete_n)
+
         # potentially save the genotype matrix:
         if self.save_G:
             multi_G.append(G)
@@ -190,6 +224,7 @@ class SimulateOutOfAfrica:
         self.total_tree_length = multi_total_length
         self.ts = multi_ts
         self.indv_pop = tree_sequence.individuals_population
+        self.mutation_id = mutations_in_sim
         self.admixture_filename = admixture_filename
 
         # save object
@@ -222,9 +257,9 @@ class SimulateOutOfAfrica:
         self.G = loaded_data.G
         self.SFS = loaded_data.SFS
         self.total_tree_length = loaded_data.total_tree_length
-        self.true_rhos = loaded_data.true_rhos
         self.ts = loaded_data.ts
         self.indv_pop = loaded_data.indv_pop
+        self.mutation_id = loaded_data.mutation_id
         self.admixture_filename = loaded_data.admixture_filename
 
         # check if genotype matrix and ts have been saved during simulated:
@@ -282,10 +317,10 @@ class ReadVCF:
 
 
 
-use_this_script_for_sim = True
+use_this_script_for_sim = False
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
-    n = 15              # sample size
+    n = 90              # sample size
     seed = 42           # starting seed for simulation (based on this seed, multiple
     # seeds will be generated)
     save_G = True       # set True to save genotype matrix during simulation, False otherwise

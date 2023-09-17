@@ -20,9 +20,13 @@ import simulate_with_demography
 import simulate_with_demography_diploid
 import benchmark_data
 import admixture_plot
+from src import outsourced_cost_computation
+import FST
 import pickle
 import warnings
 import time
+import psutil
+from scipy.sparse import csr_matrix
 
 
 """
@@ -38,11 +42,14 @@ The execution is divided in the following steps
 
 
 def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
-                       data_generation_mode,
-                       output_directory='', plot=True, plot_ADMIXTURE=False,
+                       data_generation_mode, cost_precomputed=False,
+                       output_directory='', plot=True,
+                       plot_ADMIXTURE=False,
                        ADMIXTURE_filename = ""):
     print("started")
     xs = np.transpose(sim_data.G[0])    # diploid genotype matrix
+    mutations_in_sim = np.arange(xs.shape[1])
+    print("mutations before deletion:", len(mutations_in_sim), mutations_in_sim)
     print("number of mutations before zero column deletion:", xs.shape[1])
     num_zero_mut = 0
     num_n_mut = 0
@@ -53,11 +60,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
             columns_to_delete_0.append(m)
             num_zero_mut = num_zero_mut + 1
     xs = np.delete(xs, columns_to_delete_0, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
     for m in range(0, xs.shape[1]):
         if np.all(xs[:, m] > 0):
             columns_to_delete_n.append(m)
             num_n_mut = num_n_mut + 1
     xs = np.delete(xs, columns_to_delete_n, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
+    print("mutations after deletion:", len(mutations_in_sim), mutations_in_sim)
     print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
     print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
     count_larger_2 = np.count_nonzero(xs > 4)
@@ -66,6 +76,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     nb_mut = xs.shape[1]
     print("n diploid:", n)
     print("number of mutations after mutation deletion:", nb_mut)
+
     #mut_pos = sim_data.ts[0].tables.sites.position
 
     # if (n_haploid % 2) == 1:
@@ -86,6 +97,18 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #print("G:", xs)
     data = data_types.Data(xs=xs)
 
+    # with open('../tangles_in_pop_gen/data/saved_costs/debug_bipartitions',
+    #           'rb') as handle:
+    #     test_bipartitions2 = pickle.load(handle)
+    # start = time.time()
+    # print("time started")
+    # print("Precompute costs of bipartitions.")
+    # test_bipartitions2 = outsourced_cost_computation.compute_cost_and_order_cuts(
+    #         partial(
+    #             cost_functions.FST_expected_fast, data.xs, None))
+    # end = time.time()
+    # print("time needed test2:", end - start)
+
     # calculate your bipartitions we use the binary questions/features directly as bipartitions
     # print("\tGenerating set of bipartitions", flush=True)
     # bipartitions = data_types.Cuts(values=(data.xs == True).T,
@@ -94,8 +117,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     bipartitions = data_types.Cuts(values=(data.xs > 0).T,
                                    names=np.array(list(range(0, data.xs.shape[1]))))
 
+    # Aktuellen Speicherverbrauch ausgeben
+    print(f"Current memory usage 1: {psutil.virtual_memory().percent}%")
+
     print("\tFound {} unique bipartitions".format(len(bipartitions.values)), flush=True)
     print("\tCalculating costs if bipartitions", flush=True)
+    #bipartitions = csr_matrix(bipartitions.values, dtype=bool)
 
     # Speed up bei paarweiser Kostenfuntkinon
     # bipartitions = utils.precompute_cost_and_order_cuts(bipartitions,
@@ -105,14 +132,21 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     start = time.time()
     print("time started")
-    bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
-                                                     partial(
-                                                         cost_functions.FST_expected_fast,
-                                                         data.xs, None))
+    if cost_precomputed == False:
+        print("Precompute costs of bipartitions.")
+        bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
+            bipartitions,
+                                                         partial(
+                                                             cost_functions.FST_expected_fast,
+                                                             data.xs, None))
+    else:
+        print("Load costs of bipartitions.")
+        with open('../tangles_in_pop_gen/data/saved_costs/test_load_bipartitions', 'rb') as handle:
+            bipartitions = pickle.load(handle)
     end = time.time()
     print("time needed:", end - start)
     cost = "FST_fast" # FST_expected FST_observed  HWE_divergence
-    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia
+    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
     #                                                  partial(
@@ -128,7 +162,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
                                       verbose=3)#,  # print everything
-                                      # max_clusters=3) #funktioniert für 3, aber ab 4
+                                      # max_clusters=3)
     # nicht mehr?
 
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
@@ -142,7 +176,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(1)
+    contracted_tree.prune(0)
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
@@ -194,10 +228,24 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #                                path=output_directory / 'soft_clustering')
 
         matrices, char_cuts = contracted_tree.to_matrix()
+        print("char cuts:", char_cuts)
+
+        pop_splits = [[0, 400, 800], [0, 700, 800], [0, 200, 800], [0, 600, 700, 800],
+                      [0, 200, 300, 800],
+                      [0, 400, 500, 800], [0, 100, 200, 800]]
+        #FST_sim = FST.FST_values_sim(xs, mutations=mutations_in_sim,
+        # pop_splits=pop_splits)
+        #FST_tangles = FST.FST_values_tangles(xs, bipartitions=bipartitions,
+        #                                        characterizing_cuts=char_cuts)
+        #print("FST tangles:", FST_tangles)
+        #print("FST_sim:", FST_sim)
+
+        #FST.plot_FST(xs, mutations_in_sim, bipartitions, char_cuts, pop_splits)
+
         #print(matrices)
         print("matrices done.")
         print("matrices:", matrices)
-        print("char cuts:", char_cuts)
+
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
                                            data_generation_mode,
                                            plot_ADMIXTURE=plot_ADMIXTURE,
@@ -209,13 +257,13 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 800 # 800 #40      #15     # anzahl individuen
+    n = 120 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 300# 55 0.5   #1      # recombination
+    rho = 150# 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 300  # 55      # mutationsrate
-    agreement = 33
-    seed = 17#42# 42   #17
+    theta = 150  # 55      # mutationsrate
+    agreement = 35
+    seed = 42#42# 42   #17
     noise = 0
     data_already_simulated = False # True or False, states if data object should be
     # simulated or loaded
@@ -230,7 +278,20 @@ if __name__ == '__main__':
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 
-    if data_generation_mode == 'out_of_adrica':
+    # with open('../tangles_in_pop_gen/data/saved_costs/debug_bipartitions',
+    #           'rb') as handle:
+    #     test_bipartitions = pickle.load(handle)
+    # start = time.time()
+    # print("time started")
+    # print("Precompute costs of bipartitions.")
+    # test_bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
+    #         partial(
+    #             cost_functions.FST_expected_fast, np.random.randint(2, size=(120, 5041)), None))
+    # end = time.time()
+    # print("time needed test:", end - start)
+
+
+    if data_generation_mode == 'out_of_africa':
         rho = -1
         theta = -1
         data = benchmark_data.SimulateOutOfAfrica(
@@ -265,11 +326,8 @@ if __name__ == '__main__':
             data.load_data()
             print("Data has been loaded.")
 
-
-    
-
-
-    plot_ADMIXTURE = False
+    cost_precomputed = False
+    plot_ADMIXTURE = True
     ADMIXTURE_filename = data.admixture_filename
 
     output_directory = Path('output_tangles_in_pop_gen')
@@ -279,8 +337,10 @@ if __name__ == '__main__':
     # pop_membership = data.indv_pop[indv_pop_diploid_indices]
     # print("pop membership:", pop_membership)
 
-    tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop, data_generation_mode,
-    output_directory, plot=True, plot_ADMIXTURE=plot_ADMIXTURE,
+    tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop,
+                       data_generation_mode, cost_precomputed=cost_precomputed,
+                        output_directory=output_directory, plot=True,
+                       plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)
 
     print("all done.")

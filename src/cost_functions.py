@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.metrics import pairwise_distances
 
 from sklearn.neighbors import DistanceMetric
+import time
 
 
 def gauss_kernel_distance(xs, n_samples, cut, decay=1):
@@ -580,14 +581,38 @@ def FST_expected(xs, n_samples, cut):
     #print("FST_exp:", 1/FST_exp)
     return 1/FST_exp
 
-def FST_expected_fast(xs, n_samples, cut):
+def calculate_in_cut_out_cut_parallel(xs, cut):
     in_cut = xs[cut, :]
     out_cut = xs[~cut, :]
+    return in_cut, out_cut
+
+def FST_expected_fast(xs, n_samples, cut):
+    #print("cut:", cut)
+    #print("len cut cost fct:", len(cut))
+    # start = time.time()
+
+
+    time1 = time.time()
+    in_cut = xs[cut, :]
+    out_cut = xs[~cut, :]
+
+    #cut_indices = np.where(cut)[0]
+    #in_cut = xs[cut_indices]
+    #out_cut = np.delete(xs, cut_indices, axis=0)
+    inter_time = time.time()
+    print("time needed for seperation:", inter_time - time1 ) #time1 - start
+    #print("in_cut rows:", in_cut.shape[0])
+    #print("in_cut columns:", in_cut.shape[1])
+    #print("out_cut rows:", out_cut.shape[0])
+    #print("out_cut columns:", out_cut.shape[1])
+    #print("in_cut:", in_cut)
     #print("xs in cost:", xs)
 
     len_xs = len(xs)
     len_in_cut = len(in_cut)
     len_out_cut = len(out_cut)
+    print("True:", len_in_cut)
+    print("False:", len_out_cut)
     if len_out_cut == 0:
         print("FAIL! len out cut zero")
         print(len_out_cut)
@@ -602,6 +627,42 @@ def FST_expected_fast(xs, n_samples, cut):
     F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
 
     FST_exp = 0.5 * ((np.sum(F_in) / xs.shape[1]) + (np.sum(F_out) / xs.shape[1]))
+    #print("FST exp:", FST_exp)
+    end_time = time.time()
+    print("time needed for rest:", end_time - inter_time)
+    return 1 / FST_exp
+
+def FST_wikipedia_fast(xs, n_samples, cut):
+    #print("cut:", cut)
+    #print("len cut cost fct:", len(cut))
+    in_cut = xs[cut, :]
+    out_cut = xs[~cut, :]
+    #print("in_cut rows:", in_cut.shape[0])
+    #print("in_cut columns:", in_cut.shape[1])
+    #print("out_cut rows:", out_cut.shape[0])
+    #print("out_cut columns:", out_cut.shape[1])
+    #print("in_cut:", in_cut)
+    #print("xs in cost:", xs)
+
+    n = len(xs)
+    print("n:", n)
+    n_in = len(in_cut)
+    print("n_in:", n_in)
+    n_out = len(out_cut)
+    print("n_out:", n_out)
+    p_in = (1 / (2 * n_in)) * np.sum(in_cut, axis=0)
+    p_out = (1 / (2 * n_out)) * np.sum(out_cut, axis=0)
+    p = ((n_in / n) * p_in) + ((n_out / n) * p_out)
+    print("p_in:", p_in)
+    print("p_out:", p_out)
+    print("p:", p)
+
+    FST = (p * (1 - p) - (n_in/n)*(p_in * (1 - p_in)) - (n_out/n)*(p_out * (
+            1-p_out)))/(p * (1 - p))
+    print("len FST:", len(FST))
+
+    FST_exp = np.sum(FST) / xs.shape[1]
+    print("FST_exp:", FST_exp)
     #print("FST exp:", FST_exp)
     return 1 / FST_exp
 
