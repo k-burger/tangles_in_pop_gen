@@ -66,16 +66,10 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
     -------
     cost: ndarray of shape (n_questions) containing the costs of each cut as entries
     """
-    # Start cProfile
-    profiler = cProfile.Profile()
-    profiler.enable()
-
-    # Aktuellen Speicherverbrauch ausgeben
-    print(f"Current memory usage 3: {psutil.virtual_memory().percent}%")
-
     if verbose:
         print("Preomputing costs of cuts...")
 
+    # se
     num_iterations = 2
 
     #with (open('../tangles_in_pop_gen/data/saved_costs/debug_bipartitions', 'wb') as
@@ -86,55 +80,47 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
         new_bipartitions = pickle.load(handle)
         #bipartitions.values = bipartitions.values[:, :90]
 
-    # Berechnen Sie die Größe jeder Slice basierend auf der Zeilenanzahl und der Anzahl der Iterationen.
+    # set slice size
     slice_size = len(new_bipartitions.values) // (num_iterations-1)
     slice_size = 5041
 
-    # Initialisieren eine leere Liste, um die Ergebnisse zu speichern.
+    # Initialize list for saving costs of bipartitions
     costs = []
 
-    # Startindex für das Slicing
+    # Set start index for slicing
     start_idx = 0
     start_time = time.time()
-    # Schleife über die Iterationen
+
     for i in range(0, num_iterations):
-        # Berechnen Sie das Ende des aktuellen Slice
+        # Set end index for slicing
         end_idx = start_idx + slice_size
-        # Sicherstellen, dass das Ende nicht über die Gesamtzahl der Zeilen hinausgeht
+        # make sure end index is larger than number of mutations
         end_idx = min(end_idx, len(new_bipartitions.values))
-        # Slice erstellen
+
+        # get slice of bipartitions
         slice = new_bipartitions.values[start_idx:end_idx].copy()
-        # Aktuellen Speicherverbrauch ausgeben
-        print(f"Current memory usage 4: {psutil.virtual_memory().percent}%")
-        # Aktuellen Speicherverbrauch ausgeben
-        print(f"Current memory usage 5: {psutil.virtual_memory().percent}%")
-        # Berechnung mit cost durchführen
+
+        # compute cost of slice with multiprocessing
         pool = multiprocessing.Pool()
         slice_costs = np.array(pool.map(cost_function, slice))
         pool.close()
-        # Aktuellen Speicherverbrauch ausgeben
-        print(f"Current memory usage 6: {psutil.virtual_memory().percent}%")
-        # Ergebnisse zur Ergebnisliste hinzufügen
+
+        # add costs to list of costs
         costs.extend(slice_costs)
-        print("6")
-        # Berechnen Sie den Fortschritt in Prozent
+
+        # monitor progress in percent
         progress = (i + 1) / num_iterations * 100
-        print("7")
-        # Fortschrittsausgabe
+
+        # print progress
         duration = time.time() - start_time
         print(f"Progress: {progress:.2f}% of cost computation done in {duration:.2f} "
               f"sec.")
-        #start_time = time.time()
-        print("8")
-        # Aktualisieren des Startindex für das nächste Slice
+
+        # update start index for slice computation in next iteration
         start_idx = end_idx
 
-    # Ergebnisse in einen ndarray konvertieren
+    # transform list of costs into numpy array
     final_costs = np.array(costs)
-
-    # Stop cProfile
-    profiler.disable()
-    profiler.print_stats(sort='cumulative')
 
     return final_costs
 
