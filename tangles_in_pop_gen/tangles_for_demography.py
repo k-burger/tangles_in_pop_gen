@@ -1,5 +1,7 @@
 from functools import partial
 from pathlib import Path
+import sys
+sys.path.append('..')
 
 # from sklearn.metrics import normalized_mutual_info_score, silhouette_score, davies_bouldin_score, adjusted_rand_score
 # from sklearn.neighbors._dist_metrics import DistanceMetric
