@@ -67,22 +67,11 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
         print("Preomputing costs of cuts...")
 
     # set for testing to 2 (only one iteration)
-    num_iterations = 2
+    num_iterations = 20
 
-    # for debugging load bipartitions
-    #with (open('../tangles_in_pop_gen/data/saved_costs/debug_bipartitions', 'wb') as
-    #      handle):
-    #    pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('../tangles_in_pop_gen/data/saved_costs/debug_bipartitions',
-              'rb') as handle:
-        bipartitions = pickle.load(handle)
-        #bipartitions.values = bipartitions.values[:, :90]
-
-    # for debugging slice sice set to 5041 as it is the number of mutations in loaded
-    # test example
     # set slice size
     slice_size = len(bipartitions.values) // (num_iterations-1)
-    slice_size = 5041
+    print("slice size: ", slice_size, " bipaertitions.")
 
     # Initialize list for saving costs of bipartitions
     costs = []

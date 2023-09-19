@@ -97,18 +97,6 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #print("G:", xs)
     data = data_types.Data(xs=xs)
 
-    # with open('../tangles_in_pop_gen/data/saved_costs/debug_bipartitions',
-    #           'rb') as handle:
-    #     test_bipartitions2 = pickle.load(handle)
-    # start = time.time()
-    # print("time started")
-    # print("Precompute costs of bipartitions.")
-    # test_bipartitions2 = outsourced_cost_computation.compute_cost_and_order_cuts(
-    #         partial(
-    #             cost_functions.FST_expected_fast, data.xs, None))
-    # end = time.time()
-    # print("time needed test2:", end - start)
-
     # calculate your bipartitions we use the binary questions/features directly as bipartitions
     # print("\tGenerating set of bipartitions", flush=True)
     # bipartitions = data_types.Cuts(values=(data.xs == True).T,
@@ -277,18 +265,6 @@ if __name__ == '__main__':
     save_ts = True  # set True to save the tree sequence during simulation, False otherwise
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
-
-    # with open('../tangles_in_pop_gen/data/saved_costs/debug_bipartitions',
-    #           'rb') as handle:
-    #     test_bipartitions = pickle.load(handle)
-    # start = time.time()
-    # print("time started")
-    # print("Precompute costs of bipartitions.")
-    # test_bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
-    #         partial(
-    #             cost_functions.FST_expected_fast, np.random.randint(2, size=(120, 5041)), None))
-    # end = time.time()
-    # print("time needed test:", end - start)
 
 
     if data_generation_mode == 'out_of_africa':

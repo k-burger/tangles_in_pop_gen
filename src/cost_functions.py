@@ -587,6 +587,37 @@ def calculate_in_cut_out_cut_parallel(xs, cut):
     return in_cut, out_cut
 
 def FST_expected_fast(xs, n_samples, cut):
+    #print("time needed for seperation:", inter_time - time1 ) #time1 - start
+    #print("in_cut rows:", in_cut.shape[0])
+    #print("in_cut columns:", in_cut.shape[1])
+    #print("out_cut rows:", out_cut.shape[0])
+    #print("out_cut columns:", out_cut.shape[1])
+    #print("in_cut:", in_cut)
+    #print("xs in cost:", xs)
+    start_time = time.time()
+
+    len_in_cut = np.count_nonzero(cut == True)
+    len_out_cut = np.count_nonzero(cut == False)
+    len_xs = len_in_cut + len_out_cut
+    #print("True 2:", len_in_cut)
+    #print("False 2:", len_out_cut)
+
+    p_in = (1 / (2 * len_in_cut)) * np.sum(xs * cut[:, np.newaxis], axis=0)
+    p_out = (1 / (2 * len_out_cut)) * np.sum(xs * (~cut)[:, np.newaxis], axis=0)
+
+    p = ((len_in_cut / len_xs) * p_in) + ((len_out_cut / len_xs) * p_out)
+
+    F_in = np.abs(1 - ((p_in * (1 - p_in)) / (p * (1 - p))))
+    F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
+
+    FST_exp = 0.5 * ((np.sum(F_in) / xs.shape[1]) + (np.sum(F_out) / xs.shape[1]))
+    #print("FST exp:", FST_exp)
+    end_time = time.time()
+
+    print("time needed for cost calculation:", end_time - start_time)
+    return 1 / FST_exp
+
+def FST_expected_fast_old(xs, n_samples, cut):
     #print("cut:", cut)
     #print("len cut cost fct:", len(cut))
     # start = time.time()
