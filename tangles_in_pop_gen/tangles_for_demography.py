@@ -50,30 +50,33 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                        ADMIXTURE_filename = ""):
     print("started")
     xs = np.transpose(sim_data.G[0])    # diploid genotype matrix
-    mutations_in_sim = np.arange(xs.shape[1])
-    print("mutations before deletion:", len(mutations_in_sim), mutations_in_sim)
-    print("number of mutations before zero column deletion:", xs.shape[1])
-    num_zero_mut = 0
-    num_n_mut = 0
-    columns_to_delete_0 = []
-    columns_to_delete_n = []
-    for m in range(0, xs.shape[1]):
-        if np.sum(xs[:, m]) == 0:
-            columns_to_delete_0.append(m)
-            num_zero_mut = num_zero_mut + 1
-    xs = np.delete(xs, columns_to_delete_0, axis=1)
-    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
-    for m in range(0, xs.shape[1]):
-        if np.all(xs[:, m] > 0):
-            columns_to_delete_n.append(m)
-            num_n_mut = num_n_mut + 1
-    xs = np.delete(xs, columns_to_delete_n, axis=1)
-    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
-    print("mutations after deletion:", len(mutations_in_sim), mutations_in_sim)
-    print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
-    print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
-    count_larger_2 = np.count_nonzero(xs > 4)
-    print("count larger 2:", count_larger_2)
+    if data_generation_mode == 'out_of_africa':
+        mutations_in_sim = sim_data.mutation_id
+    else:
+        mutations_in_sim = np.arange(xs.shape[1])
+    # print("mutations before deletion:", len(mutations_in_sim), mutations_in_sim)
+    # print("number of mutations before zero column deletion:", xs.shape[1])
+    # num_zero_mut = 0
+    # num_n_mut = 0
+    # columns_to_delete_0 = []
+    # columns_to_delete_n = []
+    # for m in range(0, xs.shape[1]):
+    #     if np.sum(xs[:, m]) == 0:
+    #         columns_to_delete_0.append(m)
+    #         num_zero_mut = num_zero_mut + 1
+    # xs = np.delete(xs, columns_to_delete_0, axis=1)
+    # mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
+    # for m in range(0, xs.shape[1]):
+    #     if np.all(xs[:, m] > 0):
+    #         columns_to_delete_n.append(m)
+    #         num_n_mut = num_n_mut + 1
+    # xs = np.delete(xs, columns_to_delete_n, axis=1)
+    # mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
+    # print("mutations after deletion:", len(mutations_in_sim), mutations_in_sim)
+    # print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
+    # print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
+    # count_larger_2 = np.count_nonzero(xs > 4)
+    # print("count larger 2:", count_larger_2)
     n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
     print("n diploid:", n)

@@ -191,7 +191,7 @@ class SimulateOutOfAfrica:
             if np.all(G[m,:] > 0):
                 rows_to_delete_n.append(m)
                 num_n_mut = num_n_mut + 1
-        xs = np.delete(G, rows_to_delete_n, axis=0)
+        G = np.delete(G, rows_to_delete_n, axis=0)
         mutations_in_sim = np.delete(mutations_in_sim, rows_to_delete_n)
 
         # potentially save the genotype matrix:
