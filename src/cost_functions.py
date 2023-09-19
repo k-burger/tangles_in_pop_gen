@@ -614,7 +614,7 @@ def FST_expected_fast(xs, n_samples, cut):
     #print("FST exp:", FST_exp)
     end_time = time.time()
 
-    #print("time needed for cost calculation:", end_time - start_time)
+    print("time needed for cost calculation:", end_time - start_time)
     return 1 / FST_exp
 
 def FST_expected_fast_old(xs, n_samples, cut):
