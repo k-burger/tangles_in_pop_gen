@@ -36,10 +36,6 @@ def order_cuts(bipartitions: Cuts, cost_bipartitions: np.ndarray):
 
     bipartitions.order = np.argsort(idx)
 
-    with (open('../tangles_in_pop_gen/data/saved_costs/test_load_bipartitions', 'wb') as
-          handle):
-        pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
     return bipartitions
 
 def compute_cost_and_order_cuts(bipartitions, cost_functions, verbose=True):
@@ -87,7 +83,7 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
         end_idx = min(end_idx, len(bipartitions.values))
 
         # get slice of bipartitions
-        slice = bipartitions.values[start_idx:end_idx].copy()
+        slice = bipartitions.values[start_idx:end_idx]
 
         # compute cost of slice with multiprocessing
         pool = multiprocessing.Pool()

@@ -123,23 +123,34 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                             cost_functions.all_pairs_manhattan_distance(xs))
     #                                                     )
 
+    cost = "FST_fast"  # FST_expected FST_observed  HWE_divergence
+    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
+    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_n_"+
+                                   str(
+        cost))
     start = time.time()
     print("time started")
     if cost_precomputed == False:
-        print("Precompute costs of bipartitions.")
+        #print("Precompute costs of bipartitions.")
         bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
             bipartitions,
                                                          partial(
                                                              cost_functions.FST_expected_fast,
                                                              data.xs, None))
+
+        with (open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename),
+                   'wb') as
+              handle):
+            pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
     else:
         print("Load costs of bipartitions.")
-        with open('../tangles_in_pop_gen/data/saved_costs/test_load_bipartitions', 'rb') as handle:
+        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename), 'rb') as handle:
             bipartitions = pickle.load(handle)
     end = time.time()
     print("time needed:", end - start)
-    cost = "FST_fast" # FST_expected FST_observed  HWE_divergence
-    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
+
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
     #                                                  partial(
@@ -156,9 +167,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                       agreement=agreement,
                                       verbose=3)#,  # print everything
                                       # max_clusters=3)
-    # nicht mehr?
+
+
 
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
+
+    typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
+                                                        tangles_tree.root, [], n)
+    print(typ_genome_per_pop)
 
     print("Built tree has {} leaves".format(len(tangles_tree.maximals)), flush=True)
     # postprocess tree
@@ -250,17 +266,17 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 120 # 800 #40      #15     # anzahl individuen
+    n = 800 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 150# 55 0.5   #1      # recombination
+    rho = 100# 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 150  # 55      # mutationsrate
+    theta = 100  # 55      # mutationsrate
     agreement = 35
     seed = 42#42# 42   #17
     noise = 0
     data_already_simulated = False # True or False, states if data object should be
     # simulated or loaded
-    data_generation_mode = 'out_of_africa' # readVCF  out_of_africa sim
+    data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation

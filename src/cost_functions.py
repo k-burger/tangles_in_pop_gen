@@ -604,8 +604,11 @@ def FST_expected_fast(xs, n_samples, cut):
 
     p_in = (1 / (2 * len_in_cut)) * np.sum(xs * cut[:, np.newaxis], axis=0)
     p_out = (1 / (2 * len_out_cut)) * np.sum(xs * (~cut)[:, np.newaxis], axis=0)
-
     p = ((len_in_cut / len_xs) * p_in) + ((len_out_cut / len_xs) * p_out)
+
+    #print("p_in:", p_in, ((p_in * (1 - p_in))))
+    #print("p_out:", p_out, (p_out * (1 - p_out)))
+    #print("p:", p, (p * (1 - p)))
 
     F_in = np.abs(1 - ((p_in * (1 - p_in)) / (p * (1 - p))))
     F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
@@ -614,7 +617,7 @@ def FST_expected_fast(xs, n_samples, cut):
     #print("FST exp:", FST_exp)
     end_time = time.time()
 
-    #print("time needed for cost calculation:", end_time - start_time)
+    print("time needed for cost calculation:", end_time - start_time)
     return 1 / FST_exp
 
 def FST_expected_fast_old(xs, n_samples, cut):
