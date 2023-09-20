@@ -16,7 +16,7 @@ import numpy as np
 
 from src.tree_tangles import ContractedTangleTree, tangle_computation, \
     compute_soft_predictions_children  # , mut_props_per_terminal_node, get_terminal_node_properties
-from src.utils import compute_hard_predictions, compute_mindset_prediciton
+from src.utils import compute_hard_predictions, compute_mindset_prediciton, merge_doubles
 
 import simulate_with_demography
 import simulate_with_demography_diploid
@@ -113,7 +113,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # Aktuellen Speicherverbrauch ausgeben
     print(f"Current memory usage 1: {psutil.virtual_memory().percent}%")
 
-    print("\tFound {} unique bipartitions".format(len(bipartitions.values)), flush=True)
+    print("\tFound {} bipartitions".format(len(bipartitions.values)), flush=True)
     print("\tCalculating costs if bipartitions", flush=True)
     #bipartitions = csr_matrix(bipartitions.values, dtype=bool)
 
@@ -125,9 +125,10 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     cost = "FST_fast"  # FST_expected FST_observed  HWE_divergence
     # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
-    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_n_"+
-                                   str(
-        cost))
+    # saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_n_"+str(cost))
+
+    saved_bipartitions_filename = (str("sim") + "_n_" + str(n) + "_n_" + str(cost))
+
     start = time.time()
     print("time started")
     if cost_precomputed == False:
@@ -138,9 +139,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                                              cost_functions.FST_expected_fast,
                                                              data.xs, None))
 
-        with (open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename),
-                   'wb') as
-              handle):
+        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename),
+                   'wb') as handle:
             pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -160,6 +160,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     np.save("data/mutation_labels", bipartitions.names)
     loaded = np.load("data/mutation_labels.npy", allow_pickle=True)
+
+    # merge duplicate bipartitions
+    print("Merging doublicate mutations.")
+    bipartitions = merge_doubles(bipartitions)
+
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
     print("\tBuilding the tangle search tree", flush=True)
@@ -242,6 +247,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         pop_splits = [[0, 400, 800], [0, 700, 800], [0, 200, 800], [0, 600, 700, 800],
                       [0, 200, 300, 800],
                       [0, 400, 500, 800], [0, 100, 200, 800]]
+
         #FST_sim = FST.FST_values_sim(xs, mutations=mutations_in_sim,
         # pop_splits=pop_splits)
         #FST_tangles = FST.FST_values_tangles(xs, bipartitions=bipartitions,
@@ -266,15 +272,15 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 800 # 800 #40      #15     # anzahl individuen
+    n = 40 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 100# 55 0.5   #1      # recombination
+    rho = 55# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 100  # 55      # mutationsrate
-    agreement = 35
-    seed = 42#42# 42   #17
+    theta = 55  # 100 55      # mutationsrate
+    agreement = 5
+    seed = 42 #42   #17
     noise = 0
-    data_already_simulated = False # True or False, states if data object should be
+    data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
 
@@ -286,7 +292,6 @@ if __name__ == '__main__':
     save_ts = True  # set True to save the tree sequence during simulation, False otherwise
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
-
 
     if data_generation_mode == 'out_of_africa':
         rho = -1
@@ -304,7 +309,7 @@ if __name__ == '__main__':
     elif data_generation_mode == 'readVCF':
         rho = -1
         theta = -1
-        data = benchmark_data.ReadVCF('gen0_chr22_train.vcf',
+        data = benchmark_data.ReadVCF('n_40_rep_1_rho_55_theta_55_seed_42.vcf', #'gen0_chr22_train.vcf',
                                      'admixture/data/')
         data.load_data()
 
@@ -323,7 +328,7 @@ if __name__ == '__main__':
             data.load_data()
             print("Data has been loaded.")
 
-    cost_precomputed = False
+    cost_precomputed = True
     plot_ADMIXTURE = True
     ADMIXTURE_filename = data.admixture_filename
 
@@ -336,7 +341,7 @@ if __name__ == '__main__':
 
     tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop,
                        data_generation_mode, cost_precomputed=cost_precomputed,
-                        output_directory=output_directory, plot=True,
+                       output_directory=output_directory, plot=True,
                        plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)
 

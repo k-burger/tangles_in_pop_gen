@@ -11,6 +11,7 @@ from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import DistanceMetric
 from tqdm import tqdm
 
+from src import data_types
 from src.data_types import Cuts
 
 
@@ -65,13 +66,46 @@ class Orientation(object):
             return ~cut
 
 
+def merge_doubles(bipartitions):
+    _, idx, inverse_idx = np.unique(bipartitions.values, axis=0, return_index=True, return_inverse=True)
+
+    values = np.zeros_like(_)
+    names = []
+    costs = np.zeros(shape=[len(values)])
+    orders = np.zeros(shape=[len(values)])
+    equations = []
+
+    for counter, ii in enumerate(np.unique(inverse_idx)):
+
+        names.append(", ".join(str(bipartitions.names[inverse_idx == ii])[1:-1].split()))
+        values[counter] = bipartitions.values[idx[ii]]
+        costs[counter] = bipartitions.costs[idx[ii]]
+        if bipartitions.order is not None:
+            orders[counter] = bipartitions.order[idx[ii]]
+        if bipartitions.equations is not None:
+            equations.append(bipartitions.equations[idx[ii]])
+
+    order = np.argsort(idx)
+
+    if bipartitions.equations is None:
+        equations = None
+    else:
+        equations = np.array(equations)[order]
+
+    cuts = data_types.Cuts(values=values[order], names=np.array(names)[order], equations=equations, costs=costs[order])
+
+    cuts.order = np.argsort(order)
+
+    return cuts
+
+
 def normalize(array):
     """
     Normalize a 1d numpy array between [0,1]
 
     Parameters
     ----------
-    array: ndarray
+    array: ndarrayß
         the array to normalize
 
     Returns
