@@ -199,7 +199,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
     # compute soft predictions
     # assign weight/ importance to bipartitions
-    weight = np.exp(-utils.normalize(bipartitions.costs))
+    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count("'") + 1 for name in bipartitions.names])
 
     # propagate down the tree
     print("Calculating soft predictions", flush=True)
