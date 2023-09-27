@@ -127,7 +127,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
     # saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_n_"+str(cost))
 
-    saved_bipartitions_filename = (str("sim") + "_n_" + str(n) + "_n_" + str(cost))
+    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_" + str(cost))
 
     start = time.time()
     print("time started")
@@ -162,19 +162,25 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     loaded = np.load("data/mutation_labels.npy", allow_pickle=True)
 
     # merge duplicate bipartitions
+    start_merging = time.time()
     print("Merging doublicate mutations.")
     bipartitions = merge_doubles(bipartitions)
+    end_merging = time.time()
+    print("merging duplicate bipartitions completed in ", end_merging -
+          start_merging, " sec.")
 
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
     print("\tBuilding the tangle search tree", flush=True)
+    start_tangle_tree = time.time()
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
                                       verbose=3)#,  # print everything
                                       # max_clusters=3)
 
-
-
+    end_tangle_tree = time.time()
+    print("tangle tree computation completed in ", end_tangle_tree -
+          start_tangle_tree, " sec.")
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
 
     typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
@@ -199,7 +205,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
     # compute soft predictions
     # assign weight/ importance to bipartitions
-    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count("'") + 1 for name in bipartitions.names])
+    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count(",") + 1 for name in bipartitions.names])#np.array([name.count(
+    # "'") + 1 for name in bipartitions.names])
 
     # propagate down the tree
     print("Calculating soft predictions", flush=True)
@@ -272,12 +279,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 40 # 800 #40      #15     # anzahl individuen
+    n = 2072 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
     rho = 55# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 55  # 100 55      # mutationsrate
-    agreement = 5
+    agreement = 100
     seed = 42 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be
@@ -309,7 +316,7 @@ if __name__ == '__main__':
     elif data_generation_mode == 'readVCF':
         rho = -1
         theta = -1
-        data = benchmark_data.ReadVCF('n_40_rep_1_rho_55_theta_55_seed_42.vcf', #'gen0_chr22_train.vcf',
+        data = benchmark_data.ReadVCF('gen0_chr22_train.vcf', #'gen0_chr22_train.vcf',
                                      'admixture/data/')
         data.load_data()
 

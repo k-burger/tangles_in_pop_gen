@@ -393,15 +393,17 @@ def HWE_divergence_fast(xs, n_samples, cut):
         All pairwise distances
     """
 
-    in_cut = xs[cut, :]
-    out_cut = xs[~cut, :]
+    len_in_cut = np.count_nonzero(cut == True)
+    len_out_cut = np.count_nonzero(cut == False)
 
-    p_in = (1 / (2 * len(in_cut))) * np.sum(in_cut, axis=0)
-    p_out = (1 / (2 * len(out_cut))) * np.sum(out_cut, axis=0)
+    p_in = (1 / (2 * len_in_cut)) * np.sum(xs * cut[:, np.newaxis], axis=0)
+    p_out = (1 / (2 * len_out_cut)) * np.sum(xs * (~cut)[:, np.newaxis], axis=0)
     expected_H_in = 2 * p_in * (1 - p_in)
     expected_H_out = 2 * p_out * (1 - p_out)
-    x_in = (1 / len(in_cut)) * np.count_nonzero(in_cut == 1, axis=0)
-    x_out = (1 / len(out_cut)) * np.count_nonzero(out_cut == 1, axis=0)
+    x_in = (1 / len_in_cut) * np.count_nonzero(xs * cut[:, np.newaxis] == 1, axis=0)
+    x_out = (1 / len_out_cut) * np.count_nonzero(xs * (~cut)[:, np.newaxis] == 1, axis=0)
+
+
     F_in = np.power(x_in - expected_H_in, 2)
     F_out = np.power(x_out - expected_H_out, 2)
     normalization = np.sum(np.power(p_in - p_out, 2))
@@ -617,7 +619,7 @@ def FST_expected_fast(xs, n_samples, cut):
     #print("FST exp:", FST_exp)
     end_time = time.time()
 
-    print("time needed for cost calculation:", end_time - start_time)
+    #print("time needed for cost calculation:", end_time - start_time)
     return 1 / FST_exp
 
 def FST_expected_fast_old(xs, n_samples, cut):
