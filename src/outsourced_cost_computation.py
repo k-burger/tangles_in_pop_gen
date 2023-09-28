@@ -3,6 +3,7 @@ import hashlib
 import json
 import multiprocessing
 
+
 import numpy as np
 from sklearn.manifold import TSNE
 from typing import Union, Optional
@@ -67,7 +68,7 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
 
     # set slice size
     slice_size = len(bipartitions.values) // (num_iterations-1)
-    print("slice size: ", slice_size, " bipaertitions.")
+    print("slice size: ", slice_size, " bipartitions.")
 
     # Initialize list for saving costs of bipartitions
     costs = []
@@ -87,9 +88,9 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
 
         # compute cost of slice with multiprocessing
         pool = multiprocessing.Pool()
-        slice_costs = np.array(pool.map(cost_function, slice))
+        slice_costs = np.array(pool.map(cost_function, slice))#, chunksize=1))
         pool.close()
-
+        pool.join()
         # add costs to list of costs
         costs.extend(slice_costs)
 

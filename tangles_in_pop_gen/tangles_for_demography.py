@@ -44,7 +44,7 @@ The execution is divided in the following steps
 
 
 def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
-                       data_generation_mode, cost_precomputed=False,
+                       data_generation_mode, cost_fct_name, cost_precomputed=False,
                        output_directory='', plot=True,
                        plot_ADMIXTURE=False,
                        ADMIXTURE_filename = ""):
@@ -123,11 +123,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                             cost_functions.all_pairs_manhattan_distance(xs))
     #                                                     )
 
-    cost = "FST_fast"  # FST_expected FST_observed  HWE_divergence
-    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
-    # saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_n_"+str(cost))
-
-    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_" + str(cost))
+    cost_function = getattr(cost_functions, cost_fct_name)
+    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_" + str(cost_fct_name))
 
     start = time.time()
     print("time started")
@@ -136,7 +133,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
             bipartitions,
                                                          partial(
-                                                             cost_functions.FST_expected_fast,
+                                                             cost_function,
                                                              data.xs, None))
 
         with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename),
@@ -272,7 +269,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                            data_generation_mode,
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
-                                           cost_fct=cost)
+                                           cost_fct=cost_fct_name)
 
         print("admixture like plot done.")
         # with open('saved_soft_matrices.pkl', 'wb') as f:
@@ -281,15 +278,18 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 if __name__ == '__main__':
     n = 2072 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 55# 100 55 0.5   #1      # recombination
+    rho = 100# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 55  # 100 55      # mutationsrate
-    agreement = 100
+    theta = 100  # 100 55      # mutationsrate
+    agreement = 200
     seed = 42 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
+    cost_fct_name = "FST"  # FST or HWE
+    cost_precomputed = True
+    plot_ADMIXTURE = True
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
@@ -335,10 +335,8 @@ if __name__ == '__main__':
             data.load_data()
             print("Data has been loaded.")
 
-    cost_precomputed = True
-    plot_ADMIXTURE = True
-    ADMIXTURE_filename = data.admixture_filename
 
+    ADMIXTURE_filename = data.admixture_filename
     output_directory = Path('output_tangles_in_pop_gen')
     plot = True
 
@@ -347,7 +345,8 @@ if __name__ == '__main__':
     # print("pop membership:", pop_membership)
 
     tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop,
-                       data_generation_mode, cost_precomputed=cost_precomputed,
+                       data_generation_mode, cost_fct_name=cost_fct_name,
+                       cost_precomputed=cost_precomputed,
                        output_directory=output_directory, plot=True,
                        plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)

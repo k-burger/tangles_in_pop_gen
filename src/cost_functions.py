@@ -375,7 +375,7 @@ def HWE_divergence(xs, n_samples, cut):
     return HWE_div
 
 
-def HWE_divergence_fast(xs, n_samples, cut):
+def HWE(xs, n_samples, cut):
     """
     This function computes the implicit order of a cut.
     It is zero if the cut is either the whole set or the empty set
@@ -588,7 +588,7 @@ def calculate_in_cut_out_cut_parallel(xs, cut):
     out_cut = xs[~cut, :]
     return in_cut, out_cut
 
-def FST_expected_fast(xs, n_samples, cut):
+def FST(xs, n_samples, cut):
     #print("time needed for seperation:", inter_time - time1 ) #time1 - start
     #print("in_cut rows:", in_cut.shape[0])
     #print("in_cut columns:", in_cut.shape[1])

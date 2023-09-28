@@ -179,7 +179,8 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, data_generati
     plt.subplots_adjust(wspace=0, hspace=0.1)
     plt.savefig('plots/tangles_plot_'+ data_generation_mode +'_n_' +str(n)
                 +'_a_' + str(agreement)
-                + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
+                + '_seed_' + str(seed) + "_" + cost_fct + '.jpeg', format =
+    'jpeg')
     plt.show()
 
     if plot_ADMIXTURE == True:
@@ -239,7 +240,8 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, data_generati
         plt.subplots_adjust(wspace=0, hspace=0.1)
         plt.savefig('plots/ADMIXTURE_plot_' + data_generation_mode + '_n_' + str(n)
                     + '_a_' + str(agreement)
-                    + '_seed_' + str(seed) + "_" + cost_fct + '_diploid.pdf')
+                    + '_seed_' + str(seed) + "_" + cost_fct + '.jpeg', format =
+    'jpeg')
         plt.show()
         print("admixture like plots done.")
 
