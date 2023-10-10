@@ -274,21 +274,21 @@ class SimulateOutOfAfrica:
 
 
 class ReadVCF:
-    def __init__(self, vcf_filename, filepath="", n = [], sites = [], G=[], indv_pop=[],
-                 admixture_filename=[]):
+    def __init__(self, n, vcf_filename, filepath="", sites = [], G=[], indv_pop=[],
+                 mutation_id=[], admixture_filename=[]):
         # parameters that need to be set and are not a result of the simulation:
+        self.n = n
         self.vcf_filename = vcf_filename
         self.filepath = filepath
         self.admixture_filename = vcf_filename
 
         # properties that are results of data processing:
-        self.n = n
         self.sites = sites
         self.G = G
         self.indv_pop = indv_pop
+        self.mutation_id = mutation_id
 
-    def load_data(self):
-        # load vcf file
+    def read_vcf(self):
         vcf = allel.read_vcf(self.filepath + self.vcf_filename)
         G_haploid = vcf['calldata/GT']
         G = []
@@ -297,20 +297,46 @@ class ReadVCF:
         G_haploid = numpy.concatenate(G_haploid, axis=1)
 
         column_indices = numpy.arange(int(G_haploid.shape[1] / 2)) * 2
-        #print("column indices:", column_indices)
+        # print("column indices:", column_indices)
         # sum rows and create new numpy ndarray
         G_diploid = G_haploid[:, column_indices] + G_haploid[:, column_indices + 1]
         G_diploid = G_diploid.transpose()
         self.n = G_diploid.shape[1]
         self.sites = G_diploid.shape[0]
-        print("n:", self.n)
-        print("num sites:", self.sites)
 
         # assign properties
         G.append(G_diploid)
         self.G = G
-        print("G:", self.G)
         self.indv_pop = numpy.zeros(self.n)
+        self.mutation_id = vcf['samples']
+
+        # save object
+        filename = (self.filepath + "processed_vcf/1000G_n_" + str(self.n))
+        with open(filename, 'wb') as outp:  # overwrites any existing file.
+            pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
+
+    def load_vcf(self):
+        # load vcf file
+        filename = (self.filepath + "processed_vcf/1000G_n_" + str(self.n))
+        with open(filename, 'rb') as inp:
+            loaded_data = pickle.load(
+                inp)  # could be changed to self=pickle.load(inp) or similar to save memory.
+
+        # assign properties
+        self.n = loaded_data.n
+        self.sites = loaded_data.sites
+        self.G = loaded_data.G
+        self.indv_pop = loaded_data.indv_pop
+        self.mutation_id = loaded_data.mutation_id
+
+        # check if genotype matrix and ts have been saved during simulated:
+        if self.G == []:
+            warnings.warn(
+                'the genotype matrix was not saved during simulation, this can lead to further problems.\n if necessary, simulate the data again with the corresponding seed.',
+                stacklevel=1)
+        print("n:", self.n)
+        print("num sites:", self.sites)
+        print("G:", self.G)
         print("indv pop:", self.indv_pop)
 
 
@@ -348,5 +374,5 @@ if use_this_script_for_sim == True:
     print("final G shape 1:", data.G[0].shape[1])
 
 
-    print("simulation done.")
+    #print("simulation done.")
 

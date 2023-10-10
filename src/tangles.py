@@ -1,9 +1,17 @@
 from copy import deepcopy
 from itertools import combinations
 from bitarray import bitarray
+import numpy
 
 from src.utils import subset
 from src.data_types import Cuts
+import multiprocessing
+
+# def check_combination(args):
+#     core1, core2, new_cut, min_size = args
+#     if (core1 & core2 & new_cut).count() < min_size:
+#         return None
+#     return 1
 
 
 def pad_bitarray(b, n):
@@ -117,7 +125,6 @@ class Tangle(dict):
 
         for i in i_to_remove[::-1]:
             del core[i]
-
         # Checking for consistency...
         if len(core) == 0:
             # noinspection PyArgumentList

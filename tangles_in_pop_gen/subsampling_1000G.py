@@ -13,12 +13,13 @@ from src import utils
 from src.plotting import plot_cuts_in_one
 
 import numpy as np
+import pandas as pd
 
 from src.tree_tangles import ContractedTangleTree, tangle_computation, \
     compute_soft_predictions_children  # , mut_props_per_terminal_node, get_terminal_node_properties
 from src.utils import compute_hard_predictions, compute_mindset_prediciton, merge_doubles
 
-import simulate_with_demography
+#import simulate_with_demography
 import simulate_with_demography_diploid
 import benchmark_data
 import admixture_plot
@@ -55,15 +56,32 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     else:
         mutations_in_sim = np.arange(xs.shape[1])
 
+    if data_generation_mode =='readVCF':
+        print("resort data via populations.")
+        panel_file = ('/home/klara/ML_in_pop_gen_in_process/tangles_in_pop_gen'
+                      '/tangles_in_pop_gen/admixture/data/integrated_call_samples_v3.20130502.ALL.panel')
+        panel_df = pd.read_csv(panel_file, delimiter='\t')
+        sample_pop = panel_df['pop']
+        sample_super_pop = panel_df['super_pop']
+        pop_array = np.array(sample_pop)
+        super_pop_array = np.array(sample_super_pop)
+        sort_criteria = super_pop_array + pop_array
+        sorted_indices = np.argsort(sort_criteria)
+        pop_membership = super_pop_array[sorted_indices]
+        print("pop_membership after resorting:", pop_membership)
+        xs = xs[sorted_indices]
+
+
+
     # data preprocessing:
     print("mutations before deletion:", len(mutations_in_sim))#), mutations_in_sim)
     print("number of mutations before zero column deletion:", xs.shape[1])
     num_zero_mut = 0
     num_n_mut = 0
-    num_singelton = 0
+    num_multiallelic = 0
     columns_to_delete_0 = []
     columns_to_delete_n = []
-    columns_to_delete_singelton = []
+    columns_to_delete_multiallelic = []
     for m in range(0, xs.shape[1]):
         if np.sum(xs[:, m]) == 0:
             columns_to_delete_0.append(m)
@@ -78,22 +96,32 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
 
     for m in range(0, xs.shape[1]):
-        if np.count_nonzero(xs[:, m]) < 50:
-            columns_to_delete_singelton.append(m)
-            num_singelton = num_singelton + 1
-    xs = np.delete(xs, columns_to_delete_singelton, axis=1)
-    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_singelton)
+        if np.any(xs[:, m] > 2):
+            columns_to_delete_multiallelic.append(m)
+            num_multiallelic = num_multiallelic + 1
+    xs = np.delete(xs, columns_to_delete_multiallelic, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_multiallelic)
 
     print("mutations after deletion:", len(mutations_in_sim))#, mutations_in_sim)
     print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
     print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
-    print("singeltons deleted:", num_singelton)
-    count_larger_2 = np.count_nonzero(xs > 4)
+    print("multiallelic sites deleted:", num_multiallelic)
+    count_larger_2 = np.count_nonzero(xs > 2)
     print("count larger 2:", count_larger_2)
+
+    # subsampling sites
+    sample_size = 15000
+    np.random.seed(seed)
+    print("number of sites after subsampling:", sample_size)
+    random_indices = np.random.choice(xs.shape[1], sample_size, replace=False)
+    print("random indices:", random_indices)
+    # downsize xs to selected sites
+    xs = xs[:, random_indices]
+
     n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
     print("n diploid:", n)
-    print("number of mutations after mutation deletion:", nb_mut)
+    print("number of mutations after mutation deletion and subsampling:", nb_mut)
 
     #mut_pos = sim_data.ts[0].tables.sites.position
 
@@ -137,7 +165,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                     )
 
     cost_function = getattr(cost_functions, cost_fct_name)
-    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_" + str(cost_fct_name))
+    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) +
+                                   "_sites_" +
+                                   str(nb_mut) + "_" +
+                                   str(cost_fct_name) + "_subsampling_1000G_seed_" +
+                                   str(
+                seed))
 
     start = time.time()
     print("time started")
@@ -187,16 +220,16 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
                                       verbose=3,  # print everything
-                                      max_clusters=3)
+                                      max_clusters=10)
 
     end_tangle_tree = time.time()
     print("tangle tree computation completed in ", end_tangle_tree -
           start_tangle_tree, " sec.")
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
 
-   # typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
-   #                                                     tangles_tree.root, [], n)
-   # print(typ_genome_per_pop)
+    #typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
+    #                                                    tangles_tree.root, [], n)
+    #print(typ_genome_per_pop)
 
     print("Built tree has {} leaves".format(len(tangles_tree.maximals)), flush=True)
     # postprocess tree
@@ -207,7 +240,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(0)
+    contracted_tree.prune(1)
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
@@ -291,19 +324,19 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 2072 # 800 #40      #15     # anzahl individuen
+    n = 2504 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
     rho = 100# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 100  # 100 55      # mutationsrate
-    agreement = 300
-    seed = 42 #42   #17
+    agreement = 250
+    seed = 40 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
     cost_fct_name = "FST"  # FST or HWE
-    cost_precomputed = True
+    cost_precomputed = False
     plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set
@@ -331,9 +364,13 @@ if __name__ == '__main__':
     elif data_generation_mode == 'readVCF':
         rho = -1
         theta = -1
-        data = benchmark_data.ReadVCF('gen0_chr22_train.vcf', #'gen0_chr22_train.vcf',
+        data = benchmark_data.ReadVCF(n,'1000G_chr22.vcf', #'gen0_chr22_train.vcf',
+            # 1000G_chr22.vcf
                                      'admixture/data/')
-        data.load_data()
+        #data.read_vcf()
+        data.load_vcf()
+        print("pop membership:", data.indv_pop)
+        print("len pop membership:", len(data.indv_pop))
 
     else:
         ## This generates the data object and either simulates or loads the data sets

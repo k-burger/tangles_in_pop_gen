@@ -99,14 +99,24 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, data_generati
 
     # Sorting individuals within predefined populations according to their membership
     # in the main cluster of the population in the lowest level:
-    print("len(pop_membership:", len(pop_membership))
-    if len(pop_membership) != n:
-        warnings.warn(
-            'Population membership for individuals does not add up.',
-            stacklevel=1)
-        return
+    if data_generation_mode == 'readVCF':
+        unique_pop_membership = np.unique(pop_membership)
+        unique_pop_membership_sorted = np.sort(unique_pop_membership)
+        pop_sizes = np.array([np.sum(pop_membership == super_pop) for
+                                     super_pop in
+                           unique_pop_membership_sorted])
+        print("pop sizes 1000G:", pop_sizes)
 
-    pop_sizes = np.bincount(pop_membership) # population sizes
+    else:
+        pop_membership = pop_membership.astype(np.int64)
+        print("len(pop_membership):", len(pop_membership))
+        if len(pop_membership) != n:
+            warnings.warn(
+                'Population membership for individuals does not add up.',
+                stacklevel=1)
+            return
+        pop_sizes = np.bincount(pop_membership) # population sizes
+
     nb_pop = len(pop_sizes)                 # number of populations
     pop_member_idx = []                     # list with boundaries of population affiliation
     # fill pop_member_idx with boundaries of population affiliation:
@@ -139,6 +149,10 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, data_generati
         y_plot_sorted.append(copy.deepcopy(y_sorted))
     print("data sorting done.")
 
+    #y_plot_sorted = y_plot
+
+
+
 
     # stacked bar plots:
     fig, axs = plt.subplots(nb_plots, figsize=(10, 40))
@@ -150,10 +164,18 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, data_generati
         subplot.set_xlim([-0.6, n - 0.4])
         subplot.set_yticks([])
         subplot.set_xticks([])
-        subplot.set_xticks([((x+0.5)*n/nb_pop-0.5) for x in range(0,nb_pop)])
         if data_generation_mode == 'out_of_africa':
+            subplot.set_xticks(
+                [((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
             subplot.set_xticklabels(['YRI', 'CEU', 'CHB'])
+        elif data_generation_mode == 'readVCF':
+            subplot.set_xticks(
+                [330, 834, 1260, 1763, 2259])
+            subplot.set_xticklabels(['AFR', 'AMR', 'EAS', 'EUR', 'SAS'])
+
         else:
+            subplot.set_xticks(
+                [((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
             subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
 
 
@@ -183,67 +205,67 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed, data_generati
     'jpeg')
     plt.show()
 
-    if plot_ADMIXTURE == True:
-        if nb_plots > 12:
-            print("restricted number of ADMIXTURE plots to 12.")
-            nb_plots = 12
-        if ADMIXTURE_file_name == "":
-            warnings.warn(
-                'Specify file name for ADMIXTURE!',
-                stacklevel=1)
-            return
-
-        fig, axs = plt.subplots(nb_plots, figsize=(10, 40))
-        #fig.suptitle('ADMIXTURE', fontsize=20)
-        fig.tight_layout()
-        # Create the grid
-        for subplot in axs:
-            subplot.set_facecolor('white')
-            subplot.set_xlim([-0.6, n - 0.4])
-            # subplot.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-            subplot.set_yticks([])
-            subplot.set_xticks([])
-            subplot.set_xticks(
-                [((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
-            if data_generation_mode == 'out_of_africa':
-                subplot.set_xticklabels(['YRI', 'CEU', 'CHB'])
-            else:
-                subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
-        # ADMIXTURE stacked bar plot:
-        for j in range(0, nb_plots):
-            K = j+2
-            subprocess.run(
-                ["bash", "admixture/P_Q/admixture_loop.sh", ADMIXTURE_file_name, str(K)])
-
-            with open("admixture/P_Q/" + ADMIXTURE_file_name + '.' + str(K) + '.Q') \
-                    as f:
-                Q = np.loadtxt(f, dtype=str, delimiter='\n')
-            Q = [list(map(float, q.split())) for q in Q]
-            Q = np.array(Q).T
-            Q = Q.tolist()
-            Q_sorted = []
-            for m in range(len(Q)):
-                Q_sorted.append([Q[m][i] for i in indv_sorted])
-            #print("Q:", Q)
-            #print(len(Q))
-            for m in range(len(Q)):
-                axs[j].bar(indv, Q_sorted[m], bottom=np.sum(Q_sorted[:m], axis=0),
-                           color=colors_per_plot[j][m], width=1)
-        axs[j].set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0,
-                                                                         nb_pop)])
-        axs[j].set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
-        # for p, color in zip(axs.patches, cmap):
-        #     p.set_facecolor(color)
-
-        # plt.set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
-        # plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
-        plt.subplots_adjust(wspace=0, hspace=0.1)
-        plt.savefig('plots/ADMIXTURE_plot_' + data_generation_mode + '_n_' + str(n)
-                    + '_a_' + str(agreement)
-                    + '_seed_' + str(seed) + "_" + cost_fct + '.jpeg', format =
-    'jpeg')
-        plt.show()
-        print("admixture like plots done.")
+    # if plot_ADMIXTURE == True:
+    #     if nb_plots > 12:
+    #         print("restricted number of ADMIXTURE plots to 12.")
+    #         nb_plots = 12
+    #     if ADMIXTURE_file_name == "":
+    #         warnings.warn(
+    #             'Specify file name for ADMIXTURE!',
+    #             stacklevel=1)
+    #         return
+    #
+    #     fig, axs = plt.subplots(nb_plots, figsize=(10, 40))
+    #     #fig.suptitle('ADMIXTURE', fontsize=20)
+    #     fig.tight_layout()
+    #     # Create the grid
+    #     for subplot in axs:
+    #         subplot.set_facecolor('white')
+    #         subplot.set_xlim([-0.6, n - 0.4])
+    #         # subplot.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    #         subplot.set_yticks([])
+    #         subplot.set_xticks([])
+    #         subplot.set_xticks(
+    #             [((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
+    #         if data_generation_mode == 'out_of_africa':
+    #             subplot.set_xticklabels(['YRI', 'CEU', 'CHB'])
+    #         else:
+    #             subplot.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
+    #     # ADMIXTURE stacked bar plot:
+    #     for j in range(0, nb_plots):
+    #         K = j+2
+    #         subprocess.run(
+    #             ["bash", "admixture/P_Q/admixture_loop.sh", ADMIXTURE_file_name, str(K)])
+    #
+    #         with open("admixture/P_Q/" + ADMIXTURE_file_name + '.' + str(K) + '.Q') \
+    #                 as f:
+    #             Q = np.loadtxt(f, dtype=str, delimiter='\n')
+    #         Q = [list(map(float, q.split())) for q in Q]
+    #         Q = np.array(Q).T
+    #         Q = Q.tolist()
+    #         Q_sorted = []
+    #         for m in range(len(Q)):
+    #             Q_sorted.append([Q[m][i] for i in indv_sorted])
+    #         #print("Q:", Q)
+    #         #print(len(Q))
+    #         for m in range(len(Q)):
+    #             axs[j].bar(indv, Q_sorted[m], bottom=np.sum(Q_sorted[:m], axis=0),
+    #                        color=colors_per_plot[j][m], width=1)
+    #     axs[j].set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0,
+    #                                                                      nb_pop)])
+    #     axs[j].set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
+    #     # for p, color in zip(axs.patches, cmap):
+    #     #     p.set_facecolor(color)
+    #
+    #     # plt.set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0, nb_pop)])
+    #     # plt.set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
+    #     plt.subplots_adjust(wspace=0, hspace=0.1)
+    #     plt.savefig('plots/ADMIXTURE_plot_' + data_generation_mode + '_n_' + str(n)
+    #                 + '_a_' + str(agreement)
+    #                 + '_seed_' + str(seed) + "_" + cost_fct + '.jpeg', format =
+    # 'jpeg')
+    #     plt.show()
+    #     print("admixture like plots done.")
 
 # this function works, but is not cleaned up yet. Basically the same as the function
 # above, just that the tangles plot and ADMIXTURE plot are now plotted together s.t.
