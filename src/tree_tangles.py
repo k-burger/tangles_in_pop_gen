@@ -157,7 +157,7 @@ def _add_new_child(current_node, tangle, name, last_cut_added_id, last_cut_added
 
 class TangleTree(object):
 
-    def __init__(self, agreement, cuts, max_clusters=None):
+    def __init__(self, agreement, cuts, max_clusters=None, prune_first_path=False):
 
         self.root = TangleNode(parent=None,
                                right_child=None,
@@ -169,6 +169,8 @@ class TangleTree(object):
                                last_cut_added_id=-1,
                                last_cut_added_orientation=None,
                                tangle=Tangle(cuts=cuts))
+        self.prune_first_path = prune_first_path
+        self.cuts = cuts
         self.max_clusters = max_clusters
         self.active = [self.root]
         self.maximals = []
@@ -182,7 +184,7 @@ class TangleTree(object):
     # function to add a single cut to the tree
     # function checks if tree is empty
     # --- stops if number of active leaves gets too large ! ---
-    def add_cut(self, cut, name, cut_id):
+    def add_cut(self, cut, name, cut_id, first_split=False):
         if self.max_clusters and len(self.active) >= self.max_clusters:
             print('Stopped since there are more then %s leaves already.'.format(self.max_clusters))
             return False
@@ -199,8 +201,18 @@ class TangleTree(object):
             could_add_one = could_add_one or could_add_node
 
             if did_split:
-                current_node.splitting = True
-                self.will_split.append(current_node)
+                print("test")
+                if not first_split and self.prune_first_path:
+                    index_of_cut = np.where(np.sum(self.cuts.values == cut, axis=1) == self.cuts.values.shape[1])[0][0]
+                    cuts = Cuts(values=self.cuts.values[index_of_cut:],
+                                costs=self.cuts.costs[index_of_cut:],
+                                names=self.cuts.names[index_of_cut:] if self.cuts.names is not None else None,
+                                equations=self.cuts.equations[index_of_cut:] if self.cuts.equations is not None else None)
+                    self.__init__(agreement=self.agreement, cuts=cuts, max_clusters=self.max_clusters)
+                    first_split = True
+                else:
+                    current_node.splitting = True
+                    self.will_split.append(current_node)
             elif is_maximal:
                 self.maximals.append(current_node)
 
@@ -640,7 +652,7 @@ def compute_soft_predictions_children(node, cuts, weight, verbose=0):
                                           verbose=verbose)
 
 
-def tangle_computation(cuts, agreement, verbose, max_clusters=None):
+def tangle_computation(cuts, agreement, verbose, max_clusters=None, prune_first_path=False):
     """
 
     Parameters
@@ -660,7 +672,7 @@ def tangle_computation(cuts, agreement, verbose, max_clusters=None):
         print("Using agreement = {} \n".format(agreement))
         print("Start tangle computation", flush=True)
 
-    tangles_tree = TangleTree(agreement=agreement, cuts=cuts, max_clusters=max_clusters)
+    tangles_tree = TangleTree(agreement=agreement, cuts=cuts, max_clusters=max_clusters, prune_first_path=prune_first_path)
     old_order = None
 
     unique_orders = np.unique(cuts.costs)

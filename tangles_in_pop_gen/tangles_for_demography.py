@@ -44,7 +44,7 @@ The execution is divided in the following steps
 
 
 def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
-                       data_generation_mode, cost_fct_name, cost_precomputed=False,
+                       data_generation_mode, cost_precomputed=False,
                        output_directory='', plot=True,
                        plot_ADMIXTURE=False,
                        ADMIXTURE_filename = ""):
@@ -54,42 +54,29 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         mutations_in_sim = sim_data.mutation_id
     else:
         mutations_in_sim = np.arange(xs.shape[1])
-
-    # data preprocessing:
-    print("mutations before deletion:", len(mutations_in_sim))#), mutations_in_sim)
-    print("number of mutations before zero column deletion:", xs.shape[1])
-    num_zero_mut = 0
-    num_n_mut = 0
-    num_singelton = 0
-    columns_to_delete_0 = []
-    columns_to_delete_n = []
-    columns_to_delete_singelton = []
-    for m in range(0, xs.shape[1]):
-        if np.sum(xs[:, m]) == 0:
-            columns_to_delete_0.append(m)
-            num_zero_mut = num_zero_mut + 1
-    xs = np.delete(xs, columns_to_delete_0, axis=1)
-    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
-    for m in range(0, xs.shape[1]):
-        if np.all(xs[:, m] > 0):
-            columns_to_delete_n.append(m)
-            num_n_mut = num_n_mut + 1
-    xs = np.delete(xs, columns_to_delete_n, axis=1)
-    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
-
-    for m in range(0, xs.shape[1]):
-        if np.count_nonzero(xs[:, m]) < 50:
-            columns_to_delete_singelton.append(m)
-            num_singelton = num_singelton + 1
-    xs = np.delete(xs, columns_to_delete_singelton, axis=1)
-    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_singelton)
-
-    print("mutations after deletion:", len(mutations_in_sim))#, mutations_in_sim)
-    print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
-    print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
-    print("singeltons deleted:", num_singelton)
-    count_larger_2 = np.count_nonzero(xs > 4)
-    print("count larger 2:", count_larger_2)
+    # print("mutations before deletion:", len(mutations_in_sim), mutations_in_sim)
+    # print("number of mutations before zero column deletion:", xs.shape[1])
+    # num_zero_mut = 0
+    # num_n_mut = 0
+    # columns_to_delete_0 = []
+    # columns_to_delete_n = []
+    # for m in range(0, xs.shape[1]):
+    #     if np.sum(xs[:, m]) == 0:
+    #         columns_to_delete_0.append(m)
+    #         num_zero_mut = num_zero_mut + 1
+    # xs = np.delete(xs, columns_to_delete_0, axis=1)
+    # mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
+    # for m in range(0, xs.shape[1]):
+    #     if np.all(xs[:, m] > 0):
+    #         columns_to_delete_n.append(m)
+    #         num_n_mut = num_n_mut + 1
+    # xs = np.delete(xs, columns_to_delete_n, axis=1)
+    # mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
+    # print("mutations after deletion:", len(mutations_in_sim), mutations_in_sim)
+    # print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
+    # print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
+    # count_larger_2 = np.count_nonzero(xs > 4)
+    # print("count larger 2:", count_larger_2)
     n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
     print("n diploid:", n)
@@ -136,8 +123,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                             cost_functions.all_pairs_manhattan_distance(xs))
     #                                                     )
 
-    cost_function = getattr(cost_functions, cost_fct_name)
-    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_" + str(cost_fct_name))
+    cost = "FST_fast"  # FST_expected FST_observed  HWE_divergence
+    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
+    # saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_n_"+str(cost))
+
+    saved_bipartitions_filename = (str("sim") + "_n_" + str(n) + "_n_" + str(cost))
 
     start = time.time()
     print("time started")
@@ -146,7 +136,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
             bipartitions,
                                                          partial(
-                                                             cost_function,
+                                                             cost_functions.FST_expected_fast,
                                                              data.xs, None))
 
         with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename),
@@ -172,31 +162,25 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     loaded = np.load("data/mutation_labels.npy", allow_pickle=True)
 
     # merge duplicate bipartitions
-    start_merging = time.time()
     print("Merging doublicate mutations.")
     bipartitions = merge_doubles(bipartitions)
-    print("number of bipartitions after merging:", len(bipartitions.names))
-    end_merging = time.time()
-    print("merging duplicate bipartitions completed in ", end_merging -
-          start_merging, " sec.")
 
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
     print("\tBuilding the tangle search tree", flush=True)
-    start_tangle_tree = time.time()
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
-                                      verbose=3,  # print everything
-                                      max_clusters=3)
+                                      verbose=3,
+                                      prune_first_path=True)#,  # print everything
+                                      # max_clusters=3)
 
-    end_tangle_tree = time.time()
-    print("tangle tree computation completed in ", end_tangle_tree -
-          start_tangle_tree, " sec.")
+
+
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
 
-   # typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
-   #                                                     tangles_tree.root, [], n)
-   # print(typ_genome_per_pop)
+    typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
+                                                        tangles_tree.root, [], n)
+    print(typ_genome_per_pop)
 
     print("Built tree has {} leaves".format(len(tangles_tree.maximals)), flush=True)
     # postprocess tree
@@ -216,9 +200,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
     # compute soft predictions
     # assign weight/ importance to bipartitions
-    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count(",") + 1 for name in bipartitions.names])#np.array([name.count(
-    # "'") + 1 for name in bipartitions.names])
-
+    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count(",") + 1 for name in bipartitions.names])
 
     # propagate down the tree
     print("Calculating soft predictions", flush=True)
@@ -284,27 +266,24 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                            data_generation_mode,
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
-                                           cost_fct=cost_fct_name)
+                                           cost_fct=cost)
 
         print("admixture like plot done.")
         # with open('saved_soft_matrices.pkl', 'wb') as f:
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 2072 # 800 #40      #15     # anzahl individuen
+    n = 40 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 100# 100 55 0.5   #1      # recombination
+    rho = 55# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 100  # 100 55      # mutationsrate
-    agreement = 300
+    theta = 55  # 100 55      # mutationsrate
+    agreement = 5
     seed = 42 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
-    data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
-    cost_fct_name = "FST"  # FST or HWE
-    cost_precomputed = True
-    plot_ADMIXTURE = False
+    data_generation_mode = 'sim' # readVCF  out_of_africa sim
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
@@ -331,7 +310,7 @@ if __name__ == '__main__':
     elif data_generation_mode == 'readVCF':
         rho = -1
         theta = -1
-        data = benchmark_data.ReadVCF('gen0_chr22_train.vcf', #'gen0_chr22_train.vcf',
+        data = benchmark_data.ReadVCF('n_40_rep_1_rho_55_theta_55_seed_42.vcf', #'gen0_chr22_train.vcf',
                                      'admixture/data/')
         data.load_data()
 
@@ -350,8 +329,10 @@ if __name__ == '__main__':
             data.load_data()
             print("Data has been loaded.")
 
-
+    cost_precomputed = True
+    plot_ADMIXTURE = True
     ADMIXTURE_filename = data.admixture_filename
+
     output_directory = Path('output_tangles_in_pop_gen')
     plot = True
 
@@ -360,8 +341,7 @@ if __name__ == '__main__':
     # print("pop membership:", pop_membership)
 
     tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop,
-                       data_generation_mode, cost_fct_name=cost_fct_name,
-                       cost_precomputed=cost_precomputed,
+                       data_generation_mode, cost_precomputed=cost_precomputed,
                        output_directory=output_directory, plot=True,
                        plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)
