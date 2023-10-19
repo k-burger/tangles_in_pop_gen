@@ -209,10 +209,12 @@ class TangleTree(object):
                                 names=self.cuts.names[index_of_cut:] if self.cuts.names is not None else None,
                                 equations=self.cuts.equations[index_of_cut:] if self.cuts.equations is not None else None)
                     self.__init__(agreement=self.agreement, cuts=cuts, max_clusters=self.max_clusters)
+                    could_add_node, did_split, is_maximal = self._add_children_to_node(
+                    current_node, cut, name, cut_id)
+                    could_add_one = could_add_one or could_add_node
                     first_split = True
-                else:
-                    current_node.splitting = True
-                    self.will_split.append(current_node)
+                current_node.splitting = True
+                self.will_split.append(current_node)
             elif is_maximal:
                 self.maximals.append(current_node)
 
