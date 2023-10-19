@@ -177,6 +177,7 @@ class TangleTree(object):
         self.will_split = []
         self.is_empty = True
         self.agreement = agreement
+        self.first_split = None
 
     def __str__(self):  # pragma: no cover
         return str(self.root)
@@ -184,7 +185,7 @@ class TangleTree(object):
     # function to add a single cut to the tree
     # function checks if tree is empty
     # --- stops if number of active leaves gets too large ! ---
-    def add_cut(self, cut, name, cut_id, first_split=False):
+    def add_cut(self, cut, name, cut_id):
         if self.max_clusters and len(self.active) >= self.max_clusters:
             print('Stopped since there are more then %s leaves already.'.format(self.max_clusters))
             return False
@@ -202,17 +203,17 @@ class TangleTree(object):
 
             if did_split:
                 print("test")
-                if not first_split and self.prune_first_path:
+                if not self.first_split and self.prune_first_path:
                     index_of_cut = np.where(np.sum(self.cuts.values == cut, axis=1) == self.cuts.values.shape[1])[0][0]
                     cuts = Cuts(values=self.cuts.values[index_of_cut:],
                                 costs=self.cuts.costs[index_of_cut:],
                                 names=self.cuts.names[index_of_cut:] if self.cuts.names is not None else None,
                                 equations=self.cuts.equations[index_of_cut:] if self.cuts.equations is not None else None)
                     self.__init__(agreement=self.agreement, cuts=cuts, max_clusters=self.max_clusters)
+                    self.first_split = True
                     could_add_node, did_split, is_maximal = self._add_children_to_node(
-                    current_node, cut, name, cut_id)
+                        current_node, cut, name, cut_id)
                     could_add_one = could_add_one or could_add_node
-                    first_split = True
                 current_node.splitting = True
                 self.will_split.append(current_node)
             elif is_maximal:
