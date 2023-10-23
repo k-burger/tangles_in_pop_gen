@@ -204,16 +204,7 @@ class TangleTree(object):
             if did_split:
                 print("test")
                 if not self.first_split and self.prune_first_path:
-                    index_of_cut = np.where(np.sum(self.cuts.values == cut, axis=1) == self.cuts.values.shape[1])[0][0]
-                    cuts = Cuts(values=self.cuts.values[index_of_cut:],
-                                costs=self.cuts.costs[index_of_cut:],
-                                names=self.cuts.names[index_of_cut:] if self.cuts.names is not None else None,
-                                equations=self.cuts.equations[index_of_cut:] if self.cuts.equations is not None else None)
-                    self.__init__(agreement=self.agreement, cuts=cuts, max_clusters=self.max_clusters)
                     self.first_split = True
-                    could_add_node, did_split, is_maximal = self._add_children_to_node(
-                        current_node, cut, name, cut_id)
-                    could_add_one = could_add_one or could_add_node
                 current_node.splitting = True
                 self.will_split.append(current_node)
             elif is_maximal:
@@ -222,7 +213,7 @@ class TangleTree(object):
         if could_add_one:
             self.is_empty = False
 
-        return could_add_one
+        return could_add_one, self.first_split
 
     def _add_children_to_node(self, current_node, cut, name, cut_id):
         old_tangle = current_node.tangle
@@ -357,7 +348,7 @@ class TangleTree(object):
         else:
             my_id = parent_id + direction
             str_o = 'T' if node.last_cut_added_orientation else 'F'
-            my_label = '{} -> {}'.format(node.name, str_o)
+            my_label = '{} -> {}'.format(node.name.split(",")[0], str_o)
 
             tree.add_node(my_id)
             tree.add_edge(my_id, parent_id)
@@ -696,10 +687,13 @@ def tangle_computation(cuts, agreement, verbose, max_clusters=None, prune_first_
 
             cuts_order_i = cuts.values[idx_cuts_order_i]
             cuts_names_i = cuts.names[idx_cuts_order_i] if cuts.names is not None else idx_cuts_order_i
-            new_tree = core_algorithm(tree=tangles_tree,
-                                      current_cuts=cuts_order_i,
-                                      current_names=cuts_names_i,
-                                      idx_current_cuts=idx_cuts_order_i)
+            new_tree, first_split = core_algorithm(tree=tangles_tree,
+                                                   current_cuts=cuts_order_i,
+                                                   current_names=cuts_names_i,
+                                                   idx_current_cuts=idx_cuts_order_i)
+
+            if first_split is not None:
+                return old_order
 
             if new_tree is None:
                 max_order = cuts.costs[-1]

@@ -174,7 +174,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                       prune_first_path=True)#,  # print everything
                                       # max_clusters=3)
 
-
+    if tangles_tree.__class__ == np.float64:
+        bip_idx = np.where(bipartitions.costs <= tangles_tree)[0]
+        bipartitions = bipartitions[bip_idx]
+        tangles_tree = tangle_computation(cuts=bipartitions,
+                                          agreement=agreement,
+                                          verbose=3)
 
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
 
@@ -188,10 +193,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # contract to binary tree
     print("\tContracting to binary tree", flush=True)
     contracted_tree = ContractedTangleTree(tangles_tree)
+    contracted_tree.plot_tree("plots/tree_before_pruning")
+
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
     contracted_tree.prune(0)
+
+    contracted_tree.plot_tree("plots/tree_after_pruning")
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
@@ -273,12 +282,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 40 # 800 #40      #15     # anzahl individuen
+    n = 800 # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 55# 100 55 0.5   #1      # recombination
+    rho = 100# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 55  # 100 55      # mutationsrate
-    agreement = 5
+    theta = 100  # 100 55      # mutationsrate
+    agreement = 35
     seed = 42 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be

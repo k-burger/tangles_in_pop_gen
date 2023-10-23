@@ -98,6 +98,21 @@ class Cuts(object):
         self.names = names
         self.equations = equations
 
+    def __getitem__(self, indices):
+        if self.names.__class__ == list:
+            self.names = self.names[indices]
+        if self.values.__class__ == list:
+            self.values = self.values[indices]
+        if self.costs.__class__ == list:
+            self.costs = self.costs[indices]
+        if self.order.__class__ == list:
+            self.order = self.order[indices]
+        if self.equations.__class__ == list:
+            self.equations = self.equations[indices]
+
+        return self
+
+
     def get_cut_at(self, id: int, from_unsorted: bool = False):
         """
         Returns the cut at the given ID.
