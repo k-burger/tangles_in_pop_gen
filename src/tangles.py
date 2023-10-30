@@ -1,5 +1,7 @@
 from copy import deepcopy
 from itertools import combinations
+import random
+
 from bitarray import bitarray
 import numpy
 
@@ -134,7 +136,9 @@ class Tangle(dict):
             if (core[0] & new_cut).count() < min_size:
                 return None
         else:
-            for core1, core2 in combinations(core, 2):
+            sampled_core = random.sample(core, min(len(core), 15))
+            #for core1, core2 in combinations(core, 2):
+            for core1, core2 in combinations(sampled_core, 2):
                 if (core1 & core2 & new_cut).count() < min_size:
                     return None
 
