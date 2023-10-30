@@ -30,6 +30,9 @@ import time
 import psutil
 from scipy.sparse import csr_matrix
 
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 """
 Simple script for exemplary use of the tangle framework.
@@ -44,73 +47,100 @@ The execution is divided in the following steps
 
 
 def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
-                       data_generation_mode, cost_precomputed=False,
+                       data_generation_mode, cost_fct_name, cost_precomputed=False,
                        output_directory='', plot=True,
                        plot_ADMIXTURE=False,
                        ADMIXTURE_filename = ""):
-    print("started")
-    xs = np.transpose(sim_data.G[0])    # diploid genotype matrix
+    xs = np.transpose(sim_data.G[0])  # diploid genotype matrix
     if data_generation_mode == 'out_of_africa':
         mutations_in_sim = sim_data.mutation_id
     else:
         mutations_in_sim = np.arange(xs.shape[1])
-    # print("mutations before deletion:", len(mutations_in_sim), mutations_in_sim)
-    # print("number of mutations before zero column deletion:", xs.shape[1])
-    # num_zero_mut = 0
-    # num_n_mut = 0
-    # columns_to_delete_0 = []
-    # columns_to_delete_n = []
-    # for m in range(0, xs.shape[1]):
-    #     if np.sum(xs[:, m]) == 0:
-    #         columns_to_delete_0.append(m)
-    #         num_zero_mut = num_zero_mut + 1
-    # xs = np.delete(xs, columns_to_delete_0, axis=1)
-    # mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
-    # for m in range(0, xs.shape[1]):
-    #     if np.all(xs[:, m] > 0):
-    #         columns_to_delete_n.append(m)
-    #         num_n_mut = num_n_mut + 1
-    # xs = np.delete(xs, columns_to_delete_n, axis=1)
-    # mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
-    # print("mutations after deletion:", len(mutations_in_sim), mutations_in_sim)
-    # print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
-    # print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
-    # count_larger_2 = np.count_nonzero(xs > 4)
-    # print("count larger 2:", count_larger_2)
-    n = xs.shape[0]                     # diploid number of individuals
+
+    if data_generation_mode == 'readVCF':
+        print("resort data via populations.")
+        panel_file = ('/home/klara/ML_in_pop_gen_in_process/tangles_in_pop_gen'
+                      '/tangles_in_pop_gen/admixture/data/integrated_call_samples_v3.20130502.ALL.panel')
+        panel_df = pd.read_csv(panel_file, delimiter='\t')
+        sample_pop = panel_df['pop']
+        sample_super_pop = panel_df['super_pop']
+        pop_array = np.array(sample_pop)
+        super_pop_array = np.array(sample_super_pop)
+        sort_criteria = super_pop_array + pop_array
+        sorted_indices = np.argsort(sort_criteria)
+        pop_membership = super_pop_array[sorted_indices]
+        print("pop_membership after resorting:", pop_membership)
+        xs = xs[sorted_indices]
+
+    # data preprocessing:
+    print("mutations before deletion:", len(mutations_in_sim))  # ), mutations_in_sim)
+    print("number of mutations before zero column deletion:", xs.shape[1])
+    num_zero_mut = 0
+    num_n_mut = 0
+    num_multiallelic = 0
+    num_low_freq = 0
+    columns_to_delete_0 = []
+    columns_to_delete_n = []
+    columns_to_delete_multiallelic = []
+    columns_to_delete_low_freq = []
+    for m in range(0, xs.shape[1]):
+        if np.sum(xs[:, m]) == 0:
+            columns_to_delete_0.append(m)
+            num_zero_mut = num_zero_mut + 1
+    xs = np.delete(xs, columns_to_delete_0, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
+
+    for m in range(0, xs.shape[1]):
+        if np.all(xs[:, m] > 0):
+            columns_to_delete_n.append(m)
+            num_n_mut = num_n_mut + 1
+    xs = np.delete(xs, columns_to_delete_n, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_n)
+
+    for m in range(0, xs.shape[1]):
+        if np.any(xs[:, m] > 2):
+            columns_to_delete_multiallelic.append(m)
+            num_multiallelic = num_multiallelic + 1
+    xs = np.delete(xs, columns_to_delete_multiallelic, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_multiallelic)
+
+    for m in range(0, xs.shape[1]):
+        if np.count_nonzero(xs[:, m]) == 0:
+            columns_to_delete_low_freq.append(m)
+            num_low_freq = num_low_freq + 1
+    xs = np.delete(xs, columns_to_delete_low_freq, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_low_freq)
+
+    print("mutations after deletion:", len(mutations_in_sim))  # , mutations_in_sim)
+    print("num mutations deleted (mutations carried by no indv.):", num_zero_mut)
+    print("num mutations deleted (mutations carried by all indv.):", num_n_mut)
+    print("multiallelic sites deleted:", num_multiallelic)
+    print("low freq. sites deleted:", num_low_freq)
+    count_larger_2 = np.count_nonzero(xs > 2)
+    print("count larger 2:", count_larger_2)
+
+    # # subsampling sites
+    # sample_size = 5000
+    # np.random.seed(seed)
+    # print("number of sites after subsampling:", sample_size)
+    # random_indices = np.random.choice(xs.shape[1], sample_size, replace=False)
+    # print("random indices:", random_indices)
+    # # downsize xs to selected sites
+    # xs = xs[:, random_indices]
+
+    n = xs.shape[0]  # diploid number of individuals
     nb_mut = xs.shape[1]
     print("n diploid:", n)
-    print("number of mutations after mutation deletion:", nb_mut)
+    print("number of mutations after mutation deletion and subsampling:", nb_mut)
 
-    #mut_pos = sim_data.ts[0].tables.sites.position
-
-    # if (n_haploid % 2) == 1:
-    #     warnings.warn(
-    #         'sample size must be even as we consider diploid individuals!',
-    #         stacklevel=1)
-    #
-    # # for diploid individuals, always sum two rows of genotype matrix:
-    # n = n_haploid // 2   # number of diploid individuals (as integer)
-    # print("n diploid:", n)
-    # # array with indices of rows to sum
-    # row_indices = np.arange(n) * 2
-    # # sum rows and create new numpy ndarray
-    # xs = xs_haploid[row_indices] + xs_haploid[row_indices + 1]
-    # print("xs:\n", xs)
-
-    #print("mut pos:", mut_pos)
-    #print("G:", xs)
     data = data_types.Data(xs=xs)
 
-    # calculate your bipartitions we use the binary questions/features directly as bipartitions
-    # print("\tGenerating set of bipartitions", flush=True)
-    # bipartitions = data_types.Cuts(values=(data.xs == True).T,
-    #                                names=np.array(list(range(0, data.xs.shape[1]))))
-
+    # calculate bipartitions
+    print("\tGenerating set of bipartitions", flush=True)
     bipartitions = data_types.Cuts(values=(data.xs > 0).T,
                                    names=np.array(list(range(0, data.xs.shape[1]))))
 
-    # Aktuellen Speicherverbrauch ausgeben
+    # Current memory usage
     print(f"Current memory usage 1: {psutil.virtual_memory().percent}%")
 
     print("\tFound {} bipartitions".format(len(bipartitions.values)), flush=True)
@@ -123,33 +153,48 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                             cost_functions.all_pairs_manhattan_distance(xs))
     #                                                     )
 
-    cost = "FST_fast"  # FST_expected FST_observed  HWE_divergence
-    # mean_manhattan_distance HWE_FST_exp FST_Wikipedia FST_wikipedia_fast
-    # saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) + "_n_"+str(cost))
-
-    saved_bipartitions_filename = (str("sim") + "_n_" + str(n) + "_n_" + str(cost))
+    cost_function = getattr(cost_functions, cost_fct_name)
+    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) +
+                                   "_sites_" +
+                                   str(nb_mut) + "_" +
+                                   str(cost_fct_name) + "_seed_" +
+                                   str(
+                                       seed))
 
     start = time.time()
     print("time started")
     if cost_precomputed == False:
-        #print("Precompute costs of bipartitions.")
+        # print("Precompute costs of bipartitions.")
         bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
             bipartitions,
-                                                         partial(
-                                                             cost_functions.FST_expected_fast,
-                                                             data.xs, None))
+            partial(
+                cost_function,
+                data.xs, None))
 
-        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename),
-                   'wb') as handle:
+        with open('../tangles_in_pop_gen/data/saved_costs/' + str(
+                saved_bipartitions_filename),
+                  'wb') as handle:
             pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
     else:
         print("Load costs of bipartitions.")
-        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename), 'rb') as handle:
+        with open('../tangles_in_pop_gen/data/saved_costs/' + str(
+                saved_bipartitions_filename), 'rb') as handle:
             bipartitions = pickle.load(handle)
     end = time.time()
     print("time needed:", end - start)
+
+    # plot cost of bipartitions vs mutation frequency:
+    mut_freq = np.sum(bipartitions.values, axis=1)
+    fig, ax = plt.subplots(figsize=(9, 6))
+    ax.scatter(bipartitions.costs, mut_freq, alpha=0.5, s=5)
+    ax.set_xlabel('costs')
+    ax.set_ylabel('mutation frequency')
+    with PdfPages('plots/cost_vs_mut_freq_sites_' + str(nb_mut) + "_seed_" + str(
+            seed) + "_seed_" + str(cost_fct_name) + '.pdf') as pdf:
+        pdf.savefig()
+    plt.show()
 
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
@@ -168,24 +213,30 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
     print("\tBuilding the tangle search tree", flush=True)
+    start_tangle_tree = time.time()
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
                                       verbose=3,
-                                      prune_first_path=True)#,  # print everything
+                                      prune_first_path=False)#,  # print everything
                                       # max_clusters=3)
 
     if tangles_tree.__class__ == np.float64:
+        print("I am in if statement prune_first_path.")
         bip_idx = np.where(bipartitions.costs <= tangles_tree)[0]
         bipartitions = bipartitions[bip_idx]
         tangles_tree = tangle_computation(cuts=bipartitions,
                                           agreement=agreement,
                                           verbose=3)
 
+    end_tangle_tree = time.time()
+    print("tangle tree computation completed in ", end_tangle_tree -
+          start_tangle_tree, " sec.")
+
     #plot_cuts_in_one(data, bipartitions, Path('tmp'))
 
-    typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
-                                                        tangles_tree.root, [], n)
-    print(typ_genome_per_pop)
+    #typ_genome_per_pop = tangles_tree._get_path_to_leaf(tangles_tree,
+    #                                                    tangles_tree.root, [], n)
+    #print(typ_genome_per_pop)
 
     print("Built tree has {} leaves".format(len(tangles_tree.maximals)), flush=True)
     # postprocess tree
@@ -272,27 +323,30 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode,
+                                           data_generation_mode, sorting_level="lowest",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
-                                           cost_fct=cost)
+                                           cost_fct=cost_fct_name)
 
         print("admixture like plot done.")
         # with open('saved_soft_matrices.pkl', 'wb') as f:
         #     pickle.dump(matrices, f)
 
 if __name__ == '__main__':
-    n = 800 # 800 #40      #15     # anzahl individuen
+    n = 800  # 800 #40      #15     # anzahl individuen
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
-    rho = 100# 100 55 0.5   #1      # recombination
+    rho = 100  # 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 100  # 100 55      # mutationsrate
     agreement = 35
-    seed = 42 #42   #17
+    seed = 42  # 42   #17
     noise = 0
-    data_already_simulated = True # True or False, states if data object should be
+    data_already_simulated = True  # True or False, states if data object should be
     # simulated or loaded
-    data_generation_mode = 'sim' # readVCF  out_of_africa sim
+    data_generation_mode = 'sim'  # readVCF  out_of_africa sim
+    cost_fct_name = "FST_normalized"  # FST, HWE or FST_normalized
+    cost_precomputed = False
+    plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set
     rep = 1  # number of repetitions during simulation
@@ -319,9 +373,13 @@ if __name__ == '__main__':
     elif data_generation_mode == 'readVCF':
         rho = -1
         theta = -1
-        data = benchmark_data.ReadVCF('n_40_rep_1_rho_55_theta_55_seed_42.vcf', #'gen0_chr22_train.vcf',
-                                     'admixture/data/')
-        data.load_data()
+        data = benchmark_data.ReadVCF(n, '1000G_chr22.vcf',  # 'gen0_chr22_train.vcf',
+                                      # 1000G_chr22.vcf
+                                      'admixture/data/')
+        # data.read_vcf()
+        data.load_vcf()
+        print("pop membership:", data.indv_pop)
+        print("len pop membership:", len(data.indv_pop))
 
     else:
         ## This generates the data object and either simulates or loads the data sets
@@ -338,10 +396,7 @@ if __name__ == '__main__':
             data.load_data()
             print("Data has been loaded.")
 
-    cost_precomputed = True
-    plot_ADMIXTURE = True
     ADMIXTURE_filename = data.admixture_filename
-
     output_directory = Path('output_tangles_in_pop_gen')
     plot = True
 
@@ -350,7 +405,8 @@ if __name__ == '__main__':
     # print("pop membership:", pop_membership)
 
     tangles_in_pop_gen(data, rho, theta, agreement, seed, data.indv_pop,
-                       data_generation_mode, cost_precomputed=cost_precomputed,
+                       data_generation_mode, cost_fct_name,
+                       cost_precomputed=cost_precomputed,
                        output_directory=output_directory, plot=True,
                        plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)

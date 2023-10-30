@@ -31,6 +31,11 @@ import time
 import psutil
 from scipy.sparse import csr_matrix
 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import math
+
+
 
 """
 Simple script for exemplary use of the tangle framework.
@@ -65,9 +70,16 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         sample_super_pop = panel_df['super_pop']
         pop_array = np.array(sample_pop)
         super_pop_array = np.array(sample_super_pop)
-        sort_criteria = super_pop_array + pop_array
-        sorted_indices = np.argsort(sort_criteria)
-        pop_membership = super_pop_array[sorted_indices]
+
+        custom_order = {'YRI': 0, 'LWK': 1, 'GWD': 2, 'MSL': 3, 'ESN': 4, 'ASW': 5,
+                         'ACB': 6, 'FIN': 7, 'CEU': 8, 'GBR': 9, 'TSI': 10, 'IBS': 11,
+                         'GIH': 12, 'PJL': 13, 'BEB': 14, 'STU': 15, 'ITU': 16,
+                         'CHB': 17, 'JPT': 18, 'CHS': 19, 'CDX': 20, 'KHV': 21,
+                         'MXL': 22, 'PUR': 23, 'CLM': 24, 'PEL': 25}
+        custom_sort_criteria = np.array([custom_order[pop] for pop in pop_array])
+        #sort_criteria = super_pop_array + pop_array
+        sorted_indices = np.argsort(custom_sort_criteria)
+        pop_membership = pop_array[sorted_indices]
         print("pop_membership after resorting:", pop_membership)
         xs = xs[sorted_indices]
 
@@ -110,7 +122,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("count larger 2:", count_larger_2)
 
     # subsampling sites
-    sample_size = 15000
+    sample_size = 20000
     np.random.seed(seed)
     print("number of sites after subsampling:", sample_size)
     random_indices = np.random.choice(xs.shape[1], sample_size, replace=False)
@@ -194,6 +206,17 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     end = time.time()
     print("time needed:", end - start)
 
+    # plot cost of bipartitions vs mutation frequency:
+    mut_freq = np.sum(bipartitions.values, axis=1)
+    fig, ax = plt.subplots(figsize=(9, 6))
+    ax.scatter(bipartitions.costs, mut_freq, alpha=0.5, s=5)
+    ax.set_xlabel('costs')
+    ax.set_ylabel('mutation frequency')
+    with PdfPages('plots/cost_vs_mut_freq_sites_' + str(nb_mut) + "_seed_" + str(
+            seed) + "_seed_" + str(cost_fct_name) + '.pdf') as pdf:
+        pdf.savefig()
+    plt.show()
+
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
     #                                                  partial(
@@ -219,8 +242,17 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     start_tangle_tree = time.time()
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
-                                      verbose=3,  # print everything
-                                      max_clusters=10)
+                                      verbose=3,
+                                      prune_first_path=False)# print everything
+                                      #max_clusters=10)
+
+    if tangles_tree.__class__ == np.float64:
+        print("I am in if statement prune_first_path.")
+        bip_idx = np.where(bipartitions.costs <= tangles_tree)[0]
+        bipartitions = bipartitions[bip_idx]
+        tangles_tree = tangle_computation(cuts=bipartitions,
+                                          agreement=agreement,
+                                          verbose=3)
 
     end_tangle_tree = time.time()
     print("tangle tree computation completed in ", end_tangle_tree -
@@ -237,10 +269,13 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # contract to binary tree
     print("\tContracting to binary tree", flush=True)
     contracted_tree = ContractedTangleTree(tangles_tree)
+    contracted_tree.plot_tree("plots/tree_before_pruning")
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
     contracted_tree.prune(1)
+
+    contracted_tree.plot_tree("plots/tree_after_pruning")
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
@@ -314,7 +349,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode,
+                                           data_generation_mode, sorting_level="lowest",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
@@ -335,7 +370,7 @@ if __name__ == '__main__':
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
-    cost_fct_name = "FST"  # FST or HWE
+    cost_fct_name = "HWE"  # FST or HWE
     cost_precomputed = False
     plot_ADMIXTURE = False
 

@@ -342,4 +342,4 @@ if use_this_script_for_sim == True:
     print("G:", data.G)
 
 
-    print("simulation done.")
+    #print("simulation done.")
