@@ -271,12 +271,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                           agreement=agreement,
                                           verbose=3)
 
+        print("pickle tangles tree.")
         with open('../tangles_in_pop_gen/data/saved_trees/' + str(
                 saved_tangles_tree_filename),
                    'wb') as handle:
             pickle.dump(tangles_tree, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     elif tree_precomputed == True:
+        print("load tangles tree.")
         with open('../tangles_in_pop_gen/data/saved_trees/' + str(
                 saved_tangles_tree_filename), 'rb') as handle:
             tangles_tree = pickle.load(handle)
