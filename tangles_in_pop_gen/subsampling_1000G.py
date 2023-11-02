@@ -91,8 +91,10 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     num_zero_mut = 0
     num_n_mut = 0
     num_multiallelic = 0
+    num_low_freq = 0
     columns_to_delete_0 = []
     columns_to_delete_n = []
+    columns_to_delete_low_freq = []
     columns_to_delete_multiallelic = []
     for m in range(0, xs.shape[1]):
         if np.sum(xs[:, m]) == 0:
@@ -122,13 +124,22 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("count larger 2:", count_larger_2)
 
     # subsampling sites
-    sample_size = 20000
+    sample_size = 50000
+    tree_precomputed = False
     np.random.seed(seed)
     print("number of sites after subsampling:", sample_size)
     random_indices = np.random.choice(xs.shape[1], sample_size, replace=False)
     print("random indices:", random_indices)
     # downsize xs to selected sites
     xs = xs[:, random_indices]
+
+    for m in range(0, xs.shape[1]):
+        if np.count_nonzero(xs[:, m]) == 0:
+            columns_to_delete_low_freq.append(m)
+            num_low_freq = num_low_freq + 1
+    xs = np.delete(xs, columns_to_delete_low_freq, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_low_freq)
+    print("low freq. sites deleted:", num_low_freq)
 
     n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
@@ -183,6 +194,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                    str(cost_fct_name) + "_subsampling_1000G_seed_" +
                                    str(
                 seed))
+
+    saved_tangles_tree_filename = ("tangles_tree_" + str(data_generation_mode) +
+                                   "_n_" + str(n) + "_sites_" + str(nb_mut) + "_" +
+                                   str(cost_fct_name) + "_subsampling_1000G_seed_" +
+                                   str(seed))
 
     start = time.time()
     print("time started")
@@ -239,20 +255,32 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
     print("\tBuilding the tangle search tree", flush=True)
-    start_tangle_tree = time.time()
-    tangles_tree = tangle_computation(cuts=bipartitions,
+    if tree_precomputed == False:
+        start_tangle_tree = time.time()
+        tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
                                       verbose=3,
                                       prune_first_path=False)# print everything
                                       #max_clusters=10)
 
-    if tangles_tree.__class__ == np.float64:
-        print("I am in if statement prune_first_path.")
-        bip_idx = np.where(bipartitions.costs <= tangles_tree)[0]
-        bipartitions = bipartitions[bip_idx]
-        tangles_tree = tangle_computation(cuts=bipartitions,
+        if tangles_tree.__class__ == np.float64:
+            print("I am in if statement prune_first_path.")
+            bip_idx = np.where(bipartitions.costs <= tangles_tree)[0]
+            bipartitions = bipartitions[bip_idx]
+            tangles_tree = tangle_computation(cuts=bipartitions,
                                           agreement=agreement,
                                           verbose=3)
+
+        with open('../tangles_in_pop_gen/data/saved_trees/' + str(
+                saved_tangles_tree_filename),
+                   'wb') as handle:
+            pickle.dump(tangles_tree, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    elif tree_precomputed == True:
+        with open('../tangles_in_pop_gen/data/saved_trees/' + str(
+                saved_tangles_tree_filename), 'rb') as handle:
+            tangles_tree = pickle.load(handle)
+
 
     end_tangle_tree = time.time()
     print("tangle tree computation completed in ", end_tangle_tree -
@@ -273,7 +301,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(1)
+    contracted_tree.prune(10)
 
     contracted_tree.plot_tree("plots/tree_after_pruning")
 
@@ -349,7 +377,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode, sorting_level="lowest",
+                                           data_generation_mode, sorting_level="all",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
@@ -364,14 +392,14 @@ if __name__ == '__main__':
     rho = 100# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 100  # 100 55      # mutationsrate
-    agreement = 250
+    agreement = 280
     seed = 40 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
-    cost_fct_name = "HWE"  # FST or HWE
-    cost_precomputed = False
+    cost_fct_name = "FST_normalized"  # FST or HWE
+    cost_precomputed = True
     plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set
