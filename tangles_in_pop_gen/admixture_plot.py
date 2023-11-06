@@ -104,12 +104,17 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
     if data_generation_mode == 'readVCF':
         unique_pop_membership_old = np.unique(pop_membership)
         unique_pop_membership_sorted_old = np.sort(unique_pop_membership_old)
+        # unique_pop_membership_sorted = np.array(['YRI', 'LWK', 'GWD', 'MSL', 'ESN',
+        #                                          'ASW', 'ACB', 'FIN', 'CEU', 'GBR',
+        #                                          'TSI', 'IBS', 'GIH', 'PJL', 'BEB',
+        #                                          'STU', 'ITU', 'CHB', 'JPT', 'CHS',
+        #                                          'CDX', 'KHV', 'MXL', 'PUR', 'CLM',
+        #                                          'PEL'])
         unique_pop_membership_sorted = np.array(['YRI', 'LWK', 'GWD', 'MSL', 'ESN',
                                                  'ASW', 'ACB', 'FIN', 'CEU', 'GBR',
                                                  'TSI', 'IBS', 'GIH', 'PJL', 'BEB',
                                                  'STU', 'ITU', 'CHB', 'JPT', 'CHS',
-                                                 'CDX', 'KHV', 'MXL', 'PUR', 'CLM',
-                                                 'PEL'])
+                                                 'CDX', 'KHV'])
         pop_sizes = np.array([np.sum(pop_membership == pop) for
                                      pop in
                            unique_pop_membership_sorted])
@@ -218,7 +223,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
     #y_plot_sorted = y_plot
 
     # stacked bar plots:
-    fig, axs = plt.subplots(nb_plots, figsize=(10, 6)) #20 40
+    fig, axs = plt.subplots(nb_plots, figsize=(50, 30)) #20 40
     #fig.suptitle('Tangles', fontsize=20)
     fig.tight_layout()
     # Create the grid
@@ -234,13 +239,24 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
         elif data_generation_mode == 'readVCF':
             #subplot.set_xticks([330, 834, 1260, 1763, 2259])
             #subplot.set_xticklabels(['AFR', 'AMR', 'EAS', 'EUR', 'SAS'])
+
+            # with AMR:
+            # subplot.set_xticks([54, 158, 264, 363, 455, 535, 613, 711, 810, 905,
+            #                     1004, 1111, 1216, 1315, 1406, 1500, 1602, 1705, 1808,
+            #                     1913, 2012, 2108, 2189, 2273, 2372, 2462])
+            # subplot.set_xticklabels(['YRI', 'LWK', 'GWD', 'MSL', 'ESN', 'ASW', 'ACB',
+            #                          'FIN', 'CEU', 'GBR', 'TSI', 'IBS', 'GIH', 'PJL',
+            #                          'BEB', 'STU', 'ITU', 'CHB', 'JPT', 'CHS', 'CDX',
+            #                          'KHV', 'MXL', 'PUR', 'CLM', 'PEL'])
+
+            # without AMR:
             subplot.set_xticks([54, 158, 264, 363, 455, 535, 613, 711, 810, 905,
                                 1004, 1111, 1216, 1315, 1406, 1500, 1602, 1705, 1808,
-                                1913, 2012, 2108, 2189, 2273, 2372, 2462])
+                                1913, 2012, 2108])
             subplot.set_xticklabels(['YRI', 'LWK', 'GWD', 'MSL', 'ESN', 'ASW', 'ACB',
                                      'FIN', 'CEU', 'GBR', 'TSI', 'IBS', 'GIH', 'PJL',
                                      'BEB', 'STU', 'ITU', 'CHB', 'JPT', 'CHS', 'CDX',
-                                     'KHV', 'MXL', 'PUR', 'CLM', 'PEL'])
+                                     'KHV'])
         else:
             subplot.set_xticks(
                 np.cumsum(pop_sizes) - pop_sizes / 2 -0.5)
@@ -515,9 +531,10 @@ def admixture_comparison_plot(matrices, pop_membership, agreement,
                 # axs[j].set_xticklabels([str(x) for x in indv])
                 # axs[j].xticks(indv, names, fontweight='bold')
         K = j + 2
-        subprocess.run(["bash", "admixture/P_Q/admixture_loop.sh", ADMIXTURE_file_name,
+        #ADMIXTURE_file_name = "1000G_subsample_10000"
+        subprocess.run(["bash", "tangles_in_pop_gen/admixture/P_Q/admixture_loop.sh",
+                        ADMIXTURE_file_name,
                  str(K)])
-
         with open("admixture/P_Q/" + ADMIXTURE_file_name + '.' + str(K) + '.Q') as f:
             Q = np.loadtxt(f, dtype=str, delimiter='\n')
         Q = [list(map(float, q.split())) for q in Q]

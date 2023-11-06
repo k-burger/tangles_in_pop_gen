@@ -83,6 +83,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("pop_membership after resorting:", pop_membership)
         xs = xs[sorted_indices]
 
+        # exlude AMR:
+        xs = xs[:2157]
+        pop_membership = pop_membership[:2157]
+        print("pop_membership after resorting without AMR:", pop_membership)
+
+
 
 
     # data preprocessing:
@@ -132,6 +138,35 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("random indices:", random_indices)
     # downsize xs to selected sites
     xs = xs[:, random_indices]
+
+    # # save subsampled genotype matrix as vcf:
+    # # Beispiel: Ihre Genotypenmatrix
+    # genotype_matrix = xs
+    # print("G admixture n:", genotype_matrix.shape[0])
+    # print("G admixture m:", genotype_matrix.shape[1])
+    # # Beispiel: Individual-IDs
+    # individual_ids = [f"{i}indv" for i in mutations_in_sim[random_indices]]
+    # # open vcd to write
+    # with (open("/home/klara/ML_in_pop_gen_in_process/tangles_in_pop_gen"
+    #           "/tangles_in_pop_gen/admixture/data/1000G_subsample_10000.vcf", "w") as
+    #       vcf_file):
+    #     # Schreibe VCF-Header
+    #     vcf_file.write('##fileformat=VCFv4.2\n')
+    #     vcf_file.write(
+    #         f'#CHROM' + '\t' + 'POS' + '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + '\t'.join(
+    #             individual_ids) + '\n')
+    #     # Erstelle VCF-Einträge für jede Position
+    #     for i in range(genotype_matrix.shape[1]):
+    #         chrom = "1"  # Beispiel: Nehmen Sie die entsprechende Chromosomenbezeichnung
+    #         pos = i + 1  # Beispiel: Positionen für jede Spalte in der Genotypenmatrix
+    #         ref = "A"  # Beispiel: Nehmen Sie das entsprechende Referenz-Allel
+    #         alt = "C"  # Beispiel: Nehmen Sie das entsprechende Alternativ-Allel
+    #         vcf_line = f'{chrom}\t{pos}\t.\t{ref}\t{alt}\t.\tPASS\t.\tGT'
+    #         for j in range(genotype_matrix.shape[0]):
+    #             genotype = genotype_matrix[j, i]
+    #             vcf_line += f'\t{genotype}/{genotype}' if genotype == 2 else f'\t{genotype}' if genotype == 1 else '\t0/0'
+    #         vcf_file.write(vcf_line + '\n')
+
 
     for m in range(0, xs.shape[1]):
         if np.count_nonzero(xs[:, m]) == 0:
@@ -255,8 +290,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
     print("\tBuilding the tangle search tree", flush=True)
+    start_tangle_tree = time.time()
     if tree_precomputed == False:
-        start_tangle_tree = time.time()
         tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
                                       verbose=3,
@@ -271,17 +306,17 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                           agreement=agreement,
                                           verbose=3)
 
-        print("pickle tangles tree.")
-        with open('../tangles_in_pop_gen/data/saved_trees/' + str(
-                saved_tangles_tree_filename),
-                   'wb') as handle:
-            pickle.dump(tangles_tree, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    elif tree_precomputed == True:
-        print("load saved tangles tree.")
-        with open('../tangles_in_pop_gen/data/saved_trees/' + str(
-                saved_tangles_tree_filename), 'rb') as handle:
-            tangles_tree = pickle.load(handle)
+    #     print("pickle tangles tree.")
+    #     with open('../tangles_in_pop_gen/data/saved_trees/' + str(
+    #             saved_tangles_tree_filename),
+    #                'wb') as handle:
+    #         pickle.dump(tangles_tree, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    #
+    # elif tree_precomputed == True:
+    #     print("load saved tangles tree.")
+    #     with open('../tangles_in_pop_gen/data/saved_trees/' + str(
+    #             saved_tangles_tree_filename), 'rb') as handle:
+    #         tangles_tree = pickle.load(handle)
 
 
     end_tangle_tree = time.time()
@@ -314,8 +349,9 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
     # compute soft predictions
     # assign weight/ importance to bipartitions
-    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count(",") + 1 for name in bipartitions.names])#np.array([name.count(
-    # "'") + 1 for name in bipartitions.names])
+    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count(",") + 1 for name in bipartitions.names])#np.array([name.count("'") + 1 for name in bipartitions.names])
+    # weight = (1 / bipartitions.costs) * np.sum(bipartitions.values, axis=1) * np.array(
+    #     [name.count(",") + 1 for name in bipartitions.names])
 
 
     # propagate down the tree
@@ -379,7 +415,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode, sorting_level="all",
+                                           data_generation_mode, sorting_level="lowest",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
@@ -394,7 +430,7 @@ if __name__ == '__main__':
     rho = 100# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 100  # 100 55      # mutationsrate
-    agreement = 280
+    agreement = 220
     seed = 40 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be
@@ -452,7 +488,7 @@ if __name__ == '__main__':
             data.load_data()
             print("Data has been loaded.")
 
-
+    print("admixture filename:", data.admixture_filename)
     ADMIXTURE_filename = data.admixture_filename
     output_directory = Path('output_tangles_in_pop_gen')
     plot = True
