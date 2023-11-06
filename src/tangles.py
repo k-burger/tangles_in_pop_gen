@@ -3,10 +3,13 @@ from itertools import combinations
 import random
 
 from bitarray import bitarray
-import numpy
 
 from src.utils import subset
 from src.data_types import Cuts
+import psutil
+import math
+import time
+import numpy as np
 import multiprocessing
 
 # def check_combination(args):
@@ -116,7 +119,10 @@ class Tangle(dict):
         specification = self._specification.copy()
 
         pad_bitarray(specification, new_cut_id + 1)
-
+        subsample_size = 1200
+        #print("triplet subsampling size:", subsample_size)
+        print(f"Current memory usage: {psutil.virtual_memory().percent}%")
+        #print("mutation frequency:", np.sum(new_cut == 1))
         i_to_remove = []
         for i, core_cut in enumerate(core):
             if subset(core_cut, new_cut):
@@ -136,17 +142,57 @@ class Tangle(dict):
             if (core[0] & new_cut).count() < min_size:
                 return None
         else:
-            sampled_core = random.sample(core, min(len(core), 15))
-            #for core1, core2 in combinations(core, 2):
-            for core1, core2 in combinations(sampled_core, 2):
-                if (core1 & core2 & new_cut).count() < min_size:
-                    return None
+            # # Version 1: sample core elements
+            # start = time.time()
+            # sampled_core = random.sample(core, min(len(core), subsample_size))
+            # print("sampled core:", time.time() - start)
+            # start = time.time()
+            # # for core1, core2 in combinations(core, 2):
+            # i = 0
+            # for core1, core2 in combinations(sampled_core, 2):
+            #     i = i +1
+            #     if (core1 & core2 & new_cut).count() < min_size:
+            #         return None
+            # print("len subsample:", i)
+            # print("loop done:", time.time() - start)
+
+            # Version 2: sample pairs
+            if len(core) < subsample_size:
+                for core1, core2 in combinations(core, 2):
+                    if (core1 & core2 & new_cut).count() < min_size:
+                        return None
+            else:
+                start = time.time()
+                subsample_size_pairs = math.comb(subsample_size, 2)
+                print("subsample_size_pairs computed:", time.time() - start)
+                start = time.time()
+                sampled_indices = np.random.choice(range(len(core)), subsample_size_pairs
+                                                   * 2, replace=True)
+                print("sampled indices:", time.time() - start)
+                start = time.time()
+                for i in range(0, len(sampled_indices), 2):
+                    if (core[sampled_indices[i]] & core[sampled_indices[i+1]] &
+                        new_cut).count() < min_size:
+                        return None
+                print("loop done:", time.time() - start)
 
         core.append(new_cut)
+        print("len core:", len(core))
         specification[new_cut_id] = orientation
 
         return Tangle(self._cuts, core, specification)
 
+def generate_sampled_pairs(core, subsample_size):
+    num_possible_pairs = len(core) * (len(core) - 1) // 2
+    subsample_size_pairs = min(subsample_size, num_possible_pairs)
+
+    # Erzeugen Sie eine zufällige Liste von Indizes aus core
+    sampled_indices = random.sample(range(len(core)), subsample_size_pairs)
+
+    # Erzeugen Sie die Paare basierend auf den ausgewählten Indizes
+    for i, j in combinations(sampled_indices, 2):
+        core1, core2 = core[i], core[j]
+        yield core1, core2
 
 def core_algorithm(tree, current_cuts, current_names, idx_current_cuts):
     """
