@@ -85,11 +85,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #sort_criteria = super_pop_array + pop_array
         sorted_indices = np.argsort(custom_sort_criteria)
         sorted_indices_super_pop = np.argsort(custom_sort_criteria_super_pop)
-        pop_membership = super_pop_array[sorted_indices_super_pop]
-        #pop_membership = pop_array[sorted_indices]
+        #pop_membership = super_pop_array[sorted_indices_super_pop]
+        pop_membership = pop_array[sorted_indices]
         print("pop_membership after resorting:", pop_membership)
-        #xs = xs[sorted_indices]
-        xs = xs[sorted_indices_super_pop]
+        xs = xs[sorted_indices]
+        #xs = xs[sorted_indices_super_pop]
 
         # exlude AMR:
         xs = xs[:2157]
@@ -209,55 +209,73 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #print("G:", xs)
     data = data_types.Data(xs=xs)
 
-    # compute k nearest neighbors:
-    print("start compute kNN")
-    kNN = compute_kNN.KNearestNeighbours(xs, 10)
-    kNN.compute_kNN()
+    ## kNN
+    kNN_precomputed = True
+    k = 20
+    kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
+        nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
+    if kNN_precomputed == False:
+        kNN = compute_kNN.KNearestNeighbours(xs, k, filename=kNN_filename,
+                                             filepath="data/saved_kNN/")
+        kNN.compute_kNN()
+    else:
+        kNN = compute_kNN.KNearestNeighbours(xs, k, filename=kNN_filename,
+                                             filepath="data/saved_kNN/")
+        kNN.load_kNN()
     print("kNN.kNN", kNN.kNN)
+
+    # pickle kNN-Matrix for cost function:
+    with open("data/saved_kNN/kNN", 'wb') as outp:  # overwrites existing file.
+        pickle.dump(kNN, outp, pickle.HIGHEST_PROTOCOL)
 
     # check if kNN Graph is connected:
     G = nx.from_numpy_array(kNN.kNN)
     print("knn Graph is connected:", nx.is_connected(G))
 
-    # get pop sizes:
-    print(pop_membership)
-    # unique_pop_membership_sorted = np.array(['YRI', 'LWK', 'GWD', 'MSL', 'ESN',
-    #                                          'ASW', 'ACB', 'FIN', 'CEU', 'GBR',
-    #                                          'TSI', 'IBS', 'GIH', 'PJL', 'BEB',
-    #                                          'STU', 'ITU', 'CHB', 'JPT', 'CHS',
-    #                                          'CDX', 'KHV'])
-    unique_pop_membership_sorted = np.array(['AFR', 'EUR', 'SAS', 'EAS'])
-    pop_sizes = np.array([np.sum(pop_membership == pop) for
-                          pop in
-                          unique_pop_membership_sorted])
-    print("pop sizes 1000G:", pop_sizes)
+    check_kNN_within_pop = True
+    if check_kNN_within_pop == True:
+        # check if nearest neighbors within populations:
+        #pop_sizes = np.bincount(pop_membership)
 
-    # check if nearest neighbors within populations:
-    # pop_boundaries = [0]
-    # pop_boundaries.append(np.cumsum(pop_sizes))
-    pop_start = 0
-    kNN_outside_pop_count = []
-    indv_with_neighbours_outside_pop = []
-    for i in range(0, len(pop_sizes)):
-        c = 0
-        for j in range(0, pop_sizes[i]):
-            # get indices of neighbors
-            neighbors = np.where(kNN.kNN[pop_start + j] == 1)[0]
-            # check if neighbors lie outside of population
-            neighbors_only_in_pop = True
-            for idx in neighbors:
-                if idx < pop_start or idx >= pop_start + pop_sizes[i]:
-                    indv_with_neighbours_outside_pop.append(pop_start + j)
-                    if neighbors_only_in_pop == True:
-                        c += 1
-                        neighbors_only_in_pop = False
-        kNN_outside_pop_count.append(c)
-        pop_start += pop_sizes[i]
+        # get pop sizes:
+        print(pop_membership)
+        unique_pop_membership_sorted = np.array(['YRI', 'LWK', 'GWD', 'MSL', 'ESN',
+                                                 'ASW', 'ACB', 'FIN', 'CEU', 'GBR',
+                                                 'TSI', 'IBS', 'GIH', 'PJL', 'BEB',
+                                                 'STU', 'ITU', 'CHB', 'JPT', 'CHS',
+                                                 'CDX', 'KHV'])
+        # unique_pop_membership_sorted = np.array(['AFR', 'EUR', 'SAS', 'EAS'])
+        pop_sizes = np.array([np.sum(pop_membership == pop) for
+                              pop in
+                              unique_pop_membership_sorted])
+        print("pop sizes 1000G:", pop_sizes)
 
-    print("per pop number of indv with neighbors outside of own pop:",
-          kNN_outside_pop_count)
-    print("indv with nearest neighbor outside of own pop:",
-          np.unique(indv_with_neighbours_outside_pop))
+        # check if nearest neighbors within populations:
+        pop_start = 0
+        kNN_outside_pop_count = []
+        indv_with_neighbours_outside_pop = []
+        for i in range(0, len(pop_sizes)):
+            c = 0
+            for j in range(0, pop_sizes[i]):
+                # get indices of neighbors
+                neighbors = np.where(kNN.kNN[pop_start + j] == 1)[0]
+                # check if neighbors lie outside of population
+                neighbors_only_in_pop = True
+                for idx in neighbors:
+                    if idx < pop_start or idx >= pop_start + pop_sizes[i]:
+                        indv_with_neighbours_outside_pop.append(pop_start + j)
+                        if neighbors_only_in_pop == True:
+                            c += 1
+                            neighbors_only_in_pop = False
+            kNN_outside_pop_count.append(c)
+            pop_start += pop_sizes[i]
+
+        print("per pop number of indv with neighbors outside of own pop:",
+              kNN_outside_pop_count)
+        print("indv with nearest neighbor outside of own pop:",
+              np.unique(indv_with_neighbours_outside_pop))
+
+
 
     # calculate your bipartitions we use the binary questions/features directly as bipartitions
     # print("\tGenerating set of bipartitions", flush=True)
@@ -413,7 +431,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(10)
+    contracted_tree.prune(5)
 
     #contracted_tree.plot_tree("plots/tree_after_pruning")
 
@@ -511,8 +529,8 @@ if __name__ == '__main__':
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
-    cost_fct_name = "FST_normalized"  # FST or HWE
-    cost_precomputed = True
+    cost_fct_name = "k_nearest_neighbours"  # FST or HWE
+    cost_precomputed = False
     plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set
