@@ -30,6 +30,8 @@ import warnings
 import time
 import psutil
 from scipy.sparse import csr_matrix
+import compute_kNN
+import networkx as nx
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -76,12 +78,18 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                          'GIH': 12, 'PJL': 13, 'BEB': 14, 'STU': 15, 'ITU': 16,
                          'CHB': 17, 'JPT': 18, 'CHS': 19, 'CDX': 20, 'KHV': 21,
                          'MXL': 22, 'PUR': 23, 'CLM': 24, 'PEL': 25}
+        custom_order_super_pop = {'AFR': 0, 'EUR': 1, 'SAS': 2, 'EAS': 3, 'AMR': 4}
         custom_sort_criteria = np.array([custom_order[pop] for pop in pop_array])
+        custom_sort_criteria_super_pop = np.array([custom_order_super_pop[pop] for pop in
+                                                 super_pop_array])
         #sort_criteria = super_pop_array + pop_array
         sorted_indices = np.argsort(custom_sort_criteria)
-        pop_membership = pop_array[sorted_indices]
+        sorted_indices_super_pop = np.argsort(custom_sort_criteria_super_pop)
+        pop_membership = super_pop_array[sorted_indices_super_pop]
+        #pop_membership = pop_array[sorted_indices]
         print("pop_membership after resorting:", pop_membership)
-        xs = xs[sorted_indices]
+        #xs = xs[sorted_indices]
+        xs = xs[sorted_indices_super_pop]
 
         # exlude AMR:
         xs = xs[:2157]
@@ -130,7 +138,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("count larger 2:", count_larger_2)
 
     # subsampling sites
-    sample_size = 50000
+    sample_size = 5000
     tree_precomputed = False
     np.random.seed(seed)
     print("number of sites after subsampling:", sample_size)
@@ -169,7 +177,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
 
     for m in range(0, xs.shape[1]):
-        if np.count_nonzero(xs[:, m]) == 0:
+        if np.count_nonzero(xs[:, m]) < 0:
             columns_to_delete_low_freq.append(m)
             num_low_freq = num_low_freq + 1
     xs = np.delete(xs, columns_to_delete_low_freq, axis=1)
@@ -201,6 +209,56 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #print("G:", xs)
     data = data_types.Data(xs=xs)
 
+    # compute k nearest neighbors:
+    print("start compute kNN")
+    kNN = compute_kNN.KNearestNeighbours(xs, 10)
+    kNN.compute_kNN()
+    print("kNN.kNN", kNN.kNN)
+
+    # check if kNN Graph is connected:
+    G = nx.from_numpy_array(kNN.kNN)
+    print("knn Graph is connected:", nx.is_connected(G))
+
+    # get pop sizes:
+    print(pop_membership)
+    # unique_pop_membership_sorted = np.array(['YRI', 'LWK', 'GWD', 'MSL', 'ESN',
+    #                                          'ASW', 'ACB', 'FIN', 'CEU', 'GBR',
+    #                                          'TSI', 'IBS', 'GIH', 'PJL', 'BEB',
+    #                                          'STU', 'ITU', 'CHB', 'JPT', 'CHS',
+    #                                          'CDX', 'KHV'])
+    unique_pop_membership_sorted = np.array(['AFR', 'EUR', 'SAS', 'EAS'])
+    pop_sizes = np.array([np.sum(pop_membership == pop) for
+                          pop in
+                          unique_pop_membership_sorted])
+    print("pop sizes 1000G:", pop_sizes)
+
+    # check if nearest neighbors within populations:
+    # pop_boundaries = [0]
+    # pop_boundaries.append(np.cumsum(pop_sizes))
+    pop_start = 0
+    kNN_outside_pop_count = []
+    indv_with_neighbours_outside_pop = []
+    for i in range(0, len(pop_sizes)):
+        c = 0
+        for j in range(0, pop_sizes[i]):
+            # get indices of neighbors
+            neighbors = np.where(kNN.kNN[pop_start + j] == 1)[0]
+            # check if neighbors lie outside of population
+            neighbors_only_in_pop = True
+            for idx in neighbors:
+                if idx < pop_start or idx >= pop_start + pop_sizes[i]:
+                    indv_with_neighbours_outside_pop.append(pop_start + j)
+                    if neighbors_only_in_pop == True:
+                        c += 1
+                        neighbors_only_in_pop = False
+        kNN_outside_pop_count.append(c)
+        pop_start += pop_sizes[i]
+
+    print("per pop number of indv with neighbors outside of own pop:",
+          kNN_outside_pop_count)
+    print("indv with nearest neighbor outside of own pop:",
+          np.unique(indv_with_neighbours_outside_pop))
+
     # calculate your bipartitions we use the binary questions/features directly as bipartitions
     # print("\tGenerating set of bipartitions", flush=True)
     # bipartitions = data_types.Cuts(values=(data.xs == True).T,
@@ -223,7 +281,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                     )
 
     cost_function = getattr(cost_functions, cost_fct_name)
-    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) +
+    saved_costs_filename = (str(data_generation_mode) + "_n_" + str(n) +
                                    "_sites_" +
                                    str(nb_mut) + "_" +
                                    str(cost_fct_name) + "_subsampling_1000G_seed_" +
@@ -235,6 +293,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                    str(cost_fct_name) + "_subsampling_1000G_seed_" +
                                    str(seed))
 
+    # bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts_no_multiprocessing(
+    #     bipartitions,
+    #     partial(cost_function,
+    #             data.xs, None))
+
     start = time.time()
     print("time started")
     if cost_precomputed == False:
@@ -245,17 +308,23 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                                                              cost_function,
                                                              data.xs, None))
 
-        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename),
+        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_costs_filename),
                    'wb') as handle:
             pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
     else:
         print("Load costs of bipartitions.")
-        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_bipartitions_filename), 'rb') as handle:
+        with open('../tangles_in_pop_gen/data/saved_costs/' + str(
+                saved_costs_filename), 'rb') as handle:
             bipartitions = pickle.load(handle)
     end = time.time()
     print("time needed:", end - start)
+
+    print("bipartitions.names:", bipartitions.names)
+    print("type(bipartitions.names):", type(bipartitions.names))
+    print("bipartitions.costs:", bipartitions.costs)
+    print("type(bipartitions.costs):", type(bipartitions.costs))
 
     # plot cost of bipartitions vs mutation frequency:
     mut_freq = np.sum(bipartitions.values, axis=1)
@@ -280,12 +349,18 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # merge duplicate bipartitions
     start_merging = time.time()
+    # merge duplicate bipartitions
     print("Merging doublicate mutations.")
     bipartitions = merge_doubles(bipartitions)
     print("number of bipartitions after merging:", len(bipartitions.names))
     end_merging = time.time()
     print("merging duplicate bipartitions completed in ", end_merging -
           start_merging, " sec.")
+
+    print("bipartitions.names:", bipartitions.names)
+    print("type(bipartitions.names):", type(bipartitions.names))
+    print("bipartitions.costs:", bipartitions.costs)
+    print("type(bipartitions.costs):", type(bipartitions.costs))
 
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
@@ -300,7 +375,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
         if tangles_tree.__class__ == np.float64:
             print("I am in if statement prune_first_path.")
-            bip_idx = np.where(bipartitions.costs <= tangles_tree)[0]
+            bip_idx = np.where(bipartitions.costs >= tangles_tree)[0]
             bipartitions = bipartitions[bip_idx]
             tangles_tree = tangle_computation(cuts=bipartitions,
                                           agreement=agreement,
@@ -334,13 +409,13 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # contract to binary tree
     print("\tContracting to binary tree", flush=True)
     contracted_tree = ContractedTangleTree(tangles_tree)
-    contracted_tree.plot_tree("plots/tree_before_pruning")
+    #contracted_tree.plot_tree("plots/tree_before_pruning")
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
     contracted_tree.prune(10)
 
-    contracted_tree.plot_tree("plots/tree_after_pruning")
+    #contracted_tree.plot_tree("plots/tree_after_pruning")
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
@@ -415,7 +490,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode, sorting_level="lowest",
+                                           data_generation_mode, sorting_level="all",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
@@ -430,7 +505,7 @@ if __name__ == '__main__':
     rho = 100# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 100  # 100 55      # mutationsrate
-    agreement = 220
+    agreement = 200
     seed = 40 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be

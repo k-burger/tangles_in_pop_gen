@@ -6,6 +6,7 @@ from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import DistanceMetric
 import time
 import math
+import pickle
 
 
 def gauss_kernel_distance(xs, n_samples, cut, decay=1):
@@ -623,6 +624,50 @@ def FST(xs, n_samples, cut):
     #print("time needed for cost calculation:", end_time - start_time)
     return 1/FST_exp
 
+
+def k_nearest_neighbours(xs, n_sample, cut):
+    len_in_cut = np.count_nonzero(cut == True)
+    len_out_cut = np.count_nonzero(cut == False)
+
+    # lead kNN matrix:
+    with open("../tangles_in_pop_gen/data/saved_kNN/kNN", 'rb') as inp:
+        kNN = pickle.load(inp)
+
+    # Find indices of individuals on each side of the cut
+    mutation_indices_False = np.where(cut == False)[0]
+    mutation_indices_True = np.where(cut == True)[0]
+
+    # Find neighbors for individuals that do not carry the mutation responsible for
+    # the cut
+    neighbors_False = np.where(kNN.kNN[mutation_indices_False])[1]
+    # Find neighbors for individuals that do carry the mutation responsible for the cut
+    neighbors_True = np.where(kNN.kNN[mutation_indices_True])[1]
+    # Count neighbors with opposite mutation status
+    kNN_on_opposite_side_False = np.sum(cut[neighbors_False] != False)
+    kNN_on_opposite_side_True = np.sum(cut[neighbors_True] != True)
+
+    # # Initialize count for neighbors on the other side of the cut
+    # #kNN_on_opposite_side = 0
+    # # Iterate over individuals on the False side
+    # for idx_False in mutation_indices_False:
+    #     #print("idx False:", idx_False)
+    #     # Find k nearest neighbors of the current individual
+    #     neighbors_False = np.where(kNN.kNN[idx_False])[0]
+    #     # Count neighbors on opposite side of cut
+    #     kNN_on_opposite_side += np.sum(cut[neighbors_False] != False)
+    # # Iterate over individuals on the False side
+    # for idx_True in mutation_indices_True:
+    #     #print("idx True:", idx_True)
+    #     # Find k nearest neighbors of the current individual
+    #     neighbors_True = np.where(kNN.kNN[idx_True])[0]
+    #     # Count neighbors on opposite side of cut
+    #     kNN_on_opposite_side += np.sum(cut[neighbors_True] != True)
+
+    return 1 + (kNN_on_opposite_side_False/(len_out_cut*kNN.k) +
+                kNN_on_opposite_side_True/(len_in_cut*kNN.k))
+
+
+
 def FST_norm_1(xs, n_samples, cut):
     len_in_cut = np.count_nonzero(cut == True)
     len_out_cut = np.count_nonzero(cut == False)
@@ -647,7 +692,29 @@ def FST_normalized(xs, n_samples, cut):
     p = ((len_in_cut / len_xs) * p_in) + ((len_out_cut / len_xs) * p_out)
     F_in = np.abs(1 - ((p_in * (1 - p_in)) / (p * (1 - p))))
     F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
-    norm = np.power((len_xs/len_in_cut) + (len_xs/len_out_cut),0.1)
+    norm = np.power((len_xs/len_in_cut) + (len_xs/len_out_cut),0.05)
+    FST_exp = (np.sum(F_in) + np.sum(F_out))
+    return (1/FST_exp)* norm
+
+
+def FST_normalized_hack(xs, n_samples, cut, name):
+    len_in_cut = np.count_nonzero(cut == True)
+    len_out_cut = np.count_nonzero(cut == False)
+    len_xs = len_in_cut + len_out_cut
+    p_in = (1 / (2 * len_in_cut)) * np.sum(xs * cut[:, np.newaxis], axis=0)
+    p_out = (1 / (2 * len_out_cut)) * np.sum(xs * (~cut)[:, np.newaxis], axis=0)
+    p = ((len_in_cut / len_xs) * p_in) + ((len_out_cut / len_xs) * p_out)
+    F_in = np.abs(1 - ((p_in * (1 - p_in)) / (p * (1 - p))))
+    F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
+    #norm = np.power((len_xs/len_in_cut) + (len_xs/len_out_cut),0.05)
+
+    in_cut = xs[cut, :]
+    out_cut = xs[~cut, :]
+
+    p_1 = (1 / (2 * len_in_cut)) * np.sum(in_cut[:,name])
+    p_2 = (1 / (2 * len_in_cut)) * np.sum(out_cut[:,name])
+    norm = 1/(np.power(np.maximum(p_1, p_2), 4))
+    print("norm:", norm)
     FST_exp = (np.sum(F_in) + np.sum(F_out))
     return (1/FST_exp) * norm
 

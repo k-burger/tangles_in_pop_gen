@@ -13,6 +13,7 @@ from src import utils
 from src.plotting import plot_cuts_in_one
 
 import numpy as np
+import networkx as nx
 
 from src.tree_tangles import ContractedTangleTree, tangle_computation, \
     compute_soft_predictions_children  # , mut_props_per_terminal_node, get_terminal_node_properties
@@ -22,6 +23,7 @@ import simulate_with_demography
 import simulate_with_demography_diploid
 import benchmark_data
 import admixture_plot
+import compute_kNN
 from src import outsourced_cost_computation
 import FST
 import pickle
@@ -135,6 +137,62 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     data = data_types.Data(xs=xs)
 
+
+    ## kNN
+    kNN_precomputed = False
+    k = 20
+    kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
+        nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
+    if kNN_precomputed == False:
+        kNN = compute_kNN.KNearestNeighbours(xs, k, filename=kNN_filename,
+                                             filepath="data/saved_kNN/")
+        kNN.compute_kNN()
+    else:
+        kNN = compute_kNN.KNearestNeighbours(xs, k, filename=kNN_filename,
+                                             filepath="data/saved_kNN/")
+        kNN.load_kNN()
+    print("kNN.kNN", kNN.kNN)
+
+    # pickle kNN-Matrix for cost function:
+    with open("data/saved_kNN/kNN", 'wb') as outp:  # overwrites existing file.
+        pickle.dump(kNN, outp, pickle.HIGHEST_PROTOCOL)
+
+    # check if kNN Graph is connected:
+    G = nx.from_numpy_array(kNN.kNN)
+    print("knn Graph is connected:", nx.is_connected(G))
+
+    check_kNN_within_pop = True
+    if check_kNN_within_pop == True:
+        # check if nearest neighbors within populations:
+        pop_sizes = np.bincount(pop_membership)
+        #pop_boundaries = [0]
+        #pop_boundaries.append(np.cumsum(pop_sizes))
+        pop_start = 0
+        kNN_outside_pop_count = []
+        indv_with_neighbours_outside_pop = []
+        for i in range(0, len(pop_sizes)):
+            c = 0
+            for j in range(0, pop_sizes[i]):
+                # get indices of neighbors
+                neighbors = np.where(kNN.kNN[pop_start + j] == 1)[0]
+                # check if neighbors lie outside of population
+                neighbors_only_in_pop = True
+                for idx in neighbors:
+                    if idx < pop_start or idx >= pop_start + pop_sizes[i]:
+                        indv_with_neighbours_outside_pop.append(pop_start + j)
+                        if neighbors_only_in_pop == True:
+                            c += 1
+                            neighbors_only_in_pop = False
+            kNN_outside_pop_count.append(c)
+            pop_start += pop_sizes[i]
+
+        print("per pop number of indv with neighbors outside of own pop:",
+              kNN_outside_pop_count)
+        print("indv with nearest neighbor outside of own pop:",
+              np.unique(indv_with_neighbours_outside_pop))
+
+
+
     # calculate bipartitions
     print("\tGenerating set of bipartitions", flush=True)
     bipartitions = data_types.Cuts(values=(data.xs > 0).T,
@@ -154,7 +212,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     #                                                     )
 
     cost_function = getattr(cost_functions, cost_fct_name)
-    saved_bipartitions_filename = (str(data_generation_mode) + "_n_" + str(n) +
+    saved_costs_filename = (str(data_generation_mode) + "_n_" + str(n) +
                                    "_sites_" +
                                    str(nb_mut) + "_" +
                                    str(cost_fct_name) + "_seed_" +
@@ -172,7 +230,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
                 data.xs, None))
 
         with open('../tangles_in_pop_gen/data/saved_costs/' + str(
-                saved_bipartitions_filename),
+                saved_costs_filename),
                   'wb') as handle:
             pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -180,10 +238,15 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     else:
         print("Load costs of bipartitions.")
         with open('../tangles_in_pop_gen/data/saved_costs/' + str(
-                saved_bipartitions_filename), 'rb') as handle:
+                saved_costs_filename), 'rb') as handle:
             bipartitions = pickle.load(handle)
     end = time.time()
     print("time needed:", end - start)
+
+    print("bipartitions.names:", bipartitions.names)
+    print("type(bipartitions.names):", type(bipartitions.names))
+    print("bipartitions.costs:", bipartitions.costs)
+    print("type(bipartitions.costs):", type(bipartitions.costs))
 
     # plot cost of bipartitions vs mutation frequency:
     mut_freq = np.sum(bipartitions.values, axis=1)
@@ -209,6 +272,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # merge duplicate bipartitions
     print("Merging doublicate mutations.")
     bipartitions = merge_doubles(bipartitions)
+
+    print("bipartitions.names:", bipartitions.names)
+    print("type(bipartitions.names):", type(bipartitions.names))
+    print("bipartitions.costs:", bipartitions.costs)
+    print("type(bipartitions.costs):", type(bipartitions.costs))
 
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
@@ -260,8 +328,9 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
     # compute soft predictions
     # assign weight/ importance to bipartitions
-    weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count(",") + 1 for name in bipartitions.names])
-
+    #weight = np.exp(-utils.normalize(bipartitions.costs)) * np.array([name.count(",
+    # ") + 1 for name in bipartitions.names])
+    weight = (1/bipartitions.costs)*np.sum(bipartitions.values, axis=1)*np.array([name.count(",") + 1 for name in bipartitions.names])
     # propagate down the tree
     print("Calculating soft predictions", flush=True)
     compute_soft_predictions_children(node=contracted_tree.root,
@@ -323,7 +392,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode, sorting_level="lowest",
+                                           data_generation_mode, sorting_level="all",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
@@ -341,10 +410,10 @@ if __name__ == '__main__':
     agreement = 35
     seed = 42  # 42   #17
     noise = 0
-    data_already_simulated = True  # True or False, states if data object should be
+    data_already_simulated = False  # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'sim'  # readVCF  out_of_africa sim
-    cost_fct_name = "FST_normalized"  # FST, HWE or FST_normalized
+    cost_fct_name = "k_nearest_neighbours"  # FST, HWE or FST_normalized
     cost_precomputed = False
     plot_ADMIXTURE = False
 

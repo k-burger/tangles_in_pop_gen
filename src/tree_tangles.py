@@ -202,7 +202,8 @@ class TangleTree(object):
             could_add_one = could_add_one or could_add_node
 
             if did_split:
-                print("test")
+                print("split")
+                print("split mutation frequency:", np.sum(cut==1))
                 if not self.first_split and self.prune_first_path:
                     self.first_split = True
                 current_node.splitting = True
@@ -693,7 +694,7 @@ def tangle_computation(cuts, agreement, verbose, max_clusters=None, prune_first_
                                                    idx_current_cuts=idx_cuts_order_i)
 
             if first_split is not None:
-                return old_order
+                return order
 
             if new_tree is None:
                 max_order = cuts.costs[-1]

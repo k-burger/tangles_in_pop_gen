@@ -121,16 +121,17 @@ class Simulated_Data_With_Demography_Diploid:
         demography.add_population(name="EFG", initial_size=0.25)
         demography.add_population(name="EFGH", initial_size=0.25)
         demography.add_population(name="ABCDEFGH", initial_size=0.25)
-        demography.add_population_split(time=2/7, derived=["A", "B"], ancestral="AB")
-        demography.add_population_split(time=4 / 7, derived=["E", "F"], ancestral="EF")
-        demography.add_population_split(time=6/7, derived=["C", "D"], ancestral="CD")
-        demography.add_population_split(time=8 / 7, derived=["EF", "G"],
+        c = 70
+        demography.add_population_split(time=2/c, derived=["A", "B"], ancestral="AB")
+        demography.add_population_split(time=4 / c, derived=["E", "F"], ancestral="EF")
+        demography.add_population_split(time=6/c, derived=["C", "D"], ancestral="CD")
+        demography.add_population_split(time=8 / c, derived=["EF", "G"],
                                         ancestral="EFG")
-        demography.add_population_split(time=10/7, derived=["AB", "CD"],
+        demography.add_population_split(time=10/c, derived=["AB", "CD"],
                                         ancestral="ABCD")
-        demography.add_population_split(time=12/7, derived=["EFG", "H"],
+        demography.add_population_split(time=12/c, derived=["EFG", "H"],
                                         ancestral="EFGH")
-        demography.add_population_split(time=2, derived=["ABCD", "EFGH"],
+        demography.add_population_split(time=28/(2*c), derived=["ABCD", "EFGH"],
                                         ancestral="ABCDEFGH")
         # demography.set_symmetric_migration_rate(["A", "B", "C", "D", "E", "F", "G",
         #                                          "H"],

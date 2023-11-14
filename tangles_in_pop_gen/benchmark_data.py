@@ -18,6 +18,7 @@ import numpy as np
 import stdpopsim
 from IPython.display import SVG
 import allel
+import os
 # import tskit
 import demesdraw
 import matplotlib.pyplot as plt
@@ -280,7 +281,7 @@ class ReadVCF:
         self.n = n
         self.vcf_filename = vcf_filename
         self.filepath = filepath
-        self.admixture_filename = vcf_filename
+        self.admixture_filename = os.path.splitext(vcf_filename)[0]
 
         # properties that are results of data processing:
         self.sites = sites
