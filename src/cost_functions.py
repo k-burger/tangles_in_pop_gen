@@ -628,6 +628,7 @@ def FST(xs, n_samples, cut):
 def k_nearest_neighbours(xs, n_sample, cut):
     len_in_cut = np.count_nonzero(cut == True)
     len_out_cut = np.count_nonzero(cut == False)
+    len_xs = len_in_cut + len_out_cut
 
     # lead kNN matrix:
     with open("../tangles_in_pop_gen/data/saved_kNN/kNN", 'rb') as inp:
@@ -662,11 +663,76 @@ def k_nearest_neighbours(xs, n_sample, cut):
     #     neighbors_True = np.where(kNN.kNN[idx_True])[0]
     #     # Count neighbors on opposite side of cut
     #     kNN_on_opposite_side += np.sum(cut[neighbors_True] != True)
+    norm = np.power((len_xs / len_in_cut) + (len_xs / len_out_cut), 0.05)
+    normalized_knn = (1 + ((kNN_on_opposite_side_False -
+                          np.maximum((len_out_cut*(kNN.k + 1 -len_out_cut)), 0))/
+                      (len_out_cut*kNN.k) + (kNN_on_opposite_side_True- np.maximum((
+                    len_in_cut*(kNN.k + 1 - len_in_cut)),0))/(len_in_cut*kNN.k)))*norm
+    # normalized_knn = 1 + (kNN_on_opposite_side_False + kNN_on_opposite_side_True)/ (
+    #         len_in_cut * len_out_cut*2)
 
-    return 1 + (kNN_on_opposite_side_False/(len_out_cut*kNN.k) +
-                kNN_on_opposite_side_True/(len_in_cut*kNN.k))
+    #print("norm knn:", normalized_knn)
+
+    return normalized_knn
+
+    # return 1 + (kNN_on_opposite_side_False + kNN_on_opposite_side_True)/(
+    #         len_xs*kNN.k)
 
 
+def FST_kNN(xs, n_samples, cut):
+    len_in_cut = np.count_nonzero(cut == True)
+    len_out_cut = np.count_nonzero(cut == False)
+    len_xs = len_in_cut + len_out_cut
+    kNN = k_nearest_neighbours(xs, n_samples, cut)
+
+    p_in = (1 / (2 * len_in_cut)) * np.sum(xs * cut[:, np.newaxis], axis=0)
+    p_out = (1 / (2 * len_out_cut)) * np.sum(xs * (~cut)[:, np.newaxis], axis=0)
+    p = ((len_in_cut / len_xs) * p_in) + ((len_out_cut / len_xs) * p_out)
+    F_in = np.abs(1 - ((p_in * (1 - p_in)) / (p * (1 - p))))
+    print("F_in", F_in)
+    print("F_in sort", (-1)*np.sort(-F_in))
+    F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
+    print("F_out", F_out)
+    print("F_out sort", (-1)*np.sort(-F_out))
+    FST_exp = 0.5 * ((np.sum((-1)*np.sort(-F_in)[:10]) / xs.shape[1]) + (np.sum((
+                                                                                    -1)*np.sort(
+        -F_out)[:10]) /
+                                                                    xs.shape[1]))
+    print("FST exp:", FST_exp)
+    print("return:", (1/FST_exp)*np.power(kNN,1))
+    #FST_exp = np.maximum((np.sum(F_in) / xs.shape[1]), (np.sum(F_out) /xs.shape[
+    # 1]))kNN
+
+    #print("time needed for cost calculation:", end_time - start_time)
+    return (1/FST_exp)*np.power(kNN,3)
+
+
+def HWE_kNN(xs, n_samples, cut):
+    len_in_cut = np.count_nonzero(cut == True)
+    len_out_cut = np.count_nonzero(cut == False)
+    len_xs = len_in_cut + len_out_cut
+    kNN = k_nearest_neighbours(xs, n_samples, cut)
+
+    p_in = (1 / (2 * len_in_cut)) * np.sum(xs * cut[:, np.newaxis], axis=0)
+    p_out = (1 / (2 * len_out_cut)) * np.sum(xs * (~cut)[:, np.newaxis], axis=0)
+    expected_H_in = 2 * p_in * (1 - p_in)
+    expected_H_out = 2 * p_out * (1 - p_out)
+    x_in = (1 / len_in_cut) * np.count_nonzero(xs * cut[:, np.newaxis] == 1, axis=0)
+    x_out = (1 / len_out_cut) * np.count_nonzero(xs * (~cut)[:, np.newaxis] == 1, axis=0)
+
+
+    F_in = np.abs(x_in - expected_H_in)#0, 2)
+    F_out = np.abs(x_out - expected_H_out)# , 2)
+    normalization = np.sum(np.power(p_in - p_out, 2)) # np.sum(-
+    # np.sort((-1)*np.power(p_in - p_out, 2)))
+    HWE_div = ((1+ np.minimum(np.sum(F_in), np.sum(F_out))) / (normalization))
+
+    print("Sums:", np.sum(F_in), np.sum(F_out), ". Minimum:", np.minimum(np.sum(F_in),
+                                                                   np.sum(F_out)),
+          ". HWE:", HWE_div,
+          ". kNN:", kNN, np.power(kNN, 2))
+
+    return HWE_div*np.power(kNN, 2)
 
 def FST_norm_1(xs, n_samples, cut):
     len_in_cut = np.count_nonzero(cut == True)

@@ -31,6 +31,7 @@ import warnings
 import time
 import psutil
 from scipy.sparse import csr_matrix
+import seaborn as sns
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -107,7 +108,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_multiallelic)
 
     for m in range(0, xs.shape[1]):
-        if np.count_nonzero(xs[:, m]) == 0:
+        if np.count_nonzero(xs[:, m]) < 40:
             columns_to_delete_low_freq.append(m)
             num_low_freq = num_low_freq + 1
     xs = np.delete(xs, columns_to_delete_low_freq, axis=1)
@@ -140,7 +141,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     ## kNN
     kNN_precomputed = False
-    k = 20
+    k = 50
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
         nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
     if kNN_precomputed == False:
@@ -191,6 +192,15 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("indv with nearest neighbor outside of own pop:",
               np.unique(indv_with_neighbours_outside_pop))
 
+    # # plot distance function:
+    # df = pd.DataFrame(kNN.pairwise_distances, columns=pop_membership,
+    #                   index=pop_membership)
+    # # Plot mit seaborn.clustermap
+    # sns.clustermap(df, cmap='viridis', method='average', col_cluster=False,
+    #                row_cluster=False)
+    # # Speichere den Plot als JPEG
+    # plt.savefig('plots/clustermap_sim_jaccard.jpeg')
+    # plt.show()
 
 
     # calculate bipartitions
@@ -258,6 +268,25 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
             seed) + "_seed_" + str(cost_fct_name) + '.pdf') as pdf:
         pdf.savefig()
     plt.show()
+
+    # saved_FST_filename = (str(data_generation_mode) + "_n_" + str(n) +
+    #                       "_sites_" +
+    #                       str(nb_mut) + "_FST_seed_" +
+    #                       str(
+    #                           seed))
+    # with open('../tangles_in_pop_gen/data/saved_costs/' + str(
+    #         saved_FST_filename), 'rb') as handle:
+    #     saved_FST = pickle.load(handle)
+    #
+    # # plot FST vs kNN:
+    # fig, ax = plt.subplots(figsize=(9, 9))
+    # ax.scatter(bipartitions.costs, saved_FST.costs, alpha=0.5, s=5)
+    # ax.set_xlabel('kNN cost')
+    # ax.set_ylabel('FST cost')
+    # with PdfPages('plots/FST_cost_vs_kNN_cost_' + str(nb_mut) + "_seed_" + str(
+    #         seed) + "_seed_" + str(cost_fct_name) + '.pdf') as pdf:
+    #     pdf.savefig()
+    # plt.show()
 
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
@@ -406,14 +435,14 @@ if __name__ == '__main__':
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
     rho = 100  # 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 100  # 100 55      # mutationsrate
+    theta = 2000  # 100 55      # mutationsrate
     agreement = 35
     seed = 42  # 42   #17
     noise = 0
     data_already_simulated = False  # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'sim'  # readVCF  out_of_africa sim
-    cost_fct_name = "k_nearest_neighbours"  # FST, HWE or FST_normalized
+    cost_fct_name = "HWE_kNN"  # FST, HWE or FST_normalized k_nearest_neighbours
     cost_precomputed = False
     plot_ADMIXTURE = False
 

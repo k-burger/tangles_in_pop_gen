@@ -138,7 +138,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("count larger 2:", count_larger_2)
 
     # subsampling sites
-    sample_size = 5000
+    sample_size = 100000
     tree_precomputed = False
     np.random.seed(seed)
     print("number of sites after subsampling:", sample_size)
@@ -177,7 +177,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
 
     for m in range(0, xs.shape[1]):
-        if np.count_nonzero(xs[:, m]) < 0:
+        if np.count_nonzero(xs[:, m]) < 100:
             columns_to_delete_low_freq.append(m)
             num_low_freq = num_low_freq + 1
     xs = np.delete(xs, columns_to_delete_low_freq, axis=1)
@@ -210,8 +210,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     data = data_types.Data(xs=xs)
 
     ## kNN
-    kNN_precomputed = True
-    k = 20
+    kNN_precomputed = False
+    k = 40
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
         nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
     if kNN_precomputed == False:
@@ -355,6 +355,24 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         pdf.savefig()
     plt.show()
 
+    # saved_FST_filename = (str(data_generation_mode) + "_n_" + str(n) +
+    #                                "_sites_" +
+    #                                str(nb_mut) + "_FST_subsampling_1000G_seed_" +
+    #                                str(
+    #             seed))
+    # with open('../tangles_in_pop_gen/data/saved_costs/' + str(
+    #         saved_FST_filename), 'rb') as handle:
+    #     saved_FST = pickle.load(handle)
+    #
+    # # plot FST vs kNN:
+    # fig, ax = plt.subplots(figsize=(9, 9))
+    # ax.scatter(bipartitions.costs, saved_FST.costs, alpha=0.5, s=5)
+    # ax.set_xlabel('kNN cost')
+    # ax.set_ylabel('FST cost')
+    # with PdfPages('plots/FST_cost_vs_kNN_cost_' + str(nb_mut) + "_seed_" + str(
+    #         seed) + "_seed_" + str(cost_fct_name) + '.pdf') as pdf:
+    #     pdf.savefig()
+    # plt.show()
 
     # bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
     #                                                  partial(
@@ -431,7 +449,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(5)
+    contracted_tree.prune(0)
 
     #contracted_tree.plot_tree("plots/tree_after_pruning")
 
@@ -508,7 +526,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode, sorting_level="all",
+                                           data_generation_mode, sorting_level="lowest",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
@@ -529,7 +547,7 @@ if __name__ == '__main__':
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
-    cost_fct_name = "k_nearest_neighbours"  # FST or HWE
+    cost_fct_name = ("HWE_kNN")  # FST or HWE k_nearest_neighbours
     cost_precomputed = False
     plot_ADMIXTURE = False
 
