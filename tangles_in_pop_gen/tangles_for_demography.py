@@ -313,17 +313,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     start_tangle_tree = time.time()
     tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
-                                      verbose=3,
-                                      prune_first_path=False)#,  # print everything
+                                      verbose=3)#,  # print everything
                                       # max_clusters=3)
-
-    if tangles_tree.__class__ == np.float64:
-        print("I am in if statement prune_first_path.")
-        bip_idx = np.where(bipartitions.costs <= tangles_tree)[0]
-        bipartitions = bipartitions[bip_idx]
-        tangles_tree = tangle_computation(cuts=bipartitions,
-                                          agreement=agreement,
-                                          verbose=3)
 
     end_tangle_tree = time.time()
     print("tangle tree computation completed in ", end_tangle_tree -
@@ -400,7 +391,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #                                eq_cuts=bipartitions.equations,
         #                                path=output_directory / 'soft_clustering')
 
-        matrices, char_cuts = contracted_tree.to_matrix()
+        matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
 
         pop_splits = [[0, 400, 800], [0, 700, 800], [0, 200, 800], [0, 600, 700, 800],
@@ -435,15 +426,15 @@ if __name__ == '__main__':
     # rho=int for constant theta in rep simulations, rho='rand' for random theta in (0,100) in every simulation:
     rho = 100  # 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
-    theta = 2000  # 100 55      # mutationsrate
+    theta = 100  # 100 55      # mutationsrate
     agreement = 35
     seed = 42  # 42   #17
     noise = 0
-    data_already_simulated = False  # True or False, states if data object should be
+    data_already_simulated = True  # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'sim'  # readVCF  out_of_africa sim
     cost_fct_name = "HWE_kNN"  # FST, HWE or FST_normalized k_nearest_neighbours
-    cost_precomputed = False
+    cost_precomputed = True
     plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set

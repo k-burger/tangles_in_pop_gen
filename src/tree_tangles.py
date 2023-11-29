@@ -42,7 +42,7 @@ class TangleNode(object):
         else:
             return ~cut
 
-    def __str__(self, height=0):    # pragma: no cover
+    def __str__(self, height=0):  # pragma: no cover
 
         if self.parent is None:
             string = 'Root'
@@ -202,10 +202,6 @@ class TangleTree(object):
             could_add_one = could_add_one or could_add_node
 
             if did_split:
-                print("split")
-                print("split mutation frequency:", np.sum(cut==1))
-                if not self.first_split and self.prune_first_path:
-                    self.first_split = True
                 current_node.splitting = True
                 self.will_split.append(current_node)
             elif is_maximal:
@@ -214,7 +210,7 @@ class TangleTree(object):
         if could_add_one:
             self.is_empty = False
 
-        return could_add_one, self.first_split
+        return could_add_one
 
     def _add_children_to_node(self, current_node, cut, name, cut_id):
         old_tangle = current_node.tangle
@@ -271,7 +267,7 @@ class TangleTree(object):
 
         return could_add_one, did_split, is_maximal
 
-    def plot_tree(self, path=None):    # pragma: no cover
+    def plot_tree(self, path=None):  # pragma: no cover
 
         tree = nx.Graph()
         labels = self._add_node_to_nx(tree, self.root)
@@ -301,37 +297,37 @@ class TangleTree(object):
 
         # if the tangles branch from the root to the leaf does not have the length n (number of samples),
         # fill the vector indicating the presence of the samples from behind with -1 until it has a length of n.
-        for i in range(0,len(path_to_leaf)):
+        for i in range(0, len(path_to_leaf)):
             path_to_leaf[i] = np.array(path_to_leaf[i]).astype(int)
             if len(path_to_leaf[i]) != n:
-                path_to_leaf[i] = np.append(path_to_leaf[i], (-1)*np.ones(n-len(path_to_leaf[i])))
+                path_to_leaf[i] = np.append(path_to_leaf[i], (-1) * np.ones(n - len(path_to_leaf[i])))
             path_to_leaf[i] = np.array(path_to_leaf[i]).astype(int)[idx_sort]
 
         # get characteristics of mutations clustered into each leaf of the tangles tree
-        mut_nb = []     # number of mutations
-        mut_idx = []    # index of mutations (i.e. names of mutation)
-        mut_mean_pos = []   # mean position of mutations (i.e. mean index of mutations)
-        mut_var_pos = []    # variance of mutations (i.e. variance of index of mutations)
-        for k in range(0,len(path_to_leaf)):
+        mut_nb = []  # number of mutations
+        mut_idx = []  # index of mutations (i.e. names of mutation)
+        mut_mean_pos = []  # mean position of mutations (i.e. mean index of mutations)
+        mut_var_pos = []  # variance of mutations (i.e. variance of index of mutations)
+        for k in range(0, len(path_to_leaf)):
             mut_nb.append(np.count_nonzero(ys_predicted == k))
             mut_idx.append(np.sort(np.where(np.array(ys_predicted) == k)[0]))
             if np.count_nonzero(ys_predicted == k) != 0:
                 mut_mean_pos.append(np.round(np.mean(np.where(np.array(ys_predicted) == k)[0]), 1))
                 mut_var_pos.append(np.round(np.var((np.where(np.array(ys_predicted) == k)[0])), 1))
             else:
-                mut_mean_pos.append(-1)     # no mutation clustered to this particular leaf
-                mut_var_pos.append(-1)      # no mutation clustered to this particular leaf
+                mut_mean_pos.append(-1)  # no mutation clustered to this particular leaf
+                mut_var_pos.append(-1)  # no mutation clustered to this particular leaf
 
         # print summary of the tangles tree (i.e. characteristics computed above)
         print("summary tangles tree:")
         for elem in path_to_leaf:
             print(j, ": ", elem, ", nb of mutations: ", mut_nb[j], ", mutation idx: ", mut_idx[j],
                   ", mean mutation position:", mut_mean_pos[j], ", var mutation position:", mut_var_pos[j])
-            j = j+1
+            j = j + 1
 
     def _get_path_to_leaf(self, tree, node, path_to_leaf, n):
         if node.left_child is None and node.right_child is None:
-            path_to_leaf.append([node.tangle._specification[i] for i in range(0,len(node.tangle._specification))])
+            path_to_leaf.append([node.tangle._specification[i] for i in range(0, len(node.tangle._specification))])
 
         if node.left_child is not None:
             left_subtree = self._get_path_to_leaf(tree, node.left_child, path_to_leaf, n)
@@ -516,35 +512,46 @@ class ContractedTangleTree(TangleTree):
             print(loc, ": ", np.argwhere(node.p > 0.5).flatten())
 
     def to_matrix(self):
-        queue = [self.root]
-        return self._write_to_mat(queue, 1, {}, {})
+        return self._write_to_mat([self.root], [''], 1, {}, {}, {})
 
-    def _write_to_mat(self, queue, index, matrices, char_cuts):
+    def _write_to_mat(self, queue, queue_positions, index, matrices, char_cuts, positions):
         try:
             node = queue[0]
             queue = queue[1:]
+            position = queue_positions[0]
+            queue_positions = queue_positions[1:]
         except:
-            return matrices, char_cuts
+            return matrices, char_cuts, positions
 
         if node.left_child is not None and node.right_child is not None:
             if index in matrices.keys():
                 matrices[index] = np.concatenate([matrices[index], node.left_child.p.reshape(-1, 1)], axis=1)
                 char_cuts[index] = np.concatenate([char_cuts[index], node.left_child.characterizing_cuts], axis=1)
+                positions[index] = np.concatenate([positions[index], position], axis=1)
             else:
                 matrices[index] = node.left_child.p.reshape(-1, 1)
                 char_cuts[index] = node.left_child.characterizing_cuts
+                positions[index] = position
             matrices[index] = np.concatenate([matrices[index], node.right_child.p.reshape(-1, 1)], axis=1)
 
             if node.left_child.last_cut_added_id < node.right_child.last_cut_added_id:
                 queue.append(node.left_child)
+                queue_positions.append(position + 'l')
                 queue.append(node.right_child)
+                queue_positions.append(position + 'r')
             else:
                 queue.append(node.right_child)
+                queue_positions.append(position + 'r')
                 queue.append(node.left_child)
+                queue_positions.append(position + 'l')
 
-        matrices, char_cuts = self._write_to_mat(queue, index + 1, matrices, char_cuts)
+            matrices, char_cuts, positions = self._write_to_mat(queue, queue_positions, index + 1, matrices, char_cuts,
+                                                                positions)
+        else:
+            matrices, char_cuts, positions = self._write_to_mat(queue, queue_positions, index, matrices, char_cuts,
+                                                                positions)
 
-        return matrices, char_cuts
+        return matrices, char_cuts, positions
 
 
 def process_split(node):
@@ -619,7 +626,6 @@ def compute_soft_predictions_children(node, cuts, weight, verbose=0):
         node.p = np.ones(nb_points)
 
     if node.left_child is not None and node.right_child is not None:
-
         unnormalized_p_left = compute_soft_predictions_node(characterizing_cuts=node.characterizing_cuts_left,
                                                             cuts=cuts,
                                                             weight=weight)
@@ -647,7 +653,7 @@ def compute_soft_predictions_children(node, cuts, weight, verbose=0):
                                           verbose=verbose)
 
 
-def tangle_computation(cuts, agreement, verbose, max_clusters=None, prune_first_path=False):
+def tangle_computation(cuts, agreement, verbose, max_clusters=None):
     """
 
     Parameters
@@ -667,7 +673,7 @@ def tangle_computation(cuts, agreement, verbose, max_clusters=None, prune_first_
         print("Using agreement = {} \n".format(agreement))
         print("Start tangle computation", flush=True)
 
-    tangles_tree = TangleTree(agreement=agreement, cuts=cuts, max_clusters=max_clusters, prune_first_path=prune_first_path)
+    tangles_tree = TangleTree(agreement=agreement, cuts=cuts, max_clusters=max_clusters)
     old_order = None
 
     unique_orders = np.unique(cuts.costs)
@@ -688,13 +694,10 @@ def tangle_computation(cuts, agreement, verbose, max_clusters=None, prune_first_
 
             cuts_order_i = cuts.values[idx_cuts_order_i]
             cuts_names_i = cuts.names[idx_cuts_order_i] if cuts.names is not None else idx_cuts_order_i
-            new_tree, first_split = core_algorithm(tree=tangles_tree,
-                                                   current_cuts=cuts_order_i,
-                                                   current_names=cuts_names_i,
-                                                   idx_current_cuts=idx_cuts_order_i)
-
-            if first_split is not None:
-                return order
+            new_tree = core_algorithm(tree=tangles_tree,
+                                      current_cuts=cuts_order_i,
+                                      current_names=cuts_names_i,
+                                      idx_current_cuts=idx_cuts_order_i)
 
             if new_tree is None:
                 max_order = cuts.costs[-1]
