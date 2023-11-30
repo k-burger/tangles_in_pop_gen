@@ -119,7 +119,7 @@ class Tangle(dict):
         specification = self._specification.copy()
 
         pad_bitarray(specification, new_cut_id + 1)
-        subsample_size = 1200
+        subsample_size = 4000
         #print("triplet subsampling size:", subsample_size)
         print(f"Current memory usage: {psutil.virtual_memory().percent}%")
         #print("mutation frequency:", np.sum(new_cut == 1))
