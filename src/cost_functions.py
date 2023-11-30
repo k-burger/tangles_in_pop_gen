@@ -723,14 +723,15 @@ def HWE_kNN(xs, n_samples, cut):
 
     F_in = np.abs(x_in - expected_H_in)#0, 2)
     F_out = np.abs(x_out - expected_H_out)# , 2)
-    normalization = np.sum(np.abs(p_in - p_out)) # np.sum(-
+    normalization = np.sum(np.sqrt(np.abs(p_in - p_out)))
+    print("normalization:", normalization)# np.sum(-
     # np.sort((-1)*np.power(p_in - p_out, 2)))
-    HWE_div = ((1 + np.minimum(np.sum(F_in), np.sum(F_out))) / (normalization))
+    HWE_div = ((1 + (np.sum(F_in) + np.sum(F_out))/2) / (normalization))
 
-    print("Sums:", np.sum(F_in), np.sum(F_out), ". Minimum:", np.minimum(np.sum(F_in),
-                                                                   np.sum(F_out)),
-          ". HWE:", HWE_div,
-          ". kNN:", kNN, np.power(kNN, 2))
+    # print("Sums:", np.sum(F_in), np.sum(F_out), ". Minimum:", np.minimum(np.sum(F_in),
+    #                                                                np.sum(F_out)),
+    #       ". HWE:", HWE_div,
+    #       ". kNN:", kNN, np.power(kNN, 2))
 
     return HWE_div*np.power(kNN, 2)
 

@@ -106,9 +106,11 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     num_n_mut = 0
     num_multiallelic = 0
     num_low_freq = 0
+    num_high_freq = 0
     columns_to_delete_0 = []
     columns_to_delete_n = []
     columns_to_delete_low_freq = []
+    columns_to_delete_high_freq = []
     columns_to_delete_multiallelic = []
     for m in range(0, xs.shape[1]):
         if np.sum(xs[:, m]) == 0:
@@ -183,6 +185,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     xs = np.delete(xs, columns_to_delete_low_freq, axis=1)
     mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_low_freq)
     print("low freq. sites deleted:", num_low_freq)
+
+    for m in range(0, xs.shape[1]):
+        if np.count_nonzero(xs[:, m]) > xs.shape[0] - 100:
+            columns_to_delete_high_freq.append(m)
+            num_high_freq = num_high_freq + 1
+    xs = np.delete(xs, columns_to_delete_high_freq, axis=1)
+    mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_high_freq)
+    print("high freq. sites deleted:", num_high_freq)
 
     n = xs.shape[0]                     # diploid number of individuals
     nb_mut = xs.shape[1]
@@ -350,9 +360,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     ax.scatter(bipartitions.costs, mut_freq, alpha=0.5, s=5)
     ax.set_xlabel('costs')
     ax.set_ylabel('mutation frequency')
-    with PdfPages('plots/cost_vs_mut_freq_sites_' + str(nb_mut) + "_seed_" + str(
-            seed) + "_seed_" + str(cost_fct_name) + '.pdf') as pdf:
-        pdf.savefig()
+    plt.savefig('plots/cost_vs_mut_freq_sites_' + str(nb_mut) + "_seed_" + str(
+            seed) + "_seed_" + str(cost_fct_name) + '.jpeg', format='jpeg')
     plt.show()
 
     # saved_FST_filename = (str(data_generation_mode) + "_n_" + str(n) +
@@ -406,16 +415,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
                                       verbose=3,
-                                      prune_first_path=False)# print everything
-                                      #max_clusters=10)
-
-        if tangles_tree.__class__ == np.float64:
-            print("I am in if statement prune_first_path.")
-            bip_idx = np.where(bipartitions.costs >= tangles_tree)[0]
-            bipartitions = bipartitions[bip_idx]
-            tangles_tree = tangle_computation(cuts=bipartitions,
-                                          agreement=agreement,
-                                          verbose=3)
+                                      max_clusters=3)
 
     #     print("pickle tangles tree.")
     #     with open('../tangles_in_pop_gen/data/saved_trees/' + str(
@@ -505,8 +505,9 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         #                                eq_cuts=bipartitions.equations,
         #                                path=output_directory / 'soft_clustering')
 
-        matrices, char_cuts = contracted_tree.to_matrix()
+        matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
+        print("positions:", positions)
 
         pop_splits = [[0, 400, 800], [0, 700, 800], [0, 200, 800], [0, 600, 700, 800],
                       [0, 200, 300, 800],
@@ -548,7 +549,7 @@ if __name__ == '__main__':
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
     cost_fct_name = ("HWE_kNN")  # FST or HWE k_nearest_neighbours
-    cost_precomputed = False
+    cost_precomputed = True
     plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set

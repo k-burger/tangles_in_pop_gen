@@ -15,7 +15,7 @@ import subprocess
 # memberships (from simulation) to plot accordingly. The agreement is given to
 # distinguish the saved plots in the end. The comparison to ADMIXTURE can be turned off.
 def admixture_like_plot(matrices, pop_membership, agreement, seed,
-                        data_generation_mode, sorting_level="",
+                        data_generation_mode, char_cuts, sorting_level="",
                         plot_ADMIXTURE = False, ADMIXTURE_file_name="", cost_fct = ""):
     n = np.array(matrices[1]).shape[0]      # number of samples
     nb_plots = len(matrices)                # number of plots to generate
@@ -279,6 +279,11 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
 
         for pos in pos_pop_sep:
             axs[j].axvline(x=pos, color='black', linestyle='-', linewidth=0.5)
+
+        axs[j].text(0.5, 0.99, f'nb of char. mutations: {len(char_cuts[j+1])}',
+                    ha='center',
+                    va='bottom',
+                    fontsize=15, transform=axs[j].transAxes)
     #axs[j].set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0,
     #                                                                         nb_pop)])
     #axs[j].set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
