@@ -527,7 +527,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
         print("matrices:", matrices)
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
-                                           data_generation_mode, sorting_level="lowest",
+                                           data_generation_mode,
+                                           char_cuts, sorting_level="lowest",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
