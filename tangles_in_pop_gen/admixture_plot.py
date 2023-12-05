@@ -15,7 +15,8 @@ import subprocess
 # memberships (from simulation) to plot accordingly. The agreement is given to
 # distinguish the saved plots in the end. The comparison to ADMIXTURE can be turned off.
 def admixture_like_plot(matrices, pop_membership, agreement, seed,
-                        data_generation_mode, char_cuts, sorting_level="",
+                        data_generation_mode, char_cuts, num_char_cuts,
+                        sorting_level="",
                         plot_ADMIXTURE = False, ADMIXTURE_file_name="", cost_fct = ""):
     n = np.array(matrices[1]).shape[0]      # number of samples
     nb_plots = len(matrices)                # number of plots to generate
@@ -220,6 +221,69 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
             y_plot_sorted.append(copy.deepcopy(y_sorted))
         print("data sorting done.")
 
+
+
+    if sorting_level == "new":
+        print("sort according to each level separately. Sorting of individuals within populations might not be comparable between different levels.")
+        indv_sorted = []    # list to save individual idx sorted
+        y_plot_sorted = []  # sorted soft predictions per level
+        y_plot_rounded = [[np.around(value, 1).tolist() for value in sublist] for sublist in (y_plot)]
+        # fill cluster_coeff with contribution of each ancestral population to each
+        # geographical population for each level separately:
+        for level in range(0, nb_plots):
+            indv_sorted_level = []  # list to save individual idx sorted for each level
+            cluster_coeff_level = np.zeros((nb_pop, level+2))
+            for i in range(0, nb_pop):
+                for j in range(0, level + 2):
+                    cluster_coeff_level[i, j] = np.sum(y_plot_rounded[level][j][
+                                                       pop_member_idx[i]:
+                                                           pop_member_idx[i + 1]])
+
+                # major_cluster = np.argmax(cluster_coeff_level[i, :])
+                # indv_sorted.extend(
+                #     (np.array(y_plot[level][major_cluster][pop_member_idx[i]:
+                #                                         pop_member_idx[i +
+                #                                                        1]]).argsort(
+                #
+                #     )[::-1] + pop_member_idx[i]).tolist())
+
+                # sort ancestral population according to their impact for each
+                # geographical population to sort their individuals accordingly:
+
+
+                major_clusters = np.argsort(cluster_coeff_level[i, :])[::-1]
+
+                # create list to of indv. to be sorted
+                indv_sorted_level_pop = list(range(pop_member_idx[i+1] - pop_member_idx[
+                    i]))
+                # sort indv_sorted_level according to major_clusters[0] and secondary
+                # to major_clusters[1:]:
+                indv_sorted_level_pop.sort(key=lambda idx: (y_plot_rounded[level][
+                                                            major_clusters[0]][
+                                                            pop_member_idx[i]:
+                                                        pop_member_idx[i +
+                                                                       1]][
+                    idx], secondary_sort([column[pop_member_idx[i]:pop_member_idx[
+                    i+1]] for column in y_plot_rounded[level]], major_clusters, idx)))
+                indv_sorted_level.extend([x + pop_member_idx[i] for x in
+                                     indv_sorted_level_pop][::-1])
+                # # indv_sorted enthält nun die sortierten Indizes basierend auf der Priorität der Bedeutung und der sekundären Sortierung
+                # print(indv_sorted[::-1])
+
+            indv_sorted.append(indv_sorted_level)
+
+            if level == 2:
+                print("yeah")
+        # sort soft predictions of all levels according to the obtained individuals order
+        # from the last level
+        for j in range(0, nb_plots):
+            y_sorted = []
+            for m in range(len(y_plot[j])):
+                y_sorted.append([y_plot[j][m][i] for i in indv_sorted[j]])
+            y_plot_sorted.append(copy.deepcopy(y_sorted))
+        print("data sorting done.")
+
+
     #y_plot_sorted = y_plot
 
     # stacked bar plots:
@@ -268,7 +332,8 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
     # Stacked bar chart with loop
     for j in range(0, nb_plots):
         for m in range(len(y_plot_sorted[j])):
-            axs[j].bar(indv, y_plot_sorted[j][m], bottom=np.sum(y_plot_sorted[j][:m],axis=0),
+            axs[j].bar(indv, y_plot_sorted[j][m], bottom=np.sum(
+                y_plot_sorted[j][:m],axis=0),
                       color=colors_per_plot[j][m], width=1)
             #print("y u:", y_plot[j][m])
             #print("y s:", y_plot_sorted[j][m])
@@ -280,7 +345,7 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
         for pos in pos_pop_sep:
             axs[j].axvline(x=pos, color='black', linestyle='-', linewidth=0.5)
 
-        axs[j].text(0.5, 0.99, f'nb of char. mutations: {len(char_cuts[j+1])}',
+        axs[j].text(0.5, 0.99, f'nb of char. mutations: {num_char_cuts[j+1]}',
                     ha='center',
                     va='bottom',
                     fontsize=15, transform=axs[j].transAxes)
@@ -373,7 +438,7 @@ def secondary_sort(y_plot, major_clusters, idx):
     sort_keys = []
     for imp in major_clusters[1:]:
         diff = np.array(y_plot)[imp] - np.array(y_plot)[major_clusters[0]]
-    sort_keys.append(diff[idx])
+        sort_keys.append(diff[idx])
     return tuple(sort_keys)
 
 # this function works, but is not cleaned up yet. Basically the same as the function

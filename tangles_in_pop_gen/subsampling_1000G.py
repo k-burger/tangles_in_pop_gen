@@ -141,7 +141,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # subsampling sites
     sample_size = 100000
-    tree_precomputed = False
+    # tree_precomputed = False
     np.random.seed(seed)
     print("number of sites after subsampling:", sample_size)
     random_indices = np.random.choice(xs.shape[1], sample_size, replace=False)
@@ -220,7 +220,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     data = data_types.Data(xs=xs)
 
     ## kNN
-    kNN_precomputed = False
+    kNN_precomputed = True
     k = 40
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
         nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
@@ -411,11 +411,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # calculate the tangle search tree
     print("\tBuilding the tangle search tree", flush=True)
     start_tangle_tree = time.time()
+    tree_precomputed = False
     if tree_precomputed == False:
         tangles_tree = tangle_computation(cuts=bipartitions,
                                       agreement=agreement,
-                                      verbose=3,
-                                      max_clusters=3)
+                                      verbose=3)#,
+                                      #max_clusters=3)
 
     #     print("pickle tangles tree.")
     #     with open('../tangles_in_pop_gen/data/saved_trees/' + str(
@@ -507,6 +508,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
         matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
+        num_char_cuts_per_split = []
+        for k in range(1, len(list(char_cuts.keys())) + 1):
+            num_char_cuts_per_split.append(
+                np.sum(np.array([name.count(",") + 1 for name in
+                                 bipartitions.names[
+                                     list(char_cuts[k].keys())]])))
+        num_char_cuts = dict(zip(char_cuts.keys(), num_char_cuts_per_split))
+        print("num_char_cuts_per_split:", num_char_cuts_per_split)
         print("positions:", positions)
 
         pop_splits = [[0, 400, 800], [0, 700, 800], [0, 200, 800], [0, 600, 700, 800],
@@ -528,7 +537,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
                                            data_generation_mode,
-                                           char_cuts, sorting_level="lowest",
+                                           char_cuts, num_char_cuts,
+                                           sorting_level="new",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
