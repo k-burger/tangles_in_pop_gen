@@ -694,9 +694,9 @@ def FST_kNN(xs, n_samples, cut):
     F_out = np.abs(1 - ((p_out * (1 - p_out)) / (p * (1 - p))))
     print("F_out", F_out)
     print("F_out sort", (-1)*np.sort(-F_out))
-    FST_exp = 0.5 * ((np.sum((-1)*np.sort(-F_in)[:10]) / xs.shape[1]) + (np.sum((
+    FST_exp = 0.5 * ((np.sum((-1)*np.sort(-F_in)[:50]) / xs.shape[1]) + (np.sum((
                                                                                     -1)*np.sort(
-        -F_out)[:10]) /
+        -F_out)[:50]) /
                                                                     xs.shape[1]))
     print("FST exp:", FST_exp)
     print("return:", (1/FST_exp)*np.power(kNN,1))
@@ -704,7 +704,7 @@ def FST_kNN(xs, n_samples, cut):
     # 1]))kNN
 
     #print("time needed for cost calculation:", end_time - start_time)
-    return (1/FST_exp)*np.power(kNN,3)
+    return (1/FST_exp)*np.power(kNN,2)
 
 
 def HWE_kNN(xs, n_samples, cut):
@@ -715,6 +715,7 @@ def HWE_kNN(xs, n_samples, cut):
 
     p_in = (1 / (2 * len_in_cut)) * np.sum(xs * cut[:, np.newaxis], axis=0)
     p_out = (1 / (2 * len_out_cut)) * np.sum(xs * (~cut)[:, np.newaxis], axis=0)
+    p_total = (1 / (2 * len_xs)) * np.sum(xs, axis=0)
     expected_H_in = 2 * p_in * (1 - p_in)
     expected_H_out = 2 * p_out * (1 - p_out)
     x_in = (1 / len_in_cut) * np.count_nonzero(xs * cut[:, np.newaxis] == 1, axis=0)
@@ -723,10 +724,12 @@ def HWE_kNN(xs, n_samples, cut):
 
     F_in = np.abs(x_in - expected_H_in)#0, 2)
     F_out = np.abs(x_out - expected_H_out)# , 2)
-    normalization = np.sum(np.sqrt(np.abs(p_in - p_out)))
+    normalization = np.sum(np.sqrt(np.abs(p_in - p_out))) #/ np.sqrt((p_total*(1 -
+    # p_total))))
+    #normalization = np.sum(np.sqrt(np.abs(p_in - p_out)))
     print("normalization:", normalization)# np.sum(-
     # np.sort((-1)*np.power(p_in - p_out, 2)))
-    HWE_div = ((1 + (np.sum(F_in) + np.sum(F_out))/2) / (normalization))
+    HWE_div = ((1 + np.minimum(np.sum(F_in), np.sum(F_out))) / (normalization))
 
     # print("Sums:", np.sum(F_in), np.sum(F_out), ". Minimum:", np.minimum(np.sum(F_in),
     #                                                                np.sum(F_out)),

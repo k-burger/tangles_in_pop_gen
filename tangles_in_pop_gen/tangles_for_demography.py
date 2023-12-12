@@ -24,6 +24,7 @@ import simulate_with_demography_diploid
 import benchmark_data
 import admixture_plot
 import compute_kNN
+import adaptive_cuts
 from src import outsourced_cost_computation
 import FST
 import pickle
@@ -96,7 +97,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     mutations_in_sim = np.delete(mutations_in_sim, columns_to_delete_0)
 
     for m in range(0, xs.shape[1]):
-        if np.all(xs[:, m] > 0):
+        if np.all(xs[:, m] > 3):
             columns_to_delete_n.append(m)
             num_n_mut = num_n_mut + 1
     xs = np.delete(xs, columns_to_delete_n, axis=1)
@@ -150,7 +151,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
 
     ## kNN
-    kNN_precomputed = True
+    kNN_precomputed = False
     k = 40
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
         nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
@@ -215,8 +216,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # calculate bipartitions
     print("\tGenerating set of bipartitions", flush=True)
-    bipartitions = data_types.Cuts(values=(data.xs > 0).T,
-                                   names=np.array(list(range(0, data.xs.shape[1]))))
+    # bipartitions = data_types.Cuts(values=(data.xs > 0).T,
+    #                                names=np.array(list(range(0, data.xs.shape[1]))))
+
+    adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
+        adaptive_cuts.get_adaptive_cuts(xs, 3, 15, seed))
+
+    bipartitions = data_types.Cuts(values=adaptive_cut,
+                                   names=adaptive_cut_name)
 
     # Current memory usage
     print(f"Current memory usage 1: {psutil.virtual_memory().percent}%")
@@ -310,11 +317,12 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # merge duplicate bipartitions
     print("Merging doublicate mutations.")
     bipartitions = merge_doubles(bipartitions)
-
-    print("bipartitions.names:", bipartitions.names)
-    print("type(bipartitions.names):", type(bipartitions.names))
-    print("bipartitions.costs:", bipartitions.costs)
-    print("type(bipartitions.costs):", type(bipartitions.costs))
+    #bipartitions.names = bipartitions.names.astype(str)
+    print("number of bipartitions after merging:", len(bipartitions.names))
+    # print("bipartitions.names:", bipartitions.names)
+    # print("type(bipartitions.names):", type(bipartitions.names))
+    # print("bipartitions.costs:", bipartitions.costs)
+    # print("type(bipartitions.costs):", type(bipartitions.costs))
 
     print("Tangle algorithm", flush=True)
     # calculate the tangle search tree
@@ -346,13 +354,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(0)
+    #contracted_tree.prune(0)
 
     contracted_tree.plot_tree("plots/tree_after_pruning")
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
     contracted_tree.calculate_setP()
+    # contracted_tree.prune(bipartitions, 1)
     # print("caracterizing cuts:", contracted_tree.root)
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
     # compute soft predictions
@@ -402,6 +411,14 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
         matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
+        num_char_cuts_per_split = []
+        for k in range(1, len(list(char_cuts.keys())) + 1):
+            num_char_cuts_per_split.append(
+                np.sum(np.array([name.count(",") + 1 for name in
+                                 bipartitions.names[
+                                     list(char_cuts[k].keys())]])))
+        num_char_cuts = dict(zip(char_cuts.keys(), num_char_cuts_per_split))
+        print("num_char_cuts_per_split:", num_char_cuts_per_split)
         print("positions:", positions)
 
         pop_splits = [[0, 400, 800], [0, 700, 800], [0, 200, 800], [0, 600, 700, 800],
@@ -423,7 +440,8 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
         admixture_plot.admixture_like_plot(matrices, pop_membership, agreement, seed,
                                            data_generation_mode,
-                                           char_cuts, sorting_level="all",
+                                           char_cuts, num_char_cuts,
+                                           sorting_level="new",
                                            plot_ADMIXTURE=plot_ADMIXTURE,
                                            ADMIXTURE_file_name=ADMIXTURE_filename,
                                            cost_fct=cost_fct_name)
@@ -438,7 +456,7 @@ if __name__ == '__main__':
     rho = 100  # 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 2000  # 100 55      # mutationsrate
-    agreement = 35
+    agreement = 50
     seed = 42  # 42   #17
     noise = 0
     data_already_simulated = True  # True or False, states if data object should be

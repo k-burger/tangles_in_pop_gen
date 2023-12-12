@@ -31,6 +31,7 @@ import time
 import psutil
 from scipy.sparse import csr_matrix
 import compute_kNN
+import adaptive_cuts
 import networkx as nx
 
 import matplotlib.pyplot as plt
@@ -140,7 +141,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("count larger 2:", count_larger_2)
 
     # subsampling sites
-    sample_size = 100000
+    sample_size = 200000
     # tree_precomputed = False
     np.random.seed(seed)
     print("number of sites after subsampling:", sample_size)
@@ -220,7 +221,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     data = data_types.Data(xs=xs)
 
     ## kNN
-    kNN_precomputed = True
+    kNN_precomputed = False
     k = 40
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
         nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
@@ -292,8 +293,17 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # bipartitions = data_types.Cuts(values=(data.xs == True).T,
     #                                names=np.array(list(range(0, data.xs.shape[1]))))
 
-    bipartitions = data_types.Cuts(values=(data.xs > 0).T,
-                                   names=np.array(list(range(0, data.xs.shape[1]))))
+    # bipartitions = data_types.Cuts(values=(data.xs == 2).T,
+    #                                names=np.array(list(range(0, data.xs.shape[1]))))
+
+    adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
+        adaptive_cuts.get_adaptive_cuts(xs, 3, 10, seed))
+
+    bipartitions = data_types.Cuts(values=adaptive_cut,
+                                   names=adaptive_cut_name)
+
+    # bipartitions = data_types.Cuts(values=(data.xs > 0).T,
+    #                                names=np.array(list(range(0, data.xs.shape[1]))))
 
     # Aktuellen Speicherverbrauch ausgeben
     print(f"Current memory usage 1: {psutil.virtual_memory().percent}%")
@@ -450,7 +460,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
     # prune short paths
     # print("\tPruning short paths (length at most 1)", flush=True)
-    contracted_tree.prune(0)
+    #contracted_tree.prune(0)
 
     #contracted_tree.plot_tree("plots/tree_after_pruning")
 
@@ -560,7 +570,7 @@ if __name__ == '__main__':
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
     cost_fct_name = ("HWE_kNN")  # FST or HWE k_nearest_neighbours
-    cost_precomputed = True
+    cost_precomputed = False
     plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set

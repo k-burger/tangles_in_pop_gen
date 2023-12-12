@@ -378,13 +378,14 @@ class ContractedTangleTree(TangleTree):
     def __str__(self):  # pragma: no cover
         return str(self.root)
 
-    def prune(self, prune_depth=1, verbose=True):
-        self._delete_noise_clusters(self.root, depth=prune_depth)
+    def prune(self, bipartitions, prune_depth=1, verbose=True):
+        self._delete_noise_clusters(self.root, depth=prune_depth,
+                                    bipartitions=bipartitions)
         if verbose:
             print("\t{} clusters after cutting out short paths.".format(
                 len(self.maximals)))
 
-    def _delete_noise_clusters(self, node, depth):
+    def _delete_noise_clusters(self, node, depth, bipartitions):
         if depth == 0:
             return
 
@@ -393,12 +394,15 @@ class ContractedTangleTree(TangleTree):
                 Warning(
                     "This node is a leaf and the root at the same time. This tree is empty!")
             else:
-                node_id = node.last_cut_added_id
-                parent_id = node.parent.last_cut_added_id
+                # node_id = node.last_cut_added_id
+                # parent_id = node.parent.last_cut_added_id
+                #
+                # diff = node_id - parent_id
 
-                diff = node_id - parent_id
+                nb_char_cuts = np.sum(np.array([name.count(",") + 1 for name in
+                                                bipartitions.names[list(node.characterizing_cuts.keys())]]))
 
-                if diff <= depth:
+                if nb_char_cuts <= depth:
                     self.maximals.remove(node)
                     node.parent.splitting = False
                     if node.is_left_child:
@@ -408,14 +412,14 @@ class ContractedTangleTree(TangleTree):
                         node.parent.right_child = None
                         if node.parent.is_left_child_deleted:
                             self.maximals.append(node.parent)
-                            self._delete_noise_clusters(node.parent, depth)
+                            self._delete_noise_clusters(node.parent, depth, bipartitions)
 
         else:
-            self._delete_noise_clusters(node.left_child, depth)
+            self._delete_noise_clusters(node.left_child, depth, bipartitions)
             if not node.splitting:
                 self.splitting.remove(node)
 
-            self._delete_noise_clusters(node.right_child, depth)
+            self._delete_noise_clusters(node.right_child, depth, bipartitions)
 
             if not node.splitting:
                 if node.parent is None:

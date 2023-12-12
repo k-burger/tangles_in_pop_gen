@@ -349,6 +349,10 @@ def admixture_like_plot(matrices, pop_membership, agreement, seed,
                     ha='center',
                     va='bottom',
                     fontsize=15, transform=axs[j].transAxes)
+        # axs[j].text(0.5, 0.99, f'nb of char. mutations: {len(char_cuts[j + 1].keys())}',
+        #             ha='center',
+        #             va='bottom',
+        #             fontsize=15, transform=axs[j].transAxes)
     #axs[j].set_xticks([((x + 0.5) * n / nb_pop - 0.5) for x in range(0,
     #                                                                         nb_pop)])
     #axs[j].set_xticklabels(list(string.ascii_uppercase[:nb_pop]))
