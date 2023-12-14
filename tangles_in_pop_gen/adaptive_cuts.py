@@ -32,7 +32,7 @@ def get_adaptive_cuts(xs, s, nb_iter, seed):
 
         # iterate through groups of randomly selected mutations of length s:
         for c in list(range(0, nb_mut-s, s)):
-            # print("start c:", c)
+            #print("start c:", c // s)
             # get randomly selected mutation to base cut computation on:
             selected_mutations = mutation_indices[c:c+s]
             #print("selected mutations:", selected_mutations)
@@ -50,10 +50,34 @@ def get_adaptive_cuts(xs, s, nb_iter, seed):
 
             # initial split in A and B based on selected mutations:
             if run == 0:
-                # initial sets A and B s.t. A contains all indv that carry atleast
-                # one of the selected mutations not:
-                A = np.any(xs[:, selected_mutations] == 0, axis=1)
-                B = ~A
+                # # initial sets A and B s.t. A contains all indv that carry atleast
+                # # one of the selected mutations not:
+                # A = np.any(xs[:, selected_mutations] == 0, axis=1)
+                # B = ~A
+
+                # # random initial sets A and B:
+                # A = np.random.choice([True, False], size=nb_individuals)
+                # B = ~A
+
+                # initial sets A and B s.t. A contains individuals that have more
+                # copies of first selected mutation than second and B that have more
+                # copies of second selected mutation. All othe mutations get
+                # distributed randomly:
+                random_assignment = np.random.choice([True, False], size=xs.shape[0])
+                condition_A = xs[:, selected_mutations[0]] > xs[:,
+                                                             selected_mutations[1]]
+                condition_B = xs[:, selected_mutations[0]] < xs[:,
+                                                             selected_mutations[1]]
+                A = np.full(xs.shape[0], False)  # Alle False initialisieren
+                B = np.full(xs.shape[0], False)  # Alle False initialisieren
+                A[condition_A] = True
+                B[condition_B] = True
+                A[xs[:, selected_mutations[0]] == xs[:, selected_mutations[1]]] = \
+                random_assignment[
+                    xs[:, selected_mutations[0]] == xs[:, selected_mutations[1]]]
+                B[xs[:, selected_mutations[0]] == xs[:, selected_mutations[1]]] = ~ \
+                random_assignment[
+                    xs[:, selected_mutations[0]] == xs[:, selected_mutations[1]]]
 
             # if cuts have already been computed, take them to base new computation on:
             elif np.any(cuts[c // s] != 2):
@@ -69,22 +93,24 @@ def get_adaptive_cuts(xs, s, nb_iter, seed):
             len_B = np.count_nonzero(B == True)
 
             # if A or B contain no indv, skip cut update based on the currently
-            # selected mutations for this run:
-            if len_A == 0 or len_B == 0:
-                # mark that
-                # cuts[c // s] = 0
-                continue
+            # # selected mutations for this run:
+            # if len_A == 0 or len_B == 0:
+            #     # mark that
+            #     # cuts[c // s] = 0
+            #     continue
 
             # get proportion of indv in A and B:
-            frac_A = len_A/(len_A + len_B)
-            frac_B = len_B/(len_A + len_B)
+            frac_A = 1/2 #len_A/(len_A + len_B)
+            frac_B = 1/2 #len_B/(len_A + len_B)
             #print("len:", len_A, len_B)
 
             # compute for each selected mutation allele frequencies and probability
             # of allele counts in A and B:
             for m in range(s):
-                af_A[m] = (1 / (2 * len_A)) * np.sum(xs[A, selected_mutations[m]])
-                af_B[m] = (1 / (2 * len_B)) * np.sum(xs[B, selected_mutations[m]])
+                af_A[m] = (1 / (2 * len_A + 2)) * (np.sum(xs[A, selected_mutations[
+                    m]]) + 1)
+                af_B[m] = (1 / (2 * len_B + 2)) * (np.sum(xs[B, selected_mutations[
+                    m]]) + 1)
                 P_A[0, m] = np.power((1-af_A[m]), 2)
                 P_A[1, m] = af_A[m]*(1-af_A[m])
                 P_A[2, m] = np.power(af_A[m], 2)
@@ -111,17 +137,26 @@ def get_adaptive_cuts(xs, s, nb_iter, seed):
 
                 # sort indv to more likely group A or B, if same probability,
                 # don't change group:
-                if P_n_in_A[n, c // s] > P_n_in_B[n, c // s]:
+                if (P_n_in_A[n, c // s] > P_n_in_B[n, c // s]) and (B[n] == True):
                     A[n] = True
                     B[n] = False
-                elif P_n_in_A[n, c // s] < P_n_in_B[n, c // s]:
+                    if run > 0:
+                        print("indv", n, "changed for cut",  c // s, "into A in run",
+                              run) #,
+                          # ". New B:", B)
+                elif (P_n_in_A[n, c // s] < P_n_in_B[n, c // s]) and (A[n] == True):
                     A[n] = False
                     B[n] = True
+                    if run > 0:
+                        print("indv", n, "changed for cut",  c // s, "into B in run",
+                              run) #,
+                          # ". New B:", B)
 
                 # check im A and B update resulted in empty groups, if yes, skip
                 if np.count_nonzero(A == True) == 0 or np.count_nonzero(B == True) == 0:
                     # skip this cut
-                    continue
+                    print("empty!")
+                    # continue
                 else:
                     # save resulting cut (assignment of indv to A and B)
                     cuts[c // s] = B
@@ -142,7 +177,7 @@ def get_adaptive_cuts(xs, s, nb_iter, seed):
 
     # remove selected mutations for cuts not considered:
     mut_per_cut = [mut_per_cut[i] for i in range(len(mut_per_cut)) if mask[i]]
-    print("mut_per_cut:", mut_per_cut)
+    #print("mut_per_cut:", mut_per_cut)
     print(len(cuts), " out of ", len(list(range(0, nb_mut, s))))
     names = np.array(list(range(len(cuts))))
 
@@ -185,8 +220,8 @@ def sort_mutations_HWE(xs):
 #                [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0],
 #                [0, 0, 1, 0, 1, 0, 0, 0], [0, 0, 1, 0, 1, 0, 0, 0],
 #                [0, 0, 1, 0, 1, 0, 0, 0]])
-# s = 2
-# cuts, names, P_n_in_B, mut_per_cut = get_adaptive_cuts(xs, s, 2, seed=20)
+# s = 3
+# cuts, names, P_n_in_B, mut_per_cut = get_adaptive_cuts(xs, s, 10, seed=42)
 # print("cuts:", cuts)
 # print(len(cuts), " out of ", len(list(range(0, xs.shape[1], s))))
 

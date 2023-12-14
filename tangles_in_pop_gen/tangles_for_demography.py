@@ -151,7 +151,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
 
 
     ## kNN
-    kNN_precomputed = False
+    kNN_precomputed = True
     k = 40
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
         nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
@@ -213,17 +213,45 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # plt.savefig('plots/clustermap_sim_jaccard.jpeg')
     # plt.show()
 
+    bipartitions_precomputed = True
+    saved_init_cuts_filename = ("initial_cuts"+ str(
+        data_generation_mode) +
+                                   "_n_" + str(n) +
+                            "_sites_" + str(nb_mut) + "_" +  "_seed_" + str(seed))
+    start = time.time()
+    print("time started")
+    if bipartitions_precomputed == False:
+        # print("Precompute initial cuts.")
+        adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
+            adaptive_cuts.get_adaptive_cuts(xs, 2, 5, seed))
+
+        bipartitions = data_types.Cuts(values=adaptive_cut,
+                                       names=adaptive_cut_name)
+
+        with open('../tangles_in_pop_gen/data/saved_init_cuts/' + str(
+                saved_init_cuts_filename),
+                  'wb') as handle:
+            pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+    else:
+        print("Load initial cuts.")
+        with open('../tangles_in_pop_gen/data/saved_init_cuts/' + str(
+                saved_init_cuts_filename), 'rb') as handle:
+            bipartitions = pickle.load(handle)
+    end = time.time()
+    print("time needed:", end - start)
 
     # calculate bipartitions
     print("\tGenerating set of bipartitions", flush=True)
     # bipartitions = data_types.Cuts(values=(data.xs > 0).T,
     #                                names=np.array(list(range(0, data.xs.shape[1]))))
 
-    adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
-        adaptive_cuts.get_adaptive_cuts(xs, 3, 15, seed))
-
-    bipartitions = data_types.Cuts(values=adaptive_cut,
-                                   names=adaptive_cut_name)
+    # adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
+    #     adaptive_cuts.get_adaptive_cuts(xs, 2, 5, seed))
+    #
+    # bipartitions = data_types.Cuts(values=adaptive_cut,
+    #                                names=adaptive_cut_name)
 
     # Current memory usage
     print(f"Current memory usage 1: {psutil.virtual_memory().percent}%")
@@ -361,6 +389,9 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
     contracted_tree.calculate_setP()
+
+    #contracted_tree.prune(bipartitions, 2)
+
     # contracted_tree.prune(bipartitions, 1)
     # print("caracterizing cuts:", contracted_tree.root)
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
@@ -456,7 +487,7 @@ if __name__ == '__main__':
     rho = 100  # 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 2000  # 100 55      # mutationsrate
-    agreement = 50
+    agreement = 30
     seed = 42  # 42   #17
     noise = 0
     data_already_simulated = True  # True or False, states if data object should be

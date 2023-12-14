@@ -141,7 +141,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     print("count larger 2:", count_larger_2)
 
     # subsampling sites
-    sample_size = 200000
+    sample_size = 100000
     # tree_precomputed = False
     np.random.seed(seed)
     print("number of sites after subsampling:", sample_size)
@@ -221,7 +221,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     data = data_types.Data(xs=xs)
 
     ## kNN
-    kNN_precomputed = False
+    kNN_precomputed = True
     k = 40
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
         nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
@@ -296,14 +296,43 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # bipartitions = data_types.Cuts(values=(data.xs == 2).T,
     #                                names=np.array(list(range(0, data.xs.shape[1]))))
 
-    adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
-        adaptive_cuts.get_adaptive_cuts(xs, 3, 10, seed))
-
-    bipartitions = data_types.Cuts(values=adaptive_cut,
-                                   names=adaptive_cut_name)
+    # adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
+    #     adaptive_cuts.get_adaptive_cuts(xs, 2, 5, seed))
+    #
+    # bipartitions = data_types.Cuts(values=adaptive_cut,
+    #                                names=adaptive_cut_name)
 
     # bipartitions = data_types.Cuts(values=(data.xs > 0).T,
     #                                names=np.array(list(range(0, data.xs.shape[1]))))
+
+    bipartitions_precomputed = False
+    saved_init_cuts_filename = ("initial_cuts" + str(
+        data_generation_mode) +
+                                "_n_" + str(n) +
+                                "_sites_" + str(nb_mut) + "_" + "_seed_" + str(seed))
+    start = time.time()
+    print("time started")
+    if bipartitions_precomputed == False:
+        # print("Precompute initial cuts.")
+        adaptive_cut, adaptive_cut_name, adaptive_cuts_probs, mut_per_adaptive_cut = (
+            adaptive_cuts.get_adaptive_cuts(xs, 2, 5, seed))
+
+        bipartitions = data_types.Cuts(values=adaptive_cut,
+                                       names=adaptive_cut_name)
+
+        with open('../tangles_in_pop_gen/data/saved_init_cuts/' + str(
+                saved_init_cuts_filename),
+                  'wb') as handle:
+            pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+    else:
+        print("Load initial cuts.")
+        with open('../tangles_in_pop_gen/data/saved_init_cuts/' + str(
+                saved_init_cuts_filename), 'rb') as handle:
+            bipartitions = pickle.load(handle)
+    end = time.time()
+    print("time needed:", end - start)
 
     # Aktuellen Speicherverbrauch ausgeben
     print(f"Current memory usage 1: {psutil.virtual_memory().percent}%")
@@ -367,7 +396,7 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     # plot cost of bipartitions vs mutation frequency:
     mut_freq = np.sum(bipartitions.values, axis=1)
     fig, ax = plt.subplots(figsize=(9, 6))
-    ax.scatter(bipartitions.costs, mut_freq, alpha=0.5, s=5)
+    ax.scatter(bipartitions.costs, mut_freq, alpha=0.5, s=10)
     ax.set_xlabel('costs')
     ax.set_ylabel('mutation frequency')
     plt.savefig('plots/cost_vs_mut_freq_sites_' + str(nb_mut) + "_seed_" + str(
@@ -458,15 +487,20 @@ def tangles_in_pop_gen(sim_data, rho, theta, agreement, seed, pop_membership,
     contracted_tree = ContractedTangleTree(tangles_tree)
     #contracted_tree.plot_tree("plots/tree_before_pruning")
 
-    # prune short paths
-    # print("\tPruning short paths (length at most 1)", flush=True)
-    #contracted_tree.prune(0)
+    # # prune short paths
+    # # print("\tPruning short paths (length at most 1)", flush=True)
+    # contracted_tree.prune(0)
 
     #contracted_tree.plot_tree("plots/tree_after_pruning")
 
     # calculate
     print("\tcalculating set of characterizing bipartitions", flush=True)
     contracted_tree.calculate_setP()
+
+    # prune short paths
+    # print("\tPruning short paths (length at most 1)", flush=True)
+    contracted_tree.prune(bipartitions, 2)
+
     # print("caracterizing cuts:", contracted_tree.root)
     # print("test print nodes:", tangles_tree.root.right_child.right_child.right_child)
     # compute soft predictions
@@ -563,14 +597,14 @@ if __name__ == '__main__':
     rho = 100# 100 55 0.5   #1      # recombination
     # theta=int for constant theta in rep simulations, theta='rand' for random theta in (0,100) in every simulation:
     theta = 100  # 100 55      # mutationsrate
-    agreement = 200
+    agreement = 100
     seed = 40 #42   #17
     noise = 0
     data_already_simulated = True # True or False, states if data object should be
     # simulated or loaded
     data_generation_mode = 'readVCF' # readVCF  out_of_africa sim
     cost_fct_name = ("HWE_kNN")  # FST or HWE k_nearest_neighbours
-    cost_precomputed = False
+    cost_precomputed = True
     plot_ADMIXTURE = False
 
     # new parameters that need to be set to load/simulate appropriate data set
