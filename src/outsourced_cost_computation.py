@@ -1,19 +1,7 @@
 from __future__ import annotations
-import hashlib
-import json
 import multiprocessing
-
-
 import numpy as np
-from sklearn.manifold import TSNE
-from typing import Union, Optional
-
-from sklearn.metrics import pairwise_distances
-from sklearn.neighbors import DistanceMetric
-from tqdm import tqdm
-
 from src.data_types import Cuts
-import pickle
 import time
 
 def order_cuts(bipartitions: Cuts, cost_bipartitions: np.ndarray):
@@ -32,15 +20,12 @@ def order_cuts(bipartitions: Cuts, cost_bipartitions: np.ndarray):
     bipartitions.costs = cost_bipartitions[idx]
     if bipartitions.names is not None:
         bipartitions.names = bipartitions.names[idx]
-    #if bipartitions.equations is not None:
-    #    bipartitions.equations = bipartitions.equations[idx]
 
     bipartitions.order = np.argsort(idx)
 
     return bipartitions
 
 def compute_cost_and_order_cuts(bipartitions, cost_functions, verbose=True):
-    #bipartitions.values = bipartitions.values.astype(np.uint8)
     costs = compute_cost_splitted(bipartitions, cost_functions, verbose=verbose)
     return order_cuts(bipartitions, costs)
 
@@ -63,12 +48,12 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
     if verbose:
         print("Preomputing costs of cuts...")
 
-    # set for testing to 2 (only one iteration)
-    num_iterations = 20
+    # compute costs with multiprocessing and monitor progress:
+    num_iterations = 10     # progress is monitored in 10% steps
 
-    # set slice size
+    # in each iteration, compute costs of 10% of cuts:
     slice_size = len(bipartitions.values) // (num_iterations-1)
-    print("slice size: ", slice_size, " bipartitions.")
+    #print("slice size: ", slice_size, " bipartitions.")
 
     # Initialize list for saving costs of bipartitions
     costs = []
@@ -87,8 +72,8 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
         slice = bipartitions.values[start_idx:end_idx]
 
         # compute cost of slice with multiprocessing
-        pool = multiprocessing.Pool(processes=4) #processes=20
-        slice_costs = np.array(pool.map(cost_function, slice))#, chunksize=1))
+        pool = multiprocessing.Pool(processes=15)
+        slice_costs = np.array(pool.map(cost_function, slice))
         pool.close()
         pool.join()
         # add costs to list of costs
@@ -106,37 +91,6 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
         start_idx = end_idx
 
     # transform list of costs into numpy array
-    final_costs = np.array(costs)
+    costs_np_array = np.array(costs)
 
-    return final_costs
-
-# def compute_cost_and_order_cuts_no_multiprocessing(bipartitions, cost_functions,
-#                                                    verbose=True):
-#     costs = compute_cost_no_multiprocessing(bipartitions, cost_functions,
-#                                             verbose=verbose)
-#     return order_cuts(bipartitions, costs)
-#
-#
-# def compute_cost_no_multiprocessing(bipartitions, cost_function, verbose=True):
-#     """
-#     Compute the cost of a series of cuts and returns a cost array.
-#
-#     Parameters
-#     ----------
-#     cuts: Cuts
-#         where cuts.values has shape (n_questions, n_datapoints)
-#     cost_function: function
-#         callable that calculates the cost of a single cut, which is an ndarray of shape
-#         (n_datapoints)
-#
-#     Returns
-#     -------
-#     cost: ndarray of shape (n_questions) containing the costs of each cut as entries
-#     """
-#     if verbose:
-#         print("Computing costs of cuts...")
-#
-#     cost_bipartitions = np.zeros(len(bipartitions.values), dtype=float)
-#     for i_cut, cut in enumerate(tqdm(bipartitions.values, disable=not verbose)):
-#         cost_bipartitions[i_cut] = cost_function(cut, i_cut)
-#     return cost_bipartitions
+    return costs_np_array

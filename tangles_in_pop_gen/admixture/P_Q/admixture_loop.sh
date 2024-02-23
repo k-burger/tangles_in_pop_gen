@@ -2,7 +2,8 @@
 
 file_name="$1"
 K="$2"
-vcf_path="/home/klara/ML_in_pop_gen_in_process/tangles_in_pop_gen/tangles_in_pop_gen/admixture/data/${file_name}"
+seed="$3"
+vcf_path="/home/klara/ML_in_pop_gen_in_process/tangles_in_pop_gen/tangles_in_pop_gen/data/vcf/${file_name}"
 echo "${vcf_path}"
 vcf_file="${vcf_path}.vcf"
 echo "$vcf_file"
@@ -16,7 +17,7 @@ output_dir="/home/klara/ML_in_pop_gen_in_process/tangles_in_pop_gen/tangles_in_p
 admixture_path="/home/klara/ML_in_pop_gen_in_process/tangles_in_pop_gen/tangles_in_pop_gen/admixture/admixture"
 mkdir -p "$output_dir"
 cd "$output_dir"
-"$admixture_path" "$bed_file" "$K"
+"$admixture_path" -s "$seed" "$bed_file" "$K"
 echo 'admixture done.'
 
 
