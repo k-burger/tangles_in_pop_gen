@@ -28,8 +28,8 @@ The script is divided in the following steps
 """
 
 
-def plot_inferred_ancestry(matrices, pop_membership, agreement, seed,
-                        data_generation_mode, char_cuts, num_char_cuts,
+def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_mode,
+                           seed=[], char_cuts=[], num_char_cuts=[],
                         sorting_level="",
                         plot_ADMIXTURE = False, ADMIXTURE_file_name="", cost_fct = ""):
     n = np.array(matrices[1]).shape[0]      # number of indv

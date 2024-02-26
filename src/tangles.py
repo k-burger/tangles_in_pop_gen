@@ -115,7 +115,7 @@ class Tangle(dict):
         # subsampling_size, the consistency condition will be only checked with a
         # subsample of core.
         subsample_size = 4000
-        print(f"Current memory usage: {psutil.virtual_memory().percent}%")
+        # print(f"Current memory usage: {psutil.virtual_memory().percent}%")
 
         i_to_remove = []
         for i, core_cut in enumerate(core):

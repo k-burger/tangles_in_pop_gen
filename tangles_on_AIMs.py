@@ -211,7 +211,7 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
         # ADMIXTURE):
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    seed, data_generation_mode,
+                                                    data_generation_mode, seed,
                                                     char_cuts, num_char_cuts,
                                                     sorting_level="lowest",
                                                     plot_ADMIXTURE=plot_ADMIXTURE,
@@ -231,11 +231,11 @@ if __name__ == '__main__':
     data_generation_mode = 'readVCF'
     data_set = 'AIMs'
     # specify if data can be loaded or needs to be initially processed:
-    data_already_processed = False
+    data_already_processed = True
     # specify cost function: FST_kNN for FST-based cost function, HWE_kNN for
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
-    cost_precomputed = False  # cost pre-computed or not
+    cost_precomputed = True  # cost pre-computed or not
     plot_ADMIXTURE = True  # compare tangles to ADMIXTURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
