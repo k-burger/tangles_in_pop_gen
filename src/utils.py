@@ -250,13 +250,13 @@ def compute_cost(bipartitions, cost_function, verbose=True):
     if verbose:
         print("Computing costs of cuts...")
 
-    pool = multiprocessing.Pool()
-    cost_bipartitions = np.array(pool.map(cost_function, bipartitions.values))
-    pool.close()
+    # pool = multiprocessing.Pool()
+    # cost_bipartitions = np.array(pool.map(cost_function, bipartitions.values))
+    # pool.close()
 
-    # cost_bipartitions = np.zeros(len(bipartitions.values), dtype=float)
-    # for i_cut, cut in enumerate(tqdm(bipartitions.values, disable=not verbose)):
-    #     cost_bipartitions[i_cut] = cost_function(cut)
+    cost_bipartitions = np.zeros(len(bipartitions.values), dtype=float)
+    for i_cut, cut in enumerate(tqdm(bipartitions.values, disable=not verbose)):
+        cost_bipartitions[i_cut] = cost_function(cut)
 
     return cost_bipartitions
 

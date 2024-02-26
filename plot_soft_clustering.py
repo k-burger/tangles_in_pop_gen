@@ -30,7 +30,7 @@ The script is divided in the following steps
 
 def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_mode,
                            seed=[], char_cuts=[], num_char_cuts=[],
-                        sorting_level="",
+                        sorting_level="lowest",
                         plot_ADMIXTURE = False, ADMIXTURE_file_name="", cost_fct = ""):
     n = np.array(matrices[1]).shape[0]      # number of indv
     nb_plots = len(matrices)                # number of plots to generate
@@ -191,7 +191,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
                                                  'CDX', 'KHV'])
         pop_sizes = np.array([np.sum(pop_membership == pop) for pop in
                               unique_pop_membership_sorted])
-        print("pop sizes in 1000G project:", pop_sizes)
+        # print("pop sizes in 1000G project:", pop_sizes)
     else:
         pop_membership = pop_membership.astype(np.int64)
         print("len(pop_membership):", len(pop_membership))
