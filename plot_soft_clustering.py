@@ -54,15 +54,15 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, seed,
         # minimal example ADMIXTURE
         #ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[2], cmap[1], cmap[0]]]
         # easy sim ADMIXTURE
-        # ADMIXTURE_colors = [[cmap[1], cmap[0]],
-        #                     [cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[3], cmap[1], cmap[0], cmap[2]],
-        #                     [cmap[1], cmap[4], cmap[3], cmap[0], cmap[2]],
-        #                     [cmap[7], cmap[2], cmap[9], cmap[3], cmap[0], cmap[1]],
-        #                     [cmap[2], cmap[1], cmap[4], cmap[0], cmap[3], cmap[7],
-        #                      cmap[6]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5]]]
+        ADMIXTURE_colors = [[cmap[1], cmap[0]],
+                            [cmap[1], cmap[2], cmap[0]],
+                            [cmap[3], cmap[1], cmap[0], cmap[2]],
+                            [cmap[1], cmap[4], cmap[3], cmap[0], cmap[2]],
+                            [cmap[7], cmap[2], cmap[9], cmap[3], cmap[0], cmap[1]],
+                            [cmap[2], cmap[1], cmap[4], cmap[0], cmap[3], cmap[7],
+                             cmap[6]],
+                            [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
+                             cmap[6], cmap[5]]]
         # easy sim ADMIXTURE K=12
         # ADMIXTURE_colors = [[cmap[1], cmap[0]],
         #                     [cmap[1], cmap[2], cmap[0]],
@@ -94,8 +94,8 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, seed,
         #                      cmap[7], cmap[4]]]
 
         # IMs no AMR ADMIXTURE
-        ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[1], cmap[2], cmap[0]],
-                            [cmap[3], cmap[1], cmap[2], cmap[0]]]
+        # ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[1], cmap[2], cmap[0]],
+        #                     [cmap[3], cmap[1], cmap[2], cmap[0]]]
         # complex sim FST
         # cmap = [cmap[4], cmap[0], cmap[1], cmap[3], cmap[7], cmap[2], cmap[5]]
         # ADMIXTURE aims higher K:

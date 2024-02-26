@@ -1,7 +1,6 @@
 import sys
 from functools import partial
 from pathlib import Path
-
 sys.path.append('..')
 from src import cost_functions, data_types
 from src import utils
@@ -110,13 +109,11 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
     if cost_precomputed == False:
         bipartitions = outsourced_cost_computation.compute_cost_and_order_cuts(
             bipartitions, partial(cost_function, data.xs, None))
-        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_costs_filename),
-                  'wb') as handle:
+        with open('data/saved_costs/' + str(saved_costs_filename), 'wb') as handle:
             pickle.dump(bipartitions, handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
         print("Load costs of bipartitions.")
-        with open('../tangles_in_pop_gen/data/saved_costs/' + str(saved_costs_filename),
-                  'rb') as handle:
+        with open('data/saved_costs/' + str(saved_costs_filename), 'rb') as handle:
             bipartitions = pickle.load(handle)
     end = time.time()
     print("time needed for cost computation:", end - start)
@@ -204,11 +201,11 @@ if __name__ == '__main__':
     seed = 42  # seed for simulation
     data_generation_mode = 'sim'
     # specify if data can be loaded or needs to be simulated:
-    data_already_simulated = True
+    data_already_simulated = False
     # specify cost function: FST_kNN for FST-based cost function, HWE_kNN for
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
-    cost_precomputed = True  # cost pre-computed or not
+    cost_precomputed = False  # cost pre-computed or not
     plot_ADMIXTURE = True  # compare tangles to ADMXITURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.

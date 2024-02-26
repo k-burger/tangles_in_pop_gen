@@ -1,6 +1,9 @@
 import numpy as np
-import pickle
 from sklearn.neighbors import DistanceMetric
+import pickle
+from pathlib import Path
+import sys
+sys.path.append('..')
 
 """
 Script with 3 different cost functions, all specific to population genetics.
@@ -23,7 +26,7 @@ def k_nearest_neighbours(xs, n_sample, cut):
     len_out_cut = np.count_nonzero(cut == False)
 
     # lead kNN matrix:
-    with open("../tangles_in_pop_gen/data/saved_kNN/kNN", 'rb') as inp:
+    with open("data/saved_kNN/kNN", 'rb') as inp:
         kNN = pickle.load(inp)
 
     # Find indices of individuals on each side of the cut
@@ -39,10 +42,11 @@ def k_nearest_neighbours(xs, n_sample, cut):
     kNN_on_opposite_side_False = np.sum(cut[neighbors_False] != False)
     kNN_on_opposite_side_True = np.sum(cut[neighbors_True] != True)
     # compute fraction of neighbours that lie on the other side of the cut:
-    knn_breaches = (1 + (
-                kNN_on_opposite_side_False / len_out_cut * kNN.k + kNN_on_opposite_side_True / len_in_cut * kNN.k))
+    knn_breaches = (1 + ((kNN_on_opposite_side_False) /
+                           (len_out_cut * kNN.k) + (
+                                       kNN_on_opposite_side_True) / (
+                                       len_in_cut * kNN.k)))
     return knn_breaches
-
 
 # cost function based on mean FST-values:
 def FST_kNN(xs, n_samples, cut):

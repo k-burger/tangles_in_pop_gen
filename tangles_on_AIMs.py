@@ -231,11 +231,11 @@ if __name__ == '__main__':
     data_generation_mode = 'readVCF'
     data_set = 'AIMs'
     # specify if data can be loaded or needs to be initially processed:
-    data_already_processed = True
+    data_already_processed = False
     # specify cost function: FST_kNN for FST-based cost function, HWE_kNN for
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
-    cost_precomputed = True  # cost pre-computed or not
+    cost_precomputed = False  # cost pre-computed or not
     plot_ADMIXTURE = True  # compare tangles to ADMIXTURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.

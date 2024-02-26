@@ -114,7 +114,7 @@ class Tangle(dict):
         ## add subsampling of core to speed up runtime. if length of core exceeds
         # subsampling_size, the consistency condition will be only checked with a
         # subsample of core.
-        subsample_size = 5
+        subsample_size = 4000
         print(f"Current memory usage: {psutil.virtual_memory().percent}%")
 
         i_to_remove = []

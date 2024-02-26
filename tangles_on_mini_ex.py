@@ -248,7 +248,7 @@ if __name__ == '__main__':
     # specify cost function: FST_kNN for FST-based cost function, HWE_kNN for
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
-    cost_precomputed = True  # cost pre-computed or not
+    cost_precomputed = False  # cost pre-computed or not
     plot_ADMIXTURE = True  # compare tangles to ADMXITURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.

@@ -105,7 +105,7 @@ class Simulated_Data_With_Demography:
         # this parameter rescales the coalescent times: c=7 to achieve
         # well-differentiated populations, c=70 for significant incomplete lineage
         # sorting:
-        c = 7
+        c = 70
 
         # define population splits and times:
         demography.add_population_split(time=2 / c, derived=["A", "B"], ancestral="AB")
