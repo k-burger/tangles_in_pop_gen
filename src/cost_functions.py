@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.neighbors import DistanceMetric
 import pickle
-from pathlib import Path
 import sys
 sys.path.append('..')
 

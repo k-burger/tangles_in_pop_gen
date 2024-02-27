@@ -307,7 +307,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
 
 
     ## if demanded, compute and plot ADMIXTURE for comparison:
-    if plot_ADMIXTURE == True:
+    if plot_ADMIXTURE:
         # K cannot exceed 13 to reduce run time. If needed, adapt this:
         if nb_plots > 12:
             print("restricted number of ADMIXTURE plots to 12.")
