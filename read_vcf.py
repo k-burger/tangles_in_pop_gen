@@ -11,8 +11,18 @@ the pre-processed vcf file can be loaded directly.
 
 
 class ReadVCF:
-    def __init__(self, n, data_set, vcf_filename, filepath="", sites=[], G=[],
-                 indv_pop=[], mutation_id=[], admixture_filename=[]):
+    def __init__(
+        self,
+        n,
+        data_set,
+        vcf_filename,
+        filepath="",
+        sites=[],
+        G=[],
+        indv_pop=[],
+        mutation_id=[],
+        admixture_filename=[],
+    ):
         # parameters that need to be set and are not a result of the simulation:
         self.n = n  # number of diploid individuals.
         self.data_set = data_set  # type of data_set: 'chr22' or 'AIMs'
@@ -32,7 +42,7 @@ class ReadVCF:
         # read vcf:
         vcf = allel.read_vcf(self.filepath + self.vcf_filename + ".vcf")
         # get haploid genotype matrix:
-        G_haploid = vcf['calldata/GT']
+        G_haploid = vcf["calldata/GT"]
         G = []
 
         # Reshape the array to combine the inner 2D arrays
@@ -49,20 +59,22 @@ class ReadVCF:
         G.append(G_diploid)
         self.G = G
         self.indv_pop = numpy.zeros(self.n)
-        self.mutation_id = vcf['samples']
+        self.mutation_id = vcf["samples"]
 
         # save object
-        filename = (self.filepath + "processed_vcf/1000G_n_" + str(
-            self.n) + "_" + self.data_set)
-        with open(filename, 'wb') as outp:  # overwrites any existing file.
+        filename = (
+            self.filepath + "processed_vcf/1000G_n_" + str(self.n) + "_" + self.data_set
+        )
+        with open(filename, "wb") as outp:  # overwrites any existing file.
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
 
     # load preprocessed vcf file:
     def load_vcf(self):
         # load vcf file
-        filename = (self.filepath + "processed_vcf/1000G_n_" + str(
-            self.n) + "_" + self.data_set)
-        with open(filename, 'rb') as inp:
+        filename = (
+            self.filepath + "processed_vcf/1000G_n_" + str(self.n) + "_" + self.data_set
+        )
+        with open(filename, "rb") as inp:
             loaded_data = pickle.load(inp)
 
         # assign properties

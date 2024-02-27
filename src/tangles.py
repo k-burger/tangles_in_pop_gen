@@ -16,7 +16,7 @@ def pad_bitarray(b, n):
     Pads bitarray b to desired length n with zeros at the end.
     """
     if len(b) < n:
-        b.extend(bitarray('0' * (n - len(b))))
+        b.extend(bitarray("0" * (n - len(b))))
     return b
 
 
@@ -146,13 +146,16 @@ class Tangle(dict):
                 subsample_size_pairs = math.comb(subsample_size, 2)
                 # sample 2*subsample_size_pairs many elements of core,
                 # i.e. subsample_size_pairs many pairs:
-                sampled_indices = np.random.choice(range(len(core)),
-                                                   subsample_size_pairs * 2,
-                                                   replace=True)
+                sampled_indices = np.random.choice(
+                    range(len(core)), subsample_size_pairs * 2, replace=True
+                )
                 # check consistency on sampled pairs:
                 for i in range(0, len(sampled_indices), 2):
-                    if (core[sampled_indices[i]] & core[
-                        sampled_indices[i + 1]] & new_cut).count() < min_size:
+                    if (
+                        core[sampled_indices[i]]
+                        & core[sampled_indices[i + 1]]
+                        & new_cut
+                    ).count() < min_size:
                         return None
 
         core.append(new_cut)

@@ -54,7 +54,8 @@ def compute_reliability(xs):
 
             # compute reliability factor for both sides of the cut:
             reliability_T = np.maximum(
-                1 - ((np.minimum(exp_1, N1) + np.minimum(exp_2, N2)) / (N1 + N2)), 0)
+                1 - ((np.minimum(exp_1, N1) + np.minimum(exp_2, N2)) / (N1 + N2)), 0
+            )
             reliability_F = np.maximum(1 - (exp_0 / N0), 0)
 
         # save computed reliability factor for each cut:

@@ -5,7 +5,7 @@ from scipy.sparse import lil_matrix
 from scipy.spatial import distance
 
 """
-Script to k-nearest neighbours.
+Script to compute k-nearest neighbours.
 """
 
 
@@ -21,8 +21,9 @@ class KNearestNeighbours:
     # compute kNN:
     def compute_kNN(self):
         # Calculate pairwise distances between individuals using Euclidean distance
-        self.pairwise_distances = distance.squareform(
-            distance.pdist(self.G, 'cityblock')) / 2
+        self.pairwise_distances = (
+            distance.squareform(distance.pdist(self.G, "cityblock")) / 2
+        )
         # Initialize an empty adjacency matrix
         adjacency_matrix = lil_matrix((self.G.shape[0], self.G.shape[0]), dtype=bool)
 
@@ -31,21 +32,22 @@ class KNearestNeighbours:
             # Sort individuals by distance
             nearest_neighbors = np.argsort(self.pairwise_distances[i])
             # excluding individuals themselves (distance[i] = 0):
-            nearest_neighbors = np.delete(nearest_neighbors,
-                                          np.where(nearest_neighbors == i))
+            nearest_neighbors = np.delete(
+                nearest_neighbors, np.where(nearest_neighbors == i)
+            )
             # Set adjacency to True for the k-nearest neighbors
-            adjacency_matrix[i, nearest_neighbors[0:self.k]] = True
+            adjacency_matrix[i, nearest_neighbors[0 : self.k]] = True
         # Convert the adjacency matrix to a dense NumPy array if needed
         self.kNN = adjacency_matrix.toarray()
 
         # save kNN computation:
-        with open(self.filepath + self.filename, 'wb') as outp:
+        with open(self.filepath + self.filename, "wb") as outp:
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
 
     # load kNN computation:
     def load_kNN(self):
         # load pre-computed kNN:
-        with open(self.filepath + self.filename, 'rb') as inp:
+        with open(self.filepath + self.filename, "rb") as inp:
             loaded_data = pickle.load(inp)
 
         # assign properties

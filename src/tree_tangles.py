@@ -16,10 +16,19 @@ MAX_CLUSTERS = 50
 
 
 class TangleNode(object):
-
-    def __init__(self, parent, right_child, left_child, is_left_child, name, splitting,
-                 did_split, last_cut_added_id, last_cut_added_orientation, tangle: Tangle):
-
+    def __init__(
+        self,
+        parent,
+        right_child,
+        left_child,
+        is_left_child,
+        name,
+        splitting,
+        did_split,
+        last_cut_added_id,
+        last_cut_added_orientation,
+        tangle: Tangle,
+    ):
         self.parent = parent
         self.right_child = right_child
         self.left_child = left_child
@@ -43,19 +52,21 @@ class TangleNode(object):
             return ~cut
 
     def __str__(self, height=0):  # pragma: no cover
-
         if self.parent is None:
-            string = 'Root'
+            string = "Root"
         else:
-            padding = ' '
-            string = '{}{} -> {}'.format(padding * height,
-                                         self.last_cut_added_id, self.last_cut_added_orientation)
+            padding = " "
+            string = "{}{} -> {}".format(
+                padding * height,
+                self.last_cut_added_id,
+                self.last_cut_added_orientation,
+            )
 
         if self.left_child is not None:
-            string += '\n'
+            string += "\n"
             string += self.left_child.__str__(height=height + 1)
         if self.right_child is not None:
-            string += '\n'
+            string += "\n"
             string += self.right_child.__str__(height=height + 1)
 
         return string
@@ -65,9 +76,7 @@ class TangleNode(object):
 
 
 class ContractedTangleNode(TangleNode):
-
     def __init__(self, parent, node):
-
         attributes = node.__dict__
         super().__init__(**attributes)
 
@@ -84,16 +93,19 @@ class ContractedTangleNode(TangleNode):
 
         self.p = None
 
-    def get_characterizing_cut_values(self, characterizing_cuts: Dict[int, Orientation]) -> Dict[int, np.ndarray]:
+    def get_characterizing_cut_values(
+        self, characterizing_cuts: Dict[int, Orientation]
+    ) -> Dict[int, np.ndarray]:
         """
-        Returns the values of the cuts in the characterizing cuts dictionary, with the orientation. 
+        Returns the values of the cuts in the characterizing cuts dictionary, with the orientation.
         IDs are changed to IDs of the unsorted cuts.
         """
         ret = {}
         own_cuts: Cuts = self.tangle._cuts
         for cut_id, orientation in characterizing_cuts.items():
             cut = orientation.orient_cut(
-                own_cuts.get_cut_at(cut_id, from_unsorted=False))
+                own_cuts.get_cut_at(cut_id, from_unsorted=False)
+            )
             ret[own_cuts.unsorted_id(cut_id)] = cut
         return ret
 
@@ -104,48 +116,60 @@ class ContractedTangleNode(TangleNode):
         if self.parent is None:
             return "Root"
         else:
-            orientation = 'T' if self.last_cut_added_orientation else 'F'
+            orientation = "T" if self.last_cut_added_orientation else "F"
             return f"{self.last_cut_added_id} -> {orientation}"
 
     def to_string_tree_like(self, height: int = 0):
         string = ""
 
         if self.parent is None:
-            string += 'Root\n'
+            string += "Root\n"
 
-        padding = '  '
-        string_cuts = ['{} -> {}'.format(k, v) for k, v in self.characterizing_cuts_left.items()] \
-            if self.characterizing_cuts_left is not None else ''
-        string += '{}{} left: {}\n'.format(padding *
-                                           height, self.last_cut_added_id, string_cuts)
+        padding = "  "
+        string_cuts = (
+            ["{} -> {}".format(k, v) for k, v in self.characterizing_cuts_left.items()]
+            if self.characterizing_cuts_left is not None
+            else ""
+        )
+        string += "{}{} left: {}\n".format(
+            padding * height, self.last_cut_added_id, string_cuts
+        )
 
-        string_cuts = ['{} -> {}'.format(k, v) for k, v in self.characterizing_cuts_right.items()] \
-            if self.characterizing_cuts_right is not None else ''
-        string += '{}{} right: {}\n'.format(padding *
-                                            height, self.last_cut_added_id, string_cuts)
+        string_cuts = (
+            ["{} -> {}".format(k, v) for k, v in self.characterizing_cuts_right.items()]
+            if self.characterizing_cuts_right is not None
+            else ""
+        )
+        string += "{}{} right: {}\n".format(
+            padding * height, self.last_cut_added_id, string_cuts
+        )
 
         if self.left_child is not None:
-            string += '\n'
+            string += "\n"
             string += self.left_child.to_string_tree_like(height=height + 1)
         if self.right_child is not None:
-            string += '\n'
+            string += "\n"
             string += self.right_child.to_string_tree_like(height=height + 1)
 
         return string
 
 
 # created new TangleNode and adds it as child to current node
-def _add_new_child(current_node, tangle, name, last_cut_added_id, last_cut_added_orientation, did_split):
-    new_node = TangleNode(parent=current_node,
-                          right_child=None,
-                          left_child=None,
-                          name=name,
-                          is_left_child=last_cut_added_orientation,
-                          splitting=False,
-                          did_split=did_split,
-                          last_cut_added_id=last_cut_added_id,
-                          last_cut_added_orientation=last_cut_added_orientation,
-                          tangle=tangle)
+def _add_new_child(
+    current_node, tangle, name, last_cut_added_id, last_cut_added_orientation, did_split
+):
+    new_node = TangleNode(
+        parent=current_node,
+        right_child=None,
+        left_child=None,
+        name=name,
+        is_left_child=last_cut_added_orientation,
+        splitting=False,
+        did_split=did_split,
+        last_cut_added_id=last_cut_added_id,
+        last_cut_added_orientation=last_cut_added_orientation,
+        tangle=tangle,
+    )
 
     if new_node.is_left_child:
         current_node.left_child = new_node
@@ -156,19 +180,19 @@ def _add_new_child(current_node, tangle, name, last_cut_added_id, last_cut_added
 
 
 class TangleTree(object):
-
     def __init__(self, agreement, cuts, max_clusters=None, prune_first_path=False):
-
-        self.root = TangleNode(parent=None,
-                               right_child=None,
-                               left_child=None,
-                               name=None,
-                               splitting=None,
-                               is_left_child=None,
-                               did_split=True,
-                               last_cut_added_id=-1,
-                               last_cut_added_orientation=None,
-                               tangle=Tangle(cuts=cuts))
+        self.root = TangleNode(
+            parent=None,
+            right_child=None,
+            left_child=None,
+            name=None,
+            splitting=None,
+            is_left_child=None,
+            did_split=True,
+            last_cut_added_id=-1,
+            last_cut_added_orientation=None,
+            tangle=Tangle(cuts=cuts),
+        )
         self.prune_first_path = prune_first_path
         self.cuts = cuts
         self.max_clusters = max_clusters
@@ -187,7 +211,11 @@ class TangleTree(object):
     # --- stops if number of active leaves gets too large ! ---
     def add_cut(self, cut, name, cut_id):
         if self.max_clusters and len(self.active) >= self.max_clusters:
-            print('Stopped since there are more then %s leaves already.'.format(self.max_clusters))
+            print(
+                "Stopped since there are more then %s leaves already.".format(
+                    self.max_clusters
+                )
+            )
             return False
 
         current_active = self.active
@@ -198,7 +226,8 @@ class TangleTree(object):
         # Check if we can add the current cut to them.
         for current_node in current_active:
             could_add_node, did_split, is_maximal = self._add_children_to_node(
-                current_node, cut, name, cut_id)
+                current_node, cut, name, cut_id
+            )
             could_add_one = could_add_one or could_add_node
 
             if did_split:
@@ -219,15 +248,19 @@ class TangleTree(object):
             cut = cut.astype(bool)
 
         # Tangle with the cut added in present orientation.
-        new_tangle_true = old_tangle.add(new_cut=ba.bitarray(cut.tolist()),
-                                         new_cut_id=cut_id,
-                                         orientation=True,
-                                         min_size=self.agreement)
+        new_tangle_true = old_tangle.add(
+            new_cut=ba.bitarray(cut.tolist()),
+            new_cut_id=cut_id,
+            orientation=True,
+            min_size=self.agreement,
+        )
         # Tangle with the cut added in opposite orientation.
-        new_tangle_false = old_tangle.add(new_cut=ba.bitarray((~cut).tolist()),
-                                          new_cut_id=cut_id,
-                                          orientation=False,
-                                          min_size=self.agreement)
+        new_tangle_false = old_tangle.add(
+            new_cut=ba.bitarray((~cut).tolist()),
+            new_cut_id=cut_id,
+            orientation=False,
+            min_size=self.agreement,
+        )
 
         could_add_one = False
 
@@ -246,53 +279,57 @@ class TangleTree(object):
         # Cut could be added in the original orientation.
         if new_tangle_true is not None:
             could_add_one = True
-            new_node = _add_new_child(current_node=current_node,
-                                      name=name,
-                                      tangle=new_tangle_true,
-                                      last_cut_added_id=cut_id,
-                                      last_cut_added_orientation=True,
-                                      did_split=did_split)
+            new_node = _add_new_child(
+                current_node=current_node,
+                name=name,
+                tangle=new_tangle_true,
+                last_cut_added_id=cut_id,
+                last_cut_added_orientation=True,
+                did_split=did_split,
+            )
             self.active.append(new_node)
 
         # Cut could be added in the opposite orientation.
         if new_tangle_false is not None:
             could_add_one = True
-            new_node = _add_new_child(current_node=current_node,
-                                      name=name,
-                                      tangle=new_tangle_false,
-                                      last_cut_added_id=cut_id,
-                                      last_cut_added_orientation=False,
-                                      did_split=did_split)
+            new_node = _add_new_child(
+                current_node=current_node,
+                name=name,
+                tangle=new_tangle_false,
+                last_cut_added_id=cut_id,
+                last_cut_added_orientation=False,
+                did_split=did_split,
+            )
             self.active.append(new_node)
 
         return could_add_one, did_split, is_maximal
 
     def plot_tree(self, path=None):  # pragma: no cover
-
         tree = nx.Graph()
         labels = self._add_node_to_nx(tree, self.root)
 
-        pos = graphviz_layout(tree, prog='dot')
+        pos = graphviz_layout(tree, prog="dot")
 
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
         nx.draw_networkx(tree, pos=pos, ax=ax, labels=labels, node_size=1500)
         plt.tight_layout()
         if path:
-            plt.savefig(path, bbox_inches='tight')
+            plt.savefig(path, bbox_inches="tight")
         else:
             plt.show()
 
-    def _add_node_to_nx(self, tree, node, parent_id=None, direction=None):  # pragma: no cover
-
+    def _add_node_to_nx(
+        self, tree, node, parent_id=None, direction=None
+    ):  # pragma: no cover
         if node.parent is None:
-            my_id = 'root'
-            my_label = 'Root'
+            my_id = "root"
+            my_label = "Root"
 
             tree.add_node(my_id)
         else:
             my_id = parent_id + direction
-            str_o = 'T' if node.last_cut_added_orientation else 'F'
-            my_label = '{} -> {}'.format(node.name.split(",")[0], str_o)
+            str_o = "T" if node.last_cut_added_orientation else "F"
+            my_label = "{} -> {}".format(node.name.split(",")[0], str_o)
 
             tree.add_node(my_id)
             tree.add_edge(my_id, parent_id)
@@ -301,21 +338,21 @@ class TangleTree(object):
 
         if node.left_child is not None:
             left_labels = self._add_node_to_nx(
-                tree, node.left_child, parent_id=my_id, direction='left')
+                tree, node.left_child, parent_id=my_id, direction="left"
+            )
             labels = {**labels, **left_labels}
         if node.right_child is not None:
             right_labels = self._add_node_to_nx(
-                tree, node.right_child, parent_id=my_id, direction='right')
+                tree, node.right_child, parent_id=my_id, direction="right"
+            )
             labels = {**labels, **right_labels}
 
         return labels
 
 
 class ContractedTangleTree(TangleTree):
-
     # noinspection PyMissingConstructor
     def __init__(self, tree):
-
         self.is_empty = tree.is_empty
         self.processed_soft_prediction = False
         self.maximals = []
@@ -326,11 +363,15 @@ class ContractedTangleTree(TangleTree):
         return str(self.root)
 
     def prune(self, bipartitions, prune_depth, verbose=True):
-        self._delete_noise_clusters(self.root, depth=prune_depth,
-                                    bipartitions=bipartitions)
+        self._delete_noise_clusters(
+            self.root, depth=prune_depth, bipartitions=bipartitions
+        )
         if verbose:
-            print("\t{} clusters after cutting out short paths.".format(
-                len(self.maximals)))
+            print(
+                "\t{} clusters after cutting out short paths.".format(
+                    len(self.maximals)
+                )
+            )
 
     def _delete_noise_clusters(self, node, depth, bipartitions):
         if depth == 0:
@@ -339,15 +380,24 @@ class ContractedTangleTree(TangleTree):
         if node.is_leaf():
             if node.parent is None:
                 Warning(
-                    "This node is a leaf and the root at the same time. This tree is empty!")
+                    "This node is a leaf and the root at the same time. This tree is empty!"
+                )
             else:
                 # node_id = node.last_cut_added_id
                 # parent_id = node.parent.last_cut_added_id
                 #
                 # diff = node_id - parent_id
 
-                nb_char_cuts = np.sum(np.array([name.count(",") + 1 for name in
-                                                bipartitions.names[list(node.characterizing_cuts.keys())]]))
+                nb_char_cuts = np.sum(
+                    np.array(
+                        [
+                            name.count(",") + 1
+                            for name in bipartitions.names[
+                                list(node.characterizing_cuts.keys())
+                            ]
+                        ]
+                    )
+                )
 
                 if nb_char_cuts <= depth:
                     self.maximals.remove(node)
@@ -359,7 +409,9 @@ class ContractedTangleTree(TangleTree):
                         node.parent.right_child = None
                         if node.parent.is_left_child_deleted:
                             self.maximals.append(node.parent)
-                            self._delete_noise_clusters(node.parent, depth, bipartitions)
+                            self._delete_noise_clusters(
+                                node.parent, depth, bipartitions
+                            )
 
         else:
             self._delete_noise_clusters(node.left_child, depth, bipartitions)
@@ -394,7 +446,6 @@ class ContractedTangleTree(TangleTree):
         self._calculate_characterizing_cuts(self.root)
 
     def _calculate_characterizing_cuts(self, node):
-
         if node.left_child is None and node.right_child is None:
             node.characterizing_cuts = dict()
             return
@@ -415,23 +466,26 @@ class ContractedTangleTree(TangleTree):
         while True:
             if current_node.left_child is None and current_node.right_child is None:
                 # is leaf so create new node
-                contracted_node = ContractedTangleNode(
-                    parent=parent, node=current_node)
+                contracted_node = ContractedTangleNode(parent=parent, node=current_node)
                 self.maximals.append(contracted_node)
                 return contracted_node
-            elif current_node.left_child is not None and current_node.right_child is not None:
+            elif (
+                current_node.left_child is not None
+                and current_node.right_child is not None
+            ):
                 # is splitting so create new node
-                contracted_node = ContractedTangleNode(
-                    parent=parent, node=current_node)
+                contracted_node = ContractedTangleNode(parent=parent, node=current_node)
 
                 contracted_left_child = self._contract_subtree_iterative(
-                    parent=contracted_node, node=current_node.left_child)
+                    parent=contracted_node, node=current_node.left_child
+                )
                 contracted_node.left_child = contracted_left_child
                 # let it know that it is a left child!
                 contracted_node.left_child.is_left_child = True
 
                 contracted_right_child = self._contract_subtree_iterative(
-                    parent=contracted_node, node=current_node.right_child)
+                    parent=contracted_node, node=current_node.right_child
+                )
                 contracted_node.right_child = contracted_right_child
                 # let it know that it is a right child!
                 contracted_node.right_child.is_left_child = False
@@ -448,11 +502,11 @@ class ContractedTangleTree(TangleTree):
     def _contract_subtree(self, parent, node):
         return self._contract_subtree_iterative(parent, node)
 
-    def print_summary(self, node, loc=''):
+    def print_summary(self, node, loc=""):
         if node:
-            self.print_summary(node.left_child, loc + 'l')
+            self.print_summary(node.left_child, loc + "l")
             self.print_node(node, loc)
-            self.print_summary(node.right_child, loc + 'r')
+            self.print_summary(node.right_child, loc + "r")
         else:
             return
 
@@ -463,9 +517,11 @@ class ContractedTangleTree(TangleTree):
             print(loc, ": ", np.argwhere(node.p > 0.5).flatten())
 
     def to_matrix(self):
-        return self._write_to_mat([self.root], [''], 1, {}, {}, {})
+        return self._write_to_mat([self.root], [""], 1, {}, {}, {})
 
-    def _write_to_mat(self, queue, queue_positions, index, matrices, char_cuts, positions):
+    def _write_to_mat(
+        self, queue, queue_positions, index, matrices, char_cuts, positions
+    ):
         try:
             node = queue[0]
             queue = queue[1:]
@@ -476,31 +532,39 @@ class ContractedTangleTree(TangleTree):
 
         if node.left_child is not None and node.right_child is not None:
             if index in matrices.keys():
-                matrices[index] = np.concatenate([matrices[index], node.left_child.p.reshape(-1, 1)], axis=1)
-                char_cuts[index] = np.concatenate([char_cuts[index], node.left_child.characterizing_cuts], axis=1)
+                matrices[index] = np.concatenate(
+                    [matrices[index], node.left_child.p.reshape(-1, 1)], axis=1
+                )
+                char_cuts[index] = np.concatenate(
+                    [char_cuts[index], node.left_child.characterizing_cuts], axis=1
+                )
                 positions[index] = np.concatenate([positions[index], position], axis=1)
             else:
                 matrices[index] = node.left_child.p.reshape(-1, 1)
                 char_cuts[index] = node.left_child.characterizing_cuts
                 positions[index] = position
-            matrices[index] = np.concatenate([matrices[index], node.right_child.p.reshape(-1, 1)], axis=1)
+            matrices[index] = np.concatenate(
+                [matrices[index], node.right_child.p.reshape(-1, 1)], axis=1
+            )
 
             if node.left_child.last_cut_added_id < node.right_child.last_cut_added_id:
                 queue.append(node.left_child)
-                queue_positions.append(position + 'l')
+                queue_positions.append(position + "l")
                 queue.append(node.right_child)
-                queue_positions.append(position + 'r')
+                queue_positions.append(position + "r")
             else:
                 queue.append(node.right_child)
-                queue_positions.append(position + 'r')
+                queue_positions.append(position + "r")
                 queue.append(node.left_child)
-                queue_positions.append(position + 'l')
+                queue_positions.append(position + "l")
 
-            matrices, char_cuts, positions = self._write_to_mat(queue, queue_positions, index + 1, matrices, char_cuts,
-                                                                positions)
+            matrices, char_cuts, positions = self._write_to_mat(
+                queue, queue_positions, index + 1, matrices, char_cuts, positions
+            )
         else:
-            matrices, char_cuts, positions = self._write_to_mat(queue, queue_positions, index, matrices, char_cuts,
-                                                                positions)
+            matrices, char_cuts, positions = self._write_to_mat(
+                queue, queue_positions, index, matrices, char_cuts, positions
+            )
 
         return matrices, char_cuts, positions
 
@@ -516,15 +580,14 @@ def process_split(node):
 
     # add new relevant cuts
     for id_cut in range(node_id + 1, node.left_child.last_cut_added_id + 1):
-        characterizing_cuts_left[id_cut] = Orientation(
-            orientation_left[id_cut])
+        characterizing_cuts_left[id_cut] = Orientation(orientation_left[id_cut])
 
     for id_cut in range(node_id + 1, node.right_child.last_cut_added_id + 1):
-        characterizing_cuts_right[id_cut] = Orientation(
-            orientation_right[id_cut])
+        characterizing_cuts_right[id_cut] = Orientation(orientation_right[id_cut])
 
-    id_not_in_both = (characterizing_cuts_left.keys() | characterizing_cuts_right.keys()) \
-        .difference(characterizing_cuts_left.keys() & characterizing_cuts_right.keys())
+    id_not_in_both = (
+        characterizing_cuts_left.keys() | characterizing_cuts_right.keys()
+    ).difference(characterizing_cuts_left.keys() & characterizing_cuts_right.keys())
 
     # if cuts are not oriented in both subtrees delete
     for id_cut in id_not_in_both:
@@ -532,11 +595,11 @@ def process_split(node):
         characterizing_cuts_right.pop(id_cut, None)
 
     # characterizing cuts of the current node
-    characterizing_cuts = {
-        **characterizing_cuts_left, **characterizing_cuts_right}
+    characterizing_cuts = {**characterizing_cuts_left, **characterizing_cuts_right}
 
     id_cuts_oriented_same_way = matching_items(
-        characterizing_cuts_left, characterizing_cuts_right)
+        characterizing_cuts_left, characterizing_cuts_right
+    )
 
     # if they are oriented in the same way they are not relevant for distungishing but might be for 'higher' nodes
     # delete in the left and right parts but keep in the characteristics of the current node
@@ -545,8 +608,9 @@ def process_split(node):
         characterizing_cuts_left.pop(id_cut)
         characterizing_cuts_right.pop(id_cut)
 
-    id_cuts_oriented_both_ways = characterizing_cuts_left.keys(
-    ) & characterizing_cuts_right.keys()
+    id_cuts_oriented_both_ways = (
+        characterizing_cuts_left.keys() & characterizing_cuts_right.keys()
+    )
 
     # remove the cuts that are oriented in both trees but in different directions from the current node since they do
     # not affect higher nodes anymore
@@ -562,9 +626,9 @@ def compute_soft_predictions_node(characterizing_cuts, cuts, weight, cuts_probs)
     sum_p = np.zeros(len(cuts.values[0]))
 
     for i, o in characterizing_cuts.items():
-        if o.direction == 'left':
+        if o.direction == "left":
             sum_p += np.array(cuts.values[i]) * weight[i]
-        elif o.direction == 'right':
+        elif o.direction == "right":
             sum_p += np.array(~cuts.values[i]) * weight[i]
     return sum_p
 
@@ -576,17 +640,21 @@ def compute_soft_predictions_children(node, cuts, weight, cuts_probs, verbose=0)
         node.p = np.ones(nb_points)
 
     if node.left_child is not None and node.right_child is not None:
-        unnormalized_p_left = (compute_soft_predictions_node(characterizing_cuts=node.characterizing_cuts_left,
-                                                            cuts=cuts,
-                                                            weight=weight,
-                                                            cuts_probs=cuts_probs))
-        unnormalized_p_right = (compute_soft_predictions_node(characterizing_cuts=node.characterizing_cuts_right,
-                                                             cuts=cuts,
-                                                             weight=weight,
-                                                             cuts_probs=cuts_probs))
+        unnormalized_p_left = compute_soft_predictions_node(
+            characterizing_cuts=node.characterizing_cuts_left,
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+        )
+        unnormalized_p_right = compute_soft_predictions_node(
+            characterizing_cuts=node.characterizing_cuts_right,
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+        )
 
         # normalize the ps
-        total_p = (unnormalized_p_left + unnormalized_p_right)
+        total_p = unnormalized_p_left + unnormalized_p_right
 
         p_left = unnormalized_p_left / total_p
         p_right = unnormalized_p_right / total_p
@@ -594,38 +662,45 @@ def compute_soft_predictions_children(node, cuts, weight, cuts_probs, verbose=0)
         node.left_child.p = p_left * node.p
         node.right_child.p = p_right * node.p
 
-        compute_soft_predictions_children(node=node.left_child,
-                                          cuts=cuts,
-                                          weight=weight,
-                                          cuts_probs=cuts_probs,
-                                          verbose=verbose)
+        compute_soft_predictions_children(
+            node=node.left_child,
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+            verbose=verbose,
+        )
 
-        compute_soft_predictions_children(node=node.right_child,
-                                          cuts=cuts,
-                                          weight=weight,
-                                          cuts_probs=cuts_probs,
-                                          verbose=verbose)
-
-
-
+        compute_soft_predictions_children(
+            node=node.right_child,
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+            verbose=verbose,
+        )
 
 
 def compute_soft_predictions_node_popgen(characterizing_cuts, cuts, weight, cuts_probs):
     sum_p_correct = np.zeros(len(cuts.values[0]))
     sum_p_incorrect = np.zeros(len(cuts.values[0]))
     for i, o in characterizing_cuts.items():
-        if o.direction == 'left':
-            sum_p_correct += np.array(cuts.values[i]) * cuts_probs[int(cuts.names[
-                i].split(',')[0])][0]
-            sum_p_incorrect += (np.array(cuts.values[i]) * (1-cuts_probs[int(cuts.names[
-                i].split(',')[0])][0]))
-        elif o.direction == 'right':
-            sum_p_correct += np.array(~cuts.values[i]) * cuts_probs[int(cuts.names[
-                i].split(',')[0])][1]
-            sum_p_incorrect += (np.array(~cuts.values[i]) * (1-cuts_probs[int(
-                cuts.names[
-                i].split(',')[0])][1]))
+        if o.direction == "left":
+            sum_p_correct += (
+                np.array(cuts.values[i])
+                * cuts_probs[int(cuts.names[i].split(",")[0])][0]
+            )
+            sum_p_incorrect += np.array(cuts.values[i]) * (
+                1 - cuts_probs[int(cuts.names[i].split(",")[0])][0]
+            )
+        elif o.direction == "right":
+            sum_p_correct += (
+                np.array(~cuts.values[i])
+                * cuts_probs[int(cuts.names[i].split(",")[0])][1]
+            )
+            sum_p_incorrect += np.array(~cuts.values[i]) * (
+                1 - cuts_probs[int(cuts.names[i].split(",")[0])][1]
+            )
     return sum_p_correct, sum_p_incorrect
+
 
 def compute_soft_predictions_children_popgen(node, cuts, weight, cuts_probs, verbose=0):
     _, nb_points = cuts.values.shape
@@ -634,38 +709,48 @@ def compute_soft_predictions_children_popgen(node, cuts, weight, cuts_probs, ver
         node.p = np.ones(nb_points)
 
     if node.left_child is not None and node.right_child is not None:
-        unnormalized_p_left, unnormalized_p_left_incorrect = (
-            compute_soft_predictions_node_popgen(
+        (
+            unnormalized_p_left,
+            unnormalized_p_left_incorrect,
+        ) = compute_soft_predictions_node_popgen(
             characterizing_cuts=node.characterizing_cuts_left,
-                                                            cuts=cuts,
-                                                            weight=weight,
-                                                            cuts_probs=cuts_probs))
-        unnormalized_p_right, unnormalized_p_right_incorrect = (
-            compute_soft_predictions_node_popgen(
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+        )
+        (
+            unnormalized_p_right,
+            unnormalized_p_right_incorrect,
+        ) = compute_soft_predictions_node_popgen(
             characterizing_cuts=node.characterizing_cuts_right,
-                                                             cuts=cuts,
-                                                             weight=weight,
-                                                             cuts_probs=cuts_probs))
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+        )
 
         # normalize the ps
-        total_p = (unnormalized_p_left + unnormalized_p_right)
-        p_left = (unnormalized_p_left)/ total_p
-        p_right = (unnormalized_p_right)/ total_p
+        total_p = unnormalized_p_left + unnormalized_p_right
+        p_left = (unnormalized_p_left) / total_p
+        p_right = (unnormalized_p_right) / total_p
 
         node.left_child.p = p_left * node.p
         node.right_child.p = p_right * node.p
 
-        compute_soft_predictions_children_popgen(node=node.left_child,
-                                          cuts=cuts,
-                                          weight=weight,
-                                          cuts_probs=cuts_probs,
-                                          verbose=verbose)
+        compute_soft_predictions_children_popgen(
+            node=node.left_child,
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+            verbose=verbose,
+        )
 
-        compute_soft_predictions_children_popgen(node=node.right_child,
-                                          cuts=cuts,
-                                          weight=weight,
-                                          cuts_probs=cuts_probs,
-                                          verbose=verbose)
+        compute_soft_predictions_children_popgen(
+            node=node.right_child,
+            cuts=cuts,
+            weight=weight,
+            cuts_probs=cuts_probs,
+            verbose=verbose,
+        )
 
 
 def tangle_computation(cuts, agreement, verbose, max_clusters=None):
@@ -694,39 +779,56 @@ def tangle_computation(cuts, agreement, verbose, max_clusters=None):
     unique_orders = np.unique(cuts.costs)
 
     for order in unique_orders:
-
         if old_order is None:
             idx_cuts_order_i = np.where(cuts.costs <= order)[0]
         else:
-            idx_cuts_order_i = np.where(np.all([cuts.costs > old_order,
-                                                cuts.costs <= order], axis=0))[0]
+            idx_cuts_order_i = np.where(
+                np.all([cuts.costs > old_order, cuts.costs <= order], axis=0)
+            )[0]
 
         if len(idx_cuts_order_i) > 0:
-
             if verbose >= 2:
-                print("\tCompute tangles of order {} with {} new cuts".format(
-                    order, len(idx_cuts_order_i)), flush=True)
+                print(
+                    "\tCompute tangles of order {} with {} new cuts".format(
+                        order, len(idx_cuts_order_i)
+                    ),
+                    flush=True,
+                )
 
             cuts_order_i = cuts.values[idx_cuts_order_i]
-            cuts_names_i = cuts.names[idx_cuts_order_i] if cuts.names is not None else idx_cuts_order_i
-            new_tree = core_algorithm(tree=tangles_tree,
-                                      current_cuts=cuts_order_i,
-                                      current_names=cuts_names_i,
-                                      idx_current_cuts=idx_cuts_order_i)
+            cuts_names_i = (
+                cuts.names[idx_cuts_order_i]
+                if cuts.names is not None
+                else idx_cuts_order_i
+            )
+            new_tree = core_algorithm(
+                tree=tangles_tree,
+                current_cuts=cuts_order_i,
+                current_names=cuts_names_i,
+                idx_current_cuts=idx_cuts_order_i,
+            )
 
             if new_tree is None:
                 max_order = cuts.costs[-1]
                 if verbose >= 2:
-                    print('\t\tI could not add any new cuts due to inconsistency')
-                    print('\n\tI stopped the computation at order {} instead of {}'.format(old_order, max_order),
-                          flush=True)
+                    print("\t\tI could not add any new cuts due to inconsistency")
+                    print(
+                        "\n\tI stopped the computation at order {} instead of {}".format(
+                            old_order, max_order
+                        ),
+                        flush=True,
+                    )
                 break
             else:
                 tangles_tree = new_tree
 
                 if verbose >= 2:
-                    print("\t\tI found {} tangles of order less or equal {}".format(len(new_tree.active), order),
-                          flush=True)
+                    print(
+                        "\t\tI found {} tangles of order less or equal {}".format(
+                            len(new_tree.active), order
+                        ),
+                        flush=True,
+                    )
 
         old_order = order
 
@@ -734,8 +836,11 @@ def tangle_computation(cuts, agreement, verbose, max_clusters=None):
         tangles_tree.maximals += tangles_tree.active
 
     if verbose >= 1:
-        print("\t{} leaves before cutting out short paths.".format(
-            len(tangles_tree.maximals)))
+        print(
+            "\t{} leaves before cutting out short paths.".format(
+                len(tangles_tree.maximals)
+            )
+        )
 
     return tangles_tree
 
@@ -748,15 +853,16 @@ def get_hard_predictions(X: np.ndarray, agreement: int, verbose: int = 0):
     """
     verbose_bool = verbose > 0
     cuts = Cuts((X == 1).T)
-    cost_function = BipartitionSimilarity(
-        cuts.values.T)
+    cost_function = BipartitionSimilarity(cuts.values.T)
     cuts.compute_cost_and_order_cuts(cost_function, verbose=verbose_bool)
 
     # Building the tree, contracting and calculating predictions
-    tangles_tree = tangle_computation(cuts=cuts,
-                                      agreement=agreement,
-                                      # print nothing
-                                      verbose=verbose_bool)
+    tangles_tree = tangle_computation(
+        cuts=cuts,
+        agreement=agreement,
+        # print nothing
+        verbose=verbose_bool,
+    )
 
     contracted = ContractedTangleTree(tangles_tree)
     contracted.prune(1, verbose=verbose_bool)
@@ -767,10 +873,10 @@ def get_hard_predictions(X: np.ndarray, agreement: int, verbose: int = 0):
     weight = np.exp(-normalize(cuts.costs))
 
     compute_soft_predictions_children(
-        node=contracted.root, cuts=cuts, weight=weight, verbose=verbose_bool)
+        node=contracted.root, cuts=cuts, weight=weight, verbose=verbose_bool
+    )
     contracted.processed_soft_predictions = True
 
-    ys_predicted, _ = compute_hard_predictions(
-        contracted, cuts, verbose=verbose_bool)
+    ys_predicted, _ = compute_hard_predictions(contracted, cuts, verbose=verbose_bool)
 
     return ys_predicted

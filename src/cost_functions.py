@@ -1,9 +1,9 @@
 import numpy as np
 from sklearn.neighbors import DistanceMetric
 import pickle
-from pathlib import Path
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 
 """
 Script with 3 different cost functions, all specific to population genetics.
@@ -26,7 +26,7 @@ def k_nearest_neighbours(xs, n_sample, cut):
     len_out_cut = np.count_nonzero(cut == False)
 
     # lead kNN matrix:
-    with open("data/saved_kNN/kNN", 'rb') as inp:
+    with open("data/saved_kNN/kNN", "rb") as inp:
         kNN = pickle.load(inp)
 
     # Find indices of individuals on each side of the cut
@@ -42,11 +42,12 @@ def k_nearest_neighbours(xs, n_sample, cut):
     kNN_on_opposite_side_False = np.sum(cut[neighbors_False] != False)
     kNN_on_opposite_side_True = np.sum(cut[neighbors_True] != True)
     # compute fraction of neighbours that lie on the other side of the cut:
-    knn_breaches = (1 + ((kNN_on_opposite_side_False) /
-                           (len_out_cut * kNN.k) + (
-                                       kNN_on_opposite_side_True) / (
-                                       len_in_cut * kNN.k)))
+    knn_breaches = 1 + (
+        (kNN_on_opposite_side_False) / (len_out_cut * kNN.k)
+        + (kNN_on_opposite_side_True) / (len_in_cut * kNN.k)
+    )
     return knn_breaches
+
 
 # cost function based on mean FST-values:
 def FST_kNN(xs, n_samples, cut):
@@ -97,8 +98,9 @@ def HWE_kNN(xs, n_samples, cut):
 
     # observed heterozygotes on both sides of the cut:
     x_in = (1 / len_in_cut) * np.count_nonzero(xs * cut[:, np.newaxis] == 1, axis=0)
-    x_out = (1 / len_out_cut) * np.count_nonzero(xs * (~cut)[:, np.newaxis] == 1,
-                                                 axis=0)
+    x_out = (1 / len_out_cut) * np.count_nonzero(
+        xs * (~cut)[:, np.newaxis] == 1, axis=0
+    )
 
     # penalize random cuts:
     normalization = np.sum(np.sqrt(np.abs(p_in - p_out)))
@@ -106,7 +108,7 @@ def HWE_kNN(xs, n_samples, cut):
     # mean divergence from Hardy-Weinberg equilibrium over all SNPs:
     F_in = np.abs(x_in - expected_H_in)
     F_out = np.abs(x_out - expected_H_out)
-    HWE_div = ((1 + np.minimum(np.sum(F_in), np.sum(F_out))) / (normalization))
+    HWE_div = (1 + np.minimum(np.sum(F_in), np.sum(F_out))) / (normalization)
 
     # normalization factor that penalizes unbalanced cuts:
     norm_balanced_cuts = np.power((len_xs / len_in_cut) + (len_xs / len_out_cut), 0.1)
@@ -119,7 +121,7 @@ def HWE_kNN(xs, n_samples, cut):
     return normalized_HWE
 
 
-class BipartitionSimilarity():
+class BipartitionSimilarity:
     def __init__(self, all_bipartitions: np.ndarray) -> None:
         """
         Computes the cost cost of a bipartition according to Klepper et. al 2020,
@@ -134,7 +136,7 @@ class BipartitionSimilarity():
         all_bipartitions: np.ndarray of shape (datapoints, questions),
             containing all possible bipartitions.
         """
-        metric = DistanceMetric.get_metric('manhattan')
+        metric = DistanceMetric.get_metric("manhattan")
         self.dists = metric.pairwise(all_bipartitions)
 
     def __call__(self, bipartition: np.ndarray):
@@ -150,6 +152,6 @@ class BipartitionSimilarity():
         out_cut = np.where(~bipartition)[0]
 
         distance = self.dists[np.ix_(in_cut, out_cut)]
-        similarity = 1. / (distance / np.max(distance))
+        similarity = 1.0 / (distance / np.max(distance))
         expected_similarity = np.mean(similarity)
         return expected_similarity

@@ -4,6 +4,7 @@ import numpy as np
 from src.data_types import Cuts
 import time
 
+
 def order_cuts(bipartitions: Cuts, cost_bipartitions: np.ndarray):
     """
     Orders cuts based on the cost of the cuts.
@@ -25,9 +26,11 @@ def order_cuts(bipartitions: Cuts, cost_bipartitions: np.ndarray):
 
     return bipartitions
 
+
 def compute_cost_and_order_cuts(bipartitions, cost_functions, verbose=True):
     costs = compute_cost_splitted(bipartitions, cost_functions, verbose=verbose)
     return order_cuts(bipartitions, costs)
+
 
 def compute_cost_splitted(bipartitions, cost_function, verbose=True):
     """
@@ -49,11 +52,11 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
         print("Preomputing costs of cuts...")
 
     # compute costs with multiprocessing and monitor progress:
-    num_iterations = 10     # progress is monitored in 10% steps
+    num_iterations = 10  # progress is monitored in 10% steps
 
     # in each iteration, compute costs of 10% of cuts:
-    slice_size = len(bipartitions.values) // (num_iterations-1)
-    #print("slice size: ", slice_size, " bipartitions.")
+    slice_size = len(bipartitions.values) // (num_iterations - 1)
+    # print("slice size: ", slice_size, " bipartitions.")
 
     # Initialize list for saving costs of bipartitions
     costs = []
@@ -84,8 +87,10 @@ def compute_cost_splitted(bipartitions, cost_function, verbose=True):
 
         # print progress
         duration = time.time() - start_time
-        print(f"Progress: {progress:.2f}% of cost computation done in {duration:.2f} "
-              f"sec.")
+        print(
+            f"Progress: {progress:.2f}% of cost computation done in {duration:.2f} "
+            f"sec."
+        )
 
         # update start index for slice computation in next iteration
         start_idx = end_idx

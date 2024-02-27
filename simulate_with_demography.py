@@ -13,9 +13,25 @@ shown in the publication. The resulting genotype matrix is saved in an vcf file.
 
 
 class Simulated_Data_With_Demography:
-    def __init__(self, n_diploid, theta, rho, seed, save_G=True, print_ts=False,
-                 save_ts=True, filepath="", SFS=[], total_tree_length=[], G=[],
-                 true_thetas=[], true_rhos=[], ts=[], indv_pop=[], vcf_filename=[]):
+    def __init__(
+        self,
+        n_diploid,
+        theta,
+        rho,
+        seed,
+        save_G=True,
+        print_ts=False,
+        save_ts=True,
+        filepath="",
+        SFS=[],
+        total_tree_length=[],
+        G=[],
+        true_thetas=[],
+        true_rhos=[],
+        ts=[],
+        indv_pop=[],
+        vcf_filename=[],
+    ):
         # parameters that need to be set and are not a result of the simulation:
         self.n = n_diploid
         self.rep = 1
@@ -53,14 +69,14 @@ class Simulated_Data_With_Demography:
         seed_vec = list(range(int(self.seed + 2), int(self.seed + self.rep + 2)))
 
         # check if dataset is simulated for training:
-        if self.theta == 'rand':
+        if self.theta == "rand":
             train = True
             theta_str = "random-100"
         else:
             train = False
             theta_str = str(self.theta)
 
-        if self.rho == 'rand':
+        if self.rho == "rand":
             rho_train = True
             rho_str = "random-50"
         else:
@@ -111,14 +127,18 @@ class Simulated_Data_With_Demography:
         demography.add_population_split(time=2 / c, derived=["A", "B"], ancestral="AB")
         demography.add_population_split(time=4 / c, derived=["E", "F"], ancestral="EF")
         demography.add_population_split(time=6 / c, derived=["C", "D"], ancestral="CD")
-        demography.add_population_split(time=8 / c, derived=["EF", "G"],
-                                        ancestral="EFG")
-        demography.add_population_split(time=10 / c, derived=["AB", "CD"],
-                                        ancestral="ABCD")
-        demography.add_population_split(time=12 / c, derived=["EFG", "H"],
-                                        ancestral="EFGH")
-        demography.add_population_split(time=28 / (2 * c), derived=["ABCD", "EFGH"],
-                                        ancestral="ABCDEFGH")
+        demography.add_population_split(
+            time=8 / c, derived=["EF", "G"], ancestral="EFG"
+        )
+        demography.add_population_split(
+            time=10 / c, derived=["AB", "CD"], ancestral="ABCD"
+        )
+        demography.add_population_split(
+            time=12 / c, derived=["EFG", "H"], ancestral="EFGH"
+        )
+        demography.add_population_split(
+            time=28 / (2 * c), derived=["ABCD", "EFGH"], ancestral="ABCDEFGH"
+        )
         # set migration between populations A and E:
         demography.set_symmetric_migration_rate(["A", "E"], 0.5)
 
@@ -129,23 +149,53 @@ class Simulated_Data_With_Demography:
         cmap_tab10 = plt.get_cmap("tab10")
         cmap_tab20 = plt.get_cmap("tab20")
         cmap_tab20c = plt.get_cmap("tab20c")
-        demes_colors = {'A': cmap_tab10(6), 'B': cmap_tab10(3), 'C': cmap_tab10(5),
-                        'D': cmap_tab10(0), 'E': cmap_tab10(7), 'F': cmap_tab10(4),
-                        'G': cmap_tab10(2), 'H': cmap_tab10(1), 'AB': cmap_tab20(7),
-                        'CD': cmap_tab20c(1), 'EF': cmap_tab20c(13),
-                        'EFG': cmap_tab20c(9), 'ABCD': cmap_tab20c(2),
-                        'EFGH': cmap_tab20(3), 'ABCDEFGH': cmap_tab20c(3)}
-        positions = {'ABCDEFGH': 11 / 5, 'ABCD': 5.5 / 5, 'EFGH': 19.375 / 5,
-                     'H': 22 / 5, 'EFG': 16.75 / 5, 'CD': 2.5 / 5, 'AB': 8.5 / 5,
-                     'G': 19 / 5, 'EF': 14.5 / 5, 'B': 7 / 5, 'A': 10 / 5, 'E': 13 / 5,
-                     'F': 16 / 5, 'D': 1 / 5, 'C': 4 / 5}
-        demesdraw.tubes(graph, positions=positions, num_lines_per_migration=2, seed=1,
-                        colours=demes_colors, fill=True)
-        filename_short = (self.filepath + "demographic_structure_n_" + str(self.n))
-        plt.tick_params(axis='y', labelsize=15)
-        plt.tick_params(axis='x', labelsize=15)
-        plt.ylabel('time ago (generations)', fontsize=14)
-        plt.savefig(filename_short + '.pdf')
+        demes_colors = {
+            "A": cmap_tab10(6),
+            "B": cmap_tab10(3),
+            "C": cmap_tab10(5),
+            "D": cmap_tab10(0),
+            "E": cmap_tab10(7),
+            "F": cmap_tab10(4),
+            "G": cmap_tab10(2),
+            "H": cmap_tab10(1),
+            "AB": cmap_tab20(7),
+            "CD": cmap_tab20c(1),
+            "EF": cmap_tab20c(13),
+            "EFG": cmap_tab20c(9),
+            "ABCD": cmap_tab20c(2),
+            "EFGH": cmap_tab20(3),
+            "ABCDEFGH": cmap_tab20c(3),
+        }
+        positions = {
+            "ABCDEFGH": 11 / 5,
+            "ABCD": 5.5 / 5,
+            "EFGH": 19.375 / 5,
+            "H": 22 / 5,
+            "EFG": 16.75 / 5,
+            "CD": 2.5 / 5,
+            "AB": 8.5 / 5,
+            "G": 19 / 5,
+            "EF": 14.5 / 5,
+            "B": 7 / 5,
+            "A": 10 / 5,
+            "E": 13 / 5,
+            "F": 16 / 5,
+            "D": 1 / 5,
+            "C": 4 / 5,
+        }
+        demesdraw.tubes(
+            graph,
+            positions=positions,
+            num_lines_per_migration=2,
+            seed=1,
+            colours=demes_colors,
+            fill=True,
+        )
+        filename_short = self.filepath + "demographic_structure_n_" + str(self.n)
+        plt.tick_params(axis="y", labelsize=15)
+        plt.tick_params(axis="x", labelsize=15)
+        plt.ylabel("time ago (generations)", fontsize=14)
+        plt.savefig(filename_short + ".pdf")
         plt.show()
 
         # set constant population size for 8 simulated populations:
@@ -155,17 +205,30 @@ class Simulated_Data_With_Demography:
         for i in range(0, self.rep):
             # set seed
             rng = numpy.random.default_rng(seed_vec[i])
-            seeds = rng.integers(1, 2 ** 31 - 1, size=2)
+            seeds = rng.integers(1, 2**31 - 1, size=2)
             # simulate tree sequence:
             ts = msprime.sim_ancestry(
-                samples={"A": size, "B": size, "C": size, "D": size, "E": size,
-                         "F": size, "G": size, "H": size}, sequence_length=1,
-                discrete_genome=False, recombination_rate=rho[i] / 1,
-                random_seed=seeds[0], demography=demography, ploidy=2)
+                samples={
+                    "A": size,
+                    "B": size,
+                    "C": size,
+                    "D": size,
+                    "E": size,
+                    "F": size,
+                    "G": size,
+                    "H": size,
+                },
+                sequence_length=1,
+                discrete_genome=False,
+                recombination_rate=rho[i] / 1,
+                random_seed=seeds[0],
+                demography=demography,
+                ploidy=2,
+            )
             # simulate mutations:
-            tree_sequence = msprime.sim_mutations(ts, rate=theta[i] / 1,
-                                                  random_seed=seeds[1],
-                                                  discrete_genome=False)
+            tree_sequence = msprime.sim_mutations(
+                ts, rate=theta[i] / 1, random_seed=seeds[1], discrete_genome=False
+            )
             # print("ts.individuals_population:", tree_sequence.individuals_population)
             # print("num_migration:", tree_sequence.num_migrations)
 
@@ -174,9 +237,18 @@ class Simulated_Data_With_Demography:
             indv_names = [f"{i}indv" for i in range(self.n)]
             # print("indv_names:", indv_names)
             # safe tree_sequence in vfc file:
-            vcf_filename = ("n_" + str(self.n) + "_rep_" + str(
-                self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(
-                self.seed))
+            vcf_filename = (
+                "n_"
+                + str(self.n)
+                + "_rep_"
+                + str(self.rep)
+                + "_rho_"
+                + rho_str
+                + "_theta_"
+                + theta_str
+                + "_seed_"
+                + str(self.seed)
+            )
             with open("data/vcf/" + vcf_filename + ".vcf", "w") as vcf_file:
                 tree_sequence.write_vcf(vcf_file, individual_names=indv_names)
 
@@ -201,7 +273,8 @@ class Simulated_Data_With_Demography:
             mean_tot_branch_length = 0
             for tree in tree_sequence.trees():
                 mean_tot_branch_length += tree.total_branch_length * (
-                        tree.interval[1] - tree.interval[0])
+                    tree.interval[1] - tree.interval[0]
+                )
             multi_total_length.append(mean_tot_branch_length)
 
             print("mean total branch length:", mean_tot_branch_length)
@@ -225,7 +298,7 @@ class Simulated_Data_With_Demography:
             # sum over columns of the genotype matrix
             a = G.sum(axis=1)
             # site frequency spectrum
-            S = numpy.bincount(a, None, self.n)[1:self.n]
+            S = numpy.bincount(a, None, self.n)[1 : self.n]
 
             # save the SFS and the theta used for simulation
             multi_SFS.append(S)
@@ -241,11 +314,20 @@ class Simulated_Data_With_Demography:
         self.vcf_filename = vcf_filename
 
         # save object
-        filename = (self.filepath + "sim_with_demography_n_" + str(
-            self.n) + "_rep_" + str(
-            self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(
-            self.seed))
-        with open(filename, 'wb') as outp:  # overwrites any existing file.
+        filename = (
+            self.filepath
+            + "sim_with_demography_n_"
+            + str(self.n)
+            + "_rep_"
+            + str(self.rep)
+            + "_rho_"
+            + rho_str
+            + "_theta_"
+            + theta_str
+            + "_seed_"
+            + str(self.seed)
+        )
+        with open(filename, "wb") as outp:  # overwrites any existing file.
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
 
         # print tree sequence:
@@ -253,29 +335,40 @@ class Simulated_Data_With_Demography:
             filename_svg = filename + ".svg"
             # SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True, symbol_size=5, y_label=[]))
             # for larger n, use the following instead of the SVG print command above:
-            wide_fmt = (3000,
-                        250)  # this sets the format of the plot, for smaller/larger n decrease/increase first entry (x-axis).
-            SVG(tree_sequence.draw_svg(path=filename_svg, x_axis=True, y_axis=True,
-                                       time_scale="rank",
-                                       # used time_scale="rank" for better visualization of large tree sequences
-                                       symbol_size=5, y_label=[], size=wide_fmt))
+            wide_fmt = (
+                3000,
+                250,
+            )  # this sets the format of the plot, for smaller/larger n decrease/increase first entry (x-axis).
+            SVG(
+                tree_sequence.draw_svg(
+                    path=filename_svg,
+                    x_axis=True,
+                    y_axis=True,
+                    time_scale="rank",
+                    # used time_scale="rank" for better visualization of large tree sequences
+                    symbol_size=5,
+                    y_label=[],
+                    size=wide_fmt,
+                )
+            )
         elif self.print_ts and self.rep > 1:
             warnings.warn(
-                'you try to print the ts but rep>1. only print svg if save_svg==True and rep==1.',
-                stacklevel=1)
+                "you try to print the ts but rep>1. only print svg if save_svg==True and rep==1.",
+                stacklevel=1,
+            )
 
     # function to load data with underlying demographic structure that has been
     # simulated already:
     def load_data(self):
         # covert theta and rho_scenario into str to load correct data
-        if self.theta == 'rand':
+        if self.theta == "rand":
             train = True
             theta_str = "random-100"
         else:
             train = False
             theta_str = str(self.theta)
 
-        if self.rho == 'rand':
+        if self.rho == "rand":
             rho_train = True
             rho_str = "random-50"
         else:
@@ -283,13 +376,23 @@ class Simulated_Data_With_Demography:
             rho_str = str(self.rho)
 
         # load saved data
-        filename = (self.filepath + "sim_with_demography_n_" + str(
-            self.n) + "_rep_" + str(
-            self.rep) + "_rho_" + rho_str + "_theta_" + theta_str + "_seed_" + str(
-            self.seed))
-        with open(filename, 'rb') as inp:
+        filename = (
+            self.filepath
+            + "sim_with_demography_n_"
+            + str(self.n)
+            + "_rep_"
+            + str(self.rep)
+            + "_rho_"
+            + rho_str
+            + "_theta_"
+            + theta_str
+            + "_seed_"
+            + str(self.seed)
+        )
+        with open(filename, "rb") as inp:
             loaded_data = pickle.load(
-                inp)  # could be changed to self=pickle.load(inp) or similar to save memory.
+                inp
+            )  # could be changed to self=pickle.load(inp) or similar to save memory.
 
         # assign properties
         self.seed = loaded_data.seed
@@ -305,16 +408,18 @@ class Simulated_Data_With_Demography:
         # check if genotype matrix and ts have been saved during simulated:
         if self.G == []:
             warnings.warn(
-                'the genotype matrix was not saved during simulation, this can lead to further problems.\n if necessary, simulate the data again with the corresponding seed.',
-                stacklevel=1)
+                "the genotype matrix was not saved during simulation, this can lead to further problems.\n if necessary, simulate the data again with the corresponding seed.",
+                stacklevel=1,
+            )
         if self.ts == []:
             warnings.warn(
-                'tree sequence was not saved during simulation, this can lead to further problems.\n if necessary, simulate the data again with the corresponding seed.',
-                stacklevel=1)
+                "tree sequence was not saved during simulation, this can lead to further problems.\n if necessary, simulate the data again with the corresponding seed.",
+                stacklevel=1,
+            )
 
 
 use_this_script_for_sim = True
-if use_this_script_for_sim == True:
+if use_this_script_for_sim:
     ## This is the infomation needed in any script that wants to use the data object class:
     n = 800  # sample size
     theta = 100  # theta=int for constant theta in rep simulations,
@@ -324,11 +429,13 @@ if use_this_script_for_sim == True:
     seed = 42  # starting seed for simulation (based on this seed, multiple
     # seeds will be generated)
     filepath = "data/with_demography/"
-    data_already_simulated = False  # True or False, states if data object should be simulated or loaded
+    data_already_simulated = (
+        False  # True or False, states if data object should be simulated or loaded
+    )
 
     ## This generates the data object and either simulates the properties or loads if it already exists.
     data = Simulated_Data_With_Demography(n, theta, rho, seed, filepath=filepath)
-    if data_already_simulated == False:
+    if not data_already_simulated:
         data.sim_data()
     else:
         data.load_data()
