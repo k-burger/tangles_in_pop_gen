@@ -44,10 +44,10 @@ pip install .
 ```
 
 We recommend to set up a conda environment and install all needed packages as 
-specified in 
+specified in `conda_environment.yml` via
 
 ```
-tangles_env.yml
+conda env create -f conda_environment.yml
 ```
 
 ## Overview of the repository
