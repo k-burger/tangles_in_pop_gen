@@ -105,7 +105,7 @@ class Simulated_Data_With_Demography:
         # this parameter rescales the coalescent times: c=7 to achieve
         # well-differentiated populations, c=70 for significant incomplete lineage
         # sorting:
-        c = 70
+        c = 7
 
         # define population splits and times:
         demography.add_population_split(time=2 / c, derived=["A", "B"], ancestral="AB")
@@ -144,7 +144,12 @@ class Simulated_Data_With_Demography:
         filename_short = (self.filepath + "demographic_structure_n_" + str(self.n))
         plt.tick_params(axis='y', labelsize=15)
         plt.tick_params(axis='x', labelsize=15)
-        plt.ylabel('time ago (generations)', fontsize=14)
+        #plt.axis('off')
+        plt.gca().spines['left'].set_visible(False)
+        plt.yticks([])  # y-Achsenticks entfernen
+        plt.ylabel('')
+
+        # plt.ylabel('time ago (generations)', fontsize=14)
         plt.savefig(filename_short + '.pdf')
         plt.show()
 

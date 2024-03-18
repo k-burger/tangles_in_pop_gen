@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-
+import seaborn as sns
 from src.utils import get_points_to_plot
 
 # Standard colors for uniform plots
@@ -46,13 +46,14 @@ def get_next_id(current_id, direction):
         return current_id + 2 ** level + 2
 
 
-def plot_dataset(data, colors, ax=None, eq_cuts=None, cmap=None, add_colorbar=True, gt=None, pos=None):
+def plot_dataset(data, colors, counter, ax=None, eq_cuts=None, cmap=None,
+                 add_colorbar=True, gt=None, pos=None):
     if data.xs is not None:
         ax = plot_dataset_metric(
-            data.xs, data.cs, colors, eq_cuts, ax, cmap, add_colorbar, gt)
+            data.xs, data.cs, colors, eq_cuts, ax, cmap, add_colorbar, gt, counter)
     elif data.G is not None:
         ax, pos = plot_dataset_graph(
-            data.G, data.ys, colors, ax, cmap, add_colorbar, pos)
+            data.G, data.ys, colors, ax, cmap, add_colorbar, pos, counter)
 
     return ax, pos
 
@@ -77,7 +78,9 @@ def plot_dataset_graph(G, ys, colors, ax, cmap, add_colorbar, pos):
     return ax, pos
 
 
-def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt):
+def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt, counter):
+    cmap = sns.color_palette("deep").as_hex()
+    AIMs_colors = ['grey', cmap[0], cmap[1], cmap[1], cmap[2], cmap[2], cmap[3]]
     plt.style.use('ggplot')
     plt.ioff()
 
@@ -85,6 +88,7 @@ def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt):
     ax.tick_params(axis='y', colors=(0, 0, 0, 0))
     ax.set_aspect('equal', 'box')
     ax.grid()
+    ax.set_facecolor(AIMs_colors[counter])
 
     xs_embedded, cs_embedded = get_points_to_plot(xs, cs)
 
@@ -98,8 +102,8 @@ def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt):
 
     ax.spines[['right', 'top', 'left', 'bottom']].set_visible(True)
 
-    for i, txt in enumerate(xs_embedded):
-        ax.annotate(i, (xs_embedded[i, 0], xs_embedded[i, 1]))
+    # for i, txt in enumerate(xs_embedded):
+    #     ax.annotate(i, (xs_embedded[i, 0], xs_embedded[i, 1]))
 
     if add_colorbar:
         ax = add_colorbar_to_ax(ax, cmap)
@@ -122,7 +126,7 @@ def labels_to_colors(ys, cmap):
 
 def plot_soft_predictions(data, contracted_tree, eq_cuts=None, id_node=0, path=None):
     cmap_groundtruth = plt.cm.get_cmap('autumn')
-    cmap_heatmap = plt.cm.get_cmap('Blues')
+    cmap_heatmap = plt.cm.get_cmap('Greys')
 
     if path:
         output_path = path
@@ -145,11 +149,14 @@ def plot_soft_predictions(data, contracted_tree, eq_cuts=None, id_node=0, path=N
         plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path,
                                   pos=pos)
     else:
-        plot_soft_prediction_node(data, contracted_tree.root, eq_cuts=eq_cuts, id_node=0, cmap=cmap_heatmap, path=path,
+        counter = 0
+        plot_soft_prediction_node(data, contracted_tree.root, counter, eq_cuts=eq_cuts,
+                                  id_node=0, cmap=cmap_heatmap, path=path,
                                   pos=None)
 
 
-def plot_soft_prediction_node(data, node, eq_cuts, id_node, cmap, path, pos=None):
+def plot_soft_prediction_node(data, node, counter, eq_cuts, id_node, cmap, path,
+                                                  pos=None):
     colors = cmap(node.p)
 
     if eq_cuts is not None:
@@ -162,9 +169,9 @@ def plot_soft_prediction_node(data, node, eq_cuts, id_node, cmap, path, pos=None
         eq_characterizing_cuts = []
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5, 5))
-    plot_dataset(data, colors, eq_cuts=eq_characterizing_cuts,
-                 ax=ax, cmap=cmap, pos=pos)
-    ax.set_xlabel(f"Node: {node}")
+    plot_dataset(data, colors, counter, eq_cuts=eq_characterizing_cuts,
+                 ax=ax, cmap=cmap, pos=pos, add_colorbar=False)
+    # ax.set_xlabel(f"Node: {node}")
 
     plt.tight_layout()
     if path is not None:
@@ -174,13 +181,17 @@ def plot_soft_prediction_node(data, node, eq_cuts, id_node, cmap, path, pos=None
         plt.show()
 
     if node.left_child is not None:
+        counter = counter + 1
+        print("counter:", counter)
         id_left = get_next_id(id_node, 'left')
         plot_soft_prediction_node(
-            data, node.left_child, eq_cuts, id_left, cmap, path, pos)
+            data, node.left_child, counter, eq_cuts, id_left, cmap, path, pos)
     if node.right_child is not None:
+        counter = counter + 1
+        print("counter:", counter)
         id_right = get_next_id(id_node, 'right')
         plot_soft_prediction_node(
-            data, node.right_child, eq_cuts, id_right, cmap, path, pos)
+            data, node.right_child, counter, eq_cuts, id_right, cmap, path, pos)
 
 
 def plot_hard_predictions(data, ys_predicted, path=None):

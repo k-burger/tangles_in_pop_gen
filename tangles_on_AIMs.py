@@ -11,7 +11,7 @@ import compute_kNN
 import plot_soft_clustering
 import read_vcf
 import reliability_factor
-from src import cost_functions, data_types
+from src import cost_functions, data_types, plotting
 from src import utils
 from src.tree_tangles import (ContractedTangleTree, tangle_computation,
                               compute_soft_predictions_children_popgen)
@@ -207,6 +207,12 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         num_char_cuts = dict(zip(char_cuts.keys(), num_char_cuts_per_split))
         print("num_char_cuts_per_split:", num_char_cuts_per_split)
         # print("positions:", positions)
+
+        # plot soft predictions
+        plotting.plot_soft_predictions(data=data,
+                                       contracted_tree=contracted_tree,
+                                       eq_cuts=bipartitions.equations,
+                                       path=output_directory / 'soft_clustering')
 
         # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
         # ADMIXTURE):

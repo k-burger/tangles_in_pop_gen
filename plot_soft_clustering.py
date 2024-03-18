@@ -52,18 +52,8 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         # specific seed.
         cmap2 = plt.get_cmap("tab20")
         # minimal example ADMIXTURE
-        #ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[2], cmap[1], cmap[0]]]
+        # ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[2], cmap[1], cmap[0]]]
         # easy sim ADMIXTURE
-        ADMIXTURE_colors = [[cmap[1], cmap[0]],
-                            [cmap[1], cmap[2], cmap[0]],
-                            [cmap[3], cmap[1], cmap[0], cmap[2]],
-                            [cmap[1], cmap[4], cmap[3], cmap[0], cmap[2]],
-                            [cmap[7], cmap[2], cmap[9], cmap[3], cmap[0], cmap[1]],
-                            [cmap[2], cmap[1], cmap[4], cmap[0], cmap[3], cmap[7],
-                             cmap[6]],
-                            [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-                             cmap[6], cmap[5]]]
-        # easy sim ADMIXTURE K=12
         # ADMIXTURE_colors = [[cmap[1], cmap[0]],
         #                     [cmap[1], cmap[2], cmap[0]],
         #                     [cmap[3], cmap[1], cmap[0], cmap[2]],
@@ -72,16 +62,28 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         #                     [cmap[2], cmap[1], cmap[4], cmap[0], cmap[3], cmap[7],
         #                      cmap[6]],
         #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8], cmap[9]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8], cmap[9], cmap2(1)],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8], cmap[9], cmap2(1), cmap2(3)]
-        #                     ]
+        #                      cmap[6], cmap[5]]]
+
+        # complex sim ADMIXTURE K=12
+        # ADMIXTURE_colors = [[cmap[4], cmap[0]],
+        #                      [cmap[4], cmap[0], cmap[1]],
+        #                      [cmap[1], cmap[4], cmap[2], cmap[0]],
+        #                      [cmap[4], cmap[3], cmap[0], cmap[1], cmap[2]],
+        #                      [cmap[4], cmap[0], cmap[1], cmap[5], cmap[3], cmap[2]],
+        #                      [cmap[0], cmap[5], cmap[2], cmap[3], cmap[1], cmap[6],
+        #                       cmap[4]],
+        #                      [cmap[0], cmap[6], cmap[1], cmap[2], cmap[3], cmap[5],
+        #                       cmap[7], cmap[4]],
+        #
+        #                      [cmap[6], cmap[5], cmap[1], cmap[2], cmap[0], cmap[4],
+        #                       cmap[9], cmap[3], cmap[7]],
+        #                      [cmap[2], cmap[8], cmap[0], cmap[6], cmap2(1), cmap[5],
+        #                       cmap[4], cmap[1], cmap[3], cmap[7]],
+        #                      [cmap[2], cmap[6], cmap[8], cmap2(1), cmap2(3), cmap[1],
+        #                       cmap[3], cmap[0], cmap2(5), cmap[7], cmap[4]],
+        #                      [cmap[7], cmap[2], cmap[6], cmap[3], cmap2(1), cmap2(5),
+        #                       cmap2(7), cmap[0], cmap[4], cmap[1], cmap[8], cmap[5]]]
+
         # complex sim ADMIXTURE
         # ADMIXTURE_colors = [[cmap[4], cmap[0]],
         #                     [cmap[4], cmap[0], cmap[1]],
@@ -93,19 +95,19 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         #                     [cmap[0], cmap[6], cmap[1], cmap[2], cmap[3], cmap[5],
         #                      cmap[7], cmap[4]]]
 
-        # IMs no AMR ADMIXTURE
+        # AIMs no AMR ADMIXTURE
         # ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[3], cmap[1], cmap[2], cmap[0]]]
+        #                   [cmap[3], cmap[1], cmap[2], cmap[0]]]
         # complex sim FST
         # cmap = [cmap[4], cmap[0], cmap[1], cmap[3], cmap[7], cmap[2], cmap[5]]
-        # ADMIXTURE aims higher K:
-        # ADMIXTURE_colors = [[cmap[1], cmap[0]],
-        #                     [cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[3], cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[2], cmap[1], cmap[4], cmap[3], cmap[0]],
-        #                     [cmap[5], cmap[1], cmap[0], cmap[4], cmap[2], cmap[3]],
-        #                     [cmap[2], cmap[5], cmap[0], cmap[3], cmap[4], cmap[1],
-        #                      cmap[6]]]
+        # ADMIXTURE aims K=6:
+        ADMIXTURE_colors = [[cmap[1], cmap[0]],
+                            [cmap[1], cmap[2], cmap[0]],
+                            [cmap[3], cmap[1], cmap[2], cmap[0]],
+                            [cmap[2], cmap[1], cmap[4], cmap[3], cmap[0]],
+                            [cmap[5], cmap[1], cmap[0], cmap[4], cmap[2], cmap[3]],
+                            [cmap[2], cmap[5], cmap[0], cmap[3], cmap[4], cmap[1],
+                             cmap[6]]]
     elif nb_plots+1 < 24:
         c = sns.color_palette("husl", 24)   # choose color palette
         # change order of colors to increase color contrast:
@@ -278,11 +280,25 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         # vertical black lines to separate geographical populations:
         for pos in pos_pop_sep[:-1]:
             axs[j].axvline(x=pos, color='black', linestyle='-', linewidth=2)
+
+        # highlight indv 3 within mini ex:
+        # for pos in [2.5, 3.5]:
+        #     axs[j].axvline(x=pos, color='black', linestyle='--', linewidth=4)
+
+
+
         # set limit for y-axis:
         axs[j].set_ylim([0, 1])
+        axs[j].set_yticks([])
+        axs[j].set_ylabel(r"$\ell = $" + str(j+2), rotation=0, fontsize=60,
+                          verticalalignment='center', labelpad=15,
+                          horizontalalignment='right')
+        #axs[j].spines['left'].set_position(('outward', 70))
 
     # white space between stacked bar plots:
-    plt.subplots_adjust(wspace=0, hspace=0.05, bottom=0.05) # bottom 0.1 mini ex
+    plt.subplots_adjust(left=0.05)
+    plt.subplots_adjust(wspace=0, hspace=0.05, bottom=0.05) # bottom 0.1 mini ex,
+    # 0.05 else
     # axs[j].set_xticks([])
 
     # label of x-axis on most fine-grained level:
@@ -297,7 +313,11 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
     else:
         axs[j].set_xticks(np.cumsum(pop_sizes) - pop_sizes / 2 - 0.5)
         axs[j].set_xticklabels(list(string.ascii_uppercase[:nb_pop]),
-                                fontsize=70)  # 50 for mini ex
+                                fontsize=60)
+        # for mini ex:
+        # axs[j].set_xticks([1.5, 3, 4.5, 7])
+        # axs[j].set_xticklabels(["A", "individual 3", "B", "C"],
+        #                        fontsize=50)  # 50 for mini ex
 
     # save resulting figure as jpeg:
     plt.savefig('plots/tangles_plot_'+ data_generation_mode +'_n_' +str(n)
@@ -317,6 +337,8 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
                 'Specify file name for ADMIXTURE!',
                 stacklevel=1)
             return
+
+        nb_plots = 6
 
         # create nb_plots many ADMIXTURE plots, ADMIXTURE is computed on the fly:
         fig, axs = plt.subplots(nb_plots, figsize=(50, 30)) # 4015 mini ex 5030 sim
@@ -375,9 +397,15 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
             # set limits for x and y-axis:
             axs[j].set_xlim([-0.5, n - 0.5])
             axs[j].set_ylim([0, 1])
+            axs[j].set_yticks([])
+            axs[j].set_ylabel(r"$K = $" + str(j + 2), rotation=0, fontsize=60,
+                              verticalalignment='center', labelpad=15,
+                              horizontalalignment='right')
 
         # white space between stacked bar plots:
-        plt.subplots_adjust(wspace=0, hspace=0.05, bottom=0.05) # bottom 0.1 mini ex
+        plt.subplots_adjust(left=0.05) # if K > 9 left=0.06
+        plt.subplots_adjust(wspace=0, hspace=0.05, bottom=0.05) # bottom 0.1 mini ex.
+        # 0.05 else
         axs[j].set_xticks([])
 
         # label of x-axis on most fine-grained level:
@@ -392,7 +420,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         else:
             axs[j].set_xticks(np.cumsum(pop_sizes) - pop_sizes / 2 - 0.5)
             axs[j].set_xticklabels(list(string.ascii_uppercase[:nb_pop]),
-                                   fontsize=70)  # 50 for mini ex
+                                   fontsize=60)  # 50 for mini ex
 
         # save resulting figure as jpeg:
         plt.savefig('plots/ADMIXTURE_plot_' + data_generation_mode + '_n_' + str(n)

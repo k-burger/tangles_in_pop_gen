@@ -5,6 +5,7 @@ import multiprocessing
 
 import numpy as np
 from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 from typing import Union, Optional
 
 from sklearn.metrics import pairwise_distances
@@ -170,13 +171,19 @@ def get_points_to_plot(xs, cs):
     if nb_features > 2:
         if cs is not None:
             points_to_embed = np.vstack([xs, cs])
-            embeds = TSNE(n_components=2, random_state=42).fit_transform(
+            pca = PCA(n_components=2)
+            embeds = pca.fit(points_to_embed).transform(
                 points_to_embed)
+            # embeds = TSNE(n_components=2, random_state=42).fit_transform(
+            #    points_to_embed)
             xs_embedded, cs_embedded = embeds[:-
                                               nb_centers], embeds[-nb_centers:]
         else:
-            xs_embedded = TSNE(
-                n_components=2, random_state=42).fit_transform(xs)
+            pca = PCA(n_components=2)
+            xs_embedded = pca.fit(xs).transform(
+                xs)
+            # xs_embedded = TSNE(
+            #     n_components=2, random_state=42).fit_transform(xs)
     else:
         xs_embedded = xs
         cs_embedded = cs
