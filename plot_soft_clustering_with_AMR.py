@@ -227,6 +227,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement,
         # set limit for y-axis:
         axs[j].set_ylim([0, 1])
         axs[j].set_yticks([])
+        # add label to y-axis:
         axs[j].set_ylabel(r"$\ell = $" + str(j + 2), rotation=0, fontsize=60,
                           verticalalignment='center', labelpad=15,
                           horizontalalignment='right')
@@ -316,6 +317,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement,
             axs[j].set_xlim([-0.5, n - 0.5])
             axs[j].set_ylim([0, 1])
             axs[j].set_yticks([])
+            # add label to y-axis:
             axs[j].set_ylabel(r"$K = $" + str(j + 2), rotation=0, fontsize=60,
                               verticalalignment='center', labelpad=15,
                               horizontalalignment='right')

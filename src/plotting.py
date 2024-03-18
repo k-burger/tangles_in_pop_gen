@@ -182,13 +182,13 @@ def plot_soft_prediction_node(data, node, counter, eq_cuts, id_node, cmap, path,
 
     if node.left_child is not None:
         counter = counter + 1
-        print("counter:", counter)
+        #print("counter:", counter)
         id_left = get_next_id(id_node, 'left')
         plot_soft_prediction_node(
             data, node.left_child, counter, eq_cuts, id_left, cmap, path, pos)
     if node.right_child is not None:
         counter = counter + 1
-        print("counter:", counter)
+        #print("counter:", counter)
         id_right = get_next_id(id_node, 'right')
         plot_soft_prediction_node(
             data, node.right_child, counter, eq_cuts, id_right, cmap, path, pos)

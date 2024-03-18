@@ -338,6 +338,6 @@ if use_this_script_for_sim == True:
     else:
         data.load_data()
 
-    print("G:", data.G)
+    #print("G:", data.G)
 
     # print("simulation done.")

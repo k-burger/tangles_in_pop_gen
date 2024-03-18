@@ -266,4 +266,4 @@ if __name__ == '__main__':
                        plot_ADMIXTURE=plot_ADMIXTURE,
                        ADMIXTURE_filename=ADMIXTURE_filename)
 
-    print("all done.")
+    print("All done.")

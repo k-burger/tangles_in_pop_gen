@@ -290,6 +290,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         # set limit for y-axis:
         axs[j].set_ylim([0, 1])
         axs[j].set_yticks([])
+        # add label to y-axis:
         axs[j].set_ylabel(r"$\ell = $" + str(j+2), rotation=0, fontsize=60,
                           verticalalignment='center', labelpad=15,
                           horizontalalignment='right')
@@ -322,7 +323,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
     # save resulting figure as jpeg:
     plt.savefig('plots/tangles_plot_'+ data_generation_mode +'_n_' +str(n)
                 +'_a_' + str(agreement)+ '_seed_' + str(seed) + "_" + cost_fct
-                + '_colors_modified.jpeg', format = 'jpeg')
+                + '.jpeg', format = 'jpeg')
     plt.show()
 
 
@@ -398,6 +399,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
             axs[j].set_xlim([-0.5, n - 0.5])
             axs[j].set_ylim([0, 1])
             axs[j].set_yticks([])
+            # add label to y-axis:
             axs[j].set_ylabel(r"$K = $" + str(j + 2), rotation=0, fontsize=60,
                               verticalalignment='center', labelpad=15,
                               horizontalalignment='right')
@@ -425,7 +427,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         # save resulting figure as jpeg:
         plt.savefig('plots/ADMIXTURE_plot_' + data_generation_mode + '_n_' + str(n)
                     + '_a_' + str(agreement) + '_seed_' + str(seed) + "_" + cost_fct
-                    + '_colors_modified.jpeg', format = 'jpeg')
+                    + '.jpeg', format = 'jpeg')
         plt.show()
         #print("run time for ADMIXTURE without plot:", np.sum(times))
 

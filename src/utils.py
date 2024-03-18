@@ -171,7 +171,7 @@ def get_points_to_plot(xs, cs):
     if nb_features > 2:
         if cs is not None:
             points_to_embed = np.vstack([xs, cs])
-            pca = PCA(n_components=2)
+            pca = PCA(n_components=2)   # use PCA
             embeds = pca.fit(points_to_embed).transform(
                 points_to_embed)
             # embeds = TSNE(n_components=2, random_state=42).fit_transform(
@@ -179,7 +179,7 @@ def get_points_to_plot(xs, cs):
             xs_embedded, cs_embedded = embeds[:-
                                               nb_centers], embeds[-nb_centers:]
         else:
-            pca = PCA(n_components=2)
+            pca = PCA(n_components=2)    # use PCA
             xs_embedded = pca.fit(xs).transform(
                 xs)
             # xs_embedded = TSNE(
