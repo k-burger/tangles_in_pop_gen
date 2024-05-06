@@ -1,4 +1,4 @@
-# Code to the publication: Inferring Ancestry with the Hierarchical Soft Clustering Approach Tangles
+# Code to the publication: Inferring Ancestry with the Hierarchical Soft Clustering Approach tangleGen
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?color=g&style=plastic)](https://opensource.org/licenses/MIT)
 ![tests](https://github.com/tml-tuebingen/tangles/workflows/pytesting/badge.svg)
@@ -11,7 +11,7 @@
 
 This code contains the necessary adaptations to the tangles framework to use it in 
 population genetics for estimating ancestries. The Tangles algorithm framework is 
-available as a Python package and the Tadmixture method from the publication "Inferring
+available as a Python package and the tangleGen method from the publication "Inferring
 Ancestry with the Hierarchical Soft Clustering Approach Tangles" is embedded in this 
 framework.
 
@@ -25,7 +25,7 @@ based on mean FST values and also includes k-nearest neighbors and the soft clus
 indicates the cluster membership of the individuals by taking into account the
 reliability of the cuts.
 
-A demonstration on how to use tadmixture on the 1000 Genomes data set is added in
+A demonstration on how to use tangleGen on the 1000 Genomes data set is added in
 ```
 demo.ipynb
 ```
@@ -63,7 +63,7 @@ The repository is organized as follows:
 + the directory `plots` contains all generated plots. 
 
 Besides this, the following scripts are central:
-+ `demo.ipynb`: Tadmixture demo for the 1000 Genomes project.
++ `demo.ipynb`: tangleGen demo for the 1000 Genomes project.
 + `read_vcf`: read and pre-process vcf files.
 + `simulate_with_demography`: simulates phylogenetic data with an underlying 
   demography. With this script, all simulations of the publication are conducted.
@@ -71,10 +71,10 @@ Besides this, the following scripts are central:
 + `reliability_factor.py`: computes the reliabilty factors of the cuts for the soft 
   clustering.
 + `plot_soft_clustering.py`: plots the soft clustering.
-+ `tangles_env.yml`: conda environment to run tangles and Tadmixture.
++ `tangles_env.yml`: conda environment to run tangles and tangleGen.
 
-## How to run Tadmixture
-To infer ancestries with Tadmixture, a script needs to contain the following modules:
+## How to run tangleGen
+To infer ancestries with tangleGen, a script needs to contain the following modules:
 
     1. Set parameters
     2. Load data
