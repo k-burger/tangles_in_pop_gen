@@ -10,9 +10,9 @@
 [//]: # (</p>)
 
 This code contains the necessary adaptations to the tangles framework to use it in 
-population genetics for estimating ancestries. The Tangles algorithm framework is 
+population genetics for inferring ancestries. The Tangles algorithm framework is 
 available as a Python package and the tangleGen method from the publication "Inferring
-Ancestry with the Hierarchical Soft Clustering Approach Tangles" is embedded in this 
+Ancestry with the Hierarchical Soft Clustering Approach tangleGen" (doi: https://doi.org/10.1101/2024.03.27.586940 ) is embedded in this 
 framework.
 
 The use of tangles is very interesting in population genetics not only because it is a 
