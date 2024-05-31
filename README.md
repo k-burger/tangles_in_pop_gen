@@ -4,7 +4,7 @@
 ![tests](https://github.com/tml-tuebingen/tangles/workflows/pytesting/badge.svg)
 
 <p align="center">
-  <img src="/output_tangles_in_pop_gen/soft_clustering/tex_plot/plot_hierarchy.png" 
+  <img src="/plots/plot_hierarchy.png" 
 width="500"/>
 </p>
 
@@ -16,32 +16,31 @@ relationships in population genetics. This method exploits the flexibility and r
 hierarchical functionality of the Tangles framework, available as a Python package 
 [here](https://github.com/tml-tuebingen/tangles). With tangleGen, we introduce several 
 novel components specifically tailored for ancestry inference: the definition of 
-cuts, cost function and soft clustering. 
-.
+cuts, cost function and soft clustering.
 
 ## Method Overview
 
 To infer ancestries, tangleGen proceeds in four steps:
 
-- **Constructing basic cuts on the set of individuals:** The foundation of 
+1. **Constructing basic cuts on the set of individuals:** The foundation of 
   tangleGen are
 many bipartitions on the set of individuals, dividing them into two groups. Thus, 
 bipartitions are referred as ”cuts”. Based on single nucleotide polymorphisms (SNPs), 
 individuals are divided into two groups: those homozygous for the ancestral allele and 
 the others.
-- **Assigning costs to cuts to sort them for the hierarchical clustering:** A 
+2. **Assigning costs to cuts to sort them for the hierarchical clustering:** A 
 well-chosen cost function favors cuts with higher discriminative power by assigning them 
   lower costs, while penalizing cuts that separate closely related groups of 
   individuals. The cost function for inferring ancestries is based on mean FST values 
   and incorporates k-nearest neighbors. The correspondingly sorted cuts enable the next
   iterative hierarchical clustering step.
-- **Iteratively composing the tangles tree by orienting cuts:** Beginning with the 
+3. **Iteratively composing the tangles tree by orienting cuts:** Beginning with the 
   lowest-cost cut, the algorithm iteratively evaluates the cuts, orienting them to 
   delimit clusters of individuals. Such a meaningful orientation of a subset of 
    cuts that identifies a cluster is called a "tangle". These tangles form the basis for
   constructing a tangles tree, which represents the resulting hierarchical cluster 
   structure.
-- **Computing a soft clustering based on characteristic cuts to infer ancestry:** 
+4. **Computing a soft clustering based on characteristic cuts to infer ancestry:** 
   Characteristic cuts are cuts that define the tangles tree and, consequently, the 
    identified cluster structure. Based on them, the soft clustering is computed, a value
    between 0 and 1 for each individual and cluster, indicating how likely an 
@@ -105,9 +104,8 @@ To infer ancestries with tangleGen, a script needs to contain the following modu
     4. Preprocess data
     5. Constructing cuts
     6. Computing costs
-    7. Constructing the tangles tree: For each cut compute the tangles by expanding on 
-        the previous ones if it is consistent. If it is not possible, algorithm 
-        determines
+    7. Constructing the tangles tree: For each cut compute the tangles by expanding on the
+       previous ones if it is consistent. If it is not possible, algorithm determines
     8. Read out cluster-typical genome 
     9. Compute set of characterizing cuts
     10. Postprocess in soft clustering and plot
@@ -115,7 +113,7 @@ To infer ancestries with tangleGen, a script needs to contain the following modu
 A detailed execution of these steps for the 1000 Genomes project is shown in the 
 demonstration [demo.ipynb](https://github.com/k-burger/tangles_in_pop_gen/blob/main/demo.ipynb).
 
-Here, a quick walk-trough the essentials of each of those steps:
+Here is a quick walkthrough of the essentials for each of these steps:
 1. Imports
 ```python
 import pickle
@@ -145,9 +143,8 @@ your_data.read_vcf()
 xs = np.transpose(your_data.G[0])           # get diploid genotype matrix
 data = data_types.Data(xs=xs)               # embed data in tangles framework
 ```
-4. Preprocess data: If your data comes with an extra panel file to specify 
-the sampling location of each individual, make sure that your data and the panel 
-file has the same sorting. Load the panel file
+4. Preprocess data: Preprocess data: If your data comes with an extra panel file to 
+specify the sampling location of each individual, make sure that your data and the panel file have the same sorting. Load the panel file
 ```python
 panel_df = pd.read_csv('your_panel_file', delimiter='\t')
 pop_membership = np.array(panel_df['pop'])
@@ -215,5 +212,3 @@ ys_predicted, _ = utils.compute_hard_predictions(contracted_tree, cuts=bipartiti
 # plot the soft clustering:
 plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement, "readVCF", cost_fct=cost_fct)
 ```
-Again, a detailed execution of these steps for the 1000 Genomes project is shown in 
-the demonstration [demo.ipynb](https://github.com/k-burger/tangles_in_pop_gen/blob/main/demo.ipynb).
