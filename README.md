@@ -8,8 +8,8 @@
 width="500"/>
 </p>
 
-This repository contains the code for the publication 'Inferring Ancestry with the 
-Hierarchical Soft Clustering Approach tangleGen' (doi: https://doi.org/10.1101/2024.03.27.586940).
+> [!NOTE]
+> This repository contains the code for the publication 'Inferring Ancestry  with the Hierarchical Soft Clustering Approach tangleGen' (doi: https://doi.org/10.1101/2024.03.27.586940).
 
 tangleGen is a hierarchical clustering method designed for inferring ancestral 
 relationships in population genetics. This method exploits the flexibility and robust 
@@ -49,7 +49,8 @@ well-chosen cost function favors cuts with higher discriminative power by assign
 
 ## Getting Started
 
-A detailed demonstration on how to use tangleGen is added in our demo notebook
+> [!TIP]
+> A detailed demonstration on how to use tangleGen is added in our demo notebook
 [demo.ipynb](https://github.com/k-burger/tangles_in_pop_gen/blob/main/demo.ipynb). 
 This notebook provides a step-by-step guide on how to use tangleGen for inferring 
 ancestral relationships using the 1000 Genomes data set.
