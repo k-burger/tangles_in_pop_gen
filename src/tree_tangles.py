@@ -83,6 +83,7 @@ class ContractedTangleNode(TangleNode):
         self.is_right_child_deleted = False
 
         self.p = None
+        self.c = None
 
     def get_characterizing_cut_values(self, characterizing_cuts: Dict[int, Orientation]) -> Dict[int, np.ndarray]:
         """
@@ -462,6 +463,44 @@ class ContractedTangleTree(TangleTree):
         else:
             print(loc, ": ", np.argwhere(node.p > 0.5).flatten())
 
+    def calculate_membership(self, node, parent):
+        if parent is None:
+            node.c = np.round(node.p)
+        else:
+            node.c = np.round(node.p * parent.c)
+
+        if node.left_child is not None:
+            self.calculate_membership(node.left_child, node)
+
+        if node.right_child is not None:
+            self.calculate_membership(node.right_child, node)
+
+    def C_ij(self):
+        self.calculate_membership(self.root, None)
+        return self.helper_C_i_j(self.root)
+
+    def helper_C_ij(self, node, c_ij=None):
+        l = len(self.root.c)
+        if c_ij is None:
+            c_ij = np.zeros([l, l])
+
+        if node.left_child is None:
+            return c_ij
+
+        else:
+            for i in range(l):
+                for j in range(i, l):
+                    if i == j:
+                        continue
+                    if node.c[i] == node.c[j] == 1:
+                        c_ij[i, j] = sum(node.c == 1)
+                        c_ij[j, i] = c_ij[i, j]
+
+        c_ij_left = self.helper_C_ij(node.left_child, c_ij)
+        c_ij_right = self.helper_C_ij(node.right_child, c_ij)
+
+        return np.minimum(c_ij_left, c_ij_right)
+
     def to_matrix(self):
         return self._write_to_mat([self.root], [''], 1, {}, {}, {})
 
@@ -577,13 +616,13 @@ def compute_soft_predictions_children(node, cuts, weight, cuts_probs, verbose=0)
 
     if node.left_child is not None and node.right_child is not None:
         unnormalized_p_left = (compute_soft_predictions_node(characterizing_cuts=node.characterizing_cuts_left,
-                                                            cuts=cuts,
-                                                            weight=weight,
-                                                            cuts_probs=cuts_probs))
-        unnormalized_p_right = (compute_soft_predictions_node(characterizing_cuts=node.characterizing_cuts_right,
                                                              cuts=cuts,
                                                              weight=weight,
                                                              cuts_probs=cuts_probs))
+        unnormalized_p_right = (compute_soft_predictions_node(characterizing_cuts=node.characterizing_cuts_right,
+                                                              cuts=cuts,
+                                                              weight=weight,
+                                                              cuts_probs=cuts_probs))
 
         # normalize the ps
         total_p = (unnormalized_p_left + unnormalized_p_right)
@@ -607,25 +646,23 @@ def compute_soft_predictions_children(node, cuts, weight, cuts_probs, verbose=0)
                                           verbose=verbose)
 
 
-
-
-
 def compute_soft_predictions_node_popgen(characterizing_cuts, cuts, weight, cuts_probs):
     sum_p_correct = np.zeros(len(cuts.values[0]))
     sum_p_incorrect = np.zeros(len(cuts.values[0]))
     for i, o in characterizing_cuts.items():
         if o.direction == 'left':
             sum_p_correct += np.array(cuts.values[i]) * cuts_probs[int(cuts.names[
-                i].split(',')[0])][0]
-            sum_p_incorrect += (np.array(cuts.values[i]) * (1-cuts_probs[int(cuts.names[
-                i].split(',')[0])][0]))
+                                                                           i].split(',')[0])][0]
+            sum_p_incorrect += (np.array(cuts.values[i]) * (1 - cuts_probs[int(cuts.names[
+                                                                                   i].split(',')[0])][0]))
         elif o.direction == 'right':
             sum_p_correct += np.array(~cuts.values[i]) * cuts_probs[int(cuts.names[
-                i].split(',')[0])][1]
-            sum_p_incorrect += (np.array(~cuts.values[i]) * (1-cuts_probs[int(
+                                                                            i].split(',')[0])][1]
+            sum_p_incorrect += (np.array(~cuts.values[i]) * (1 - cuts_probs[int(
                 cuts.names[
-                i].split(',')[0])][1]))
+                    i].split(',')[0])][1]))
     return sum_p_correct, sum_p_incorrect
+
 
 def compute_soft_predictions_children_popgen(node, cuts, weight, cuts_probs, verbose=0):
     _, nb_points = cuts.values.shape
@@ -636,36 +673,36 @@ def compute_soft_predictions_children_popgen(node, cuts, weight, cuts_probs, ver
     if node.left_child is not None and node.right_child is not None:
         unnormalized_p_left, unnormalized_p_left_incorrect = (
             compute_soft_predictions_node_popgen(
-            characterizing_cuts=node.characterizing_cuts_left,
-                                                            cuts=cuts,
-                                                            weight=weight,
-                                                            cuts_probs=cuts_probs))
+                characterizing_cuts=node.characterizing_cuts_left,
+                cuts=cuts,
+                weight=weight,
+                cuts_probs=cuts_probs))
         unnormalized_p_right, unnormalized_p_right_incorrect = (
             compute_soft_predictions_node_popgen(
-            characterizing_cuts=node.characterizing_cuts_right,
-                                                             cuts=cuts,
-                                                             weight=weight,
-                                                             cuts_probs=cuts_probs))
+                characterizing_cuts=node.characterizing_cuts_right,
+                cuts=cuts,
+                weight=weight,
+                cuts_probs=cuts_probs))
 
         # normalize the ps
         total_p = (unnormalized_p_left + unnormalized_p_right)
-        p_left = (unnormalized_p_left)/ total_p
-        p_right = (unnormalized_p_right)/ total_p
+        p_left = (unnormalized_p_left) / total_p
+        p_right = (unnormalized_p_right) / total_p
 
         node.left_child.p = p_left * node.p
         node.right_child.p = p_right * node.p
 
         compute_soft_predictions_children_popgen(node=node.left_child,
-                                          cuts=cuts,
-                                          weight=weight,
-                                          cuts_probs=cuts_probs,
-                                          verbose=verbose)
+                                                 cuts=cuts,
+                                                 weight=weight,
+                                                 cuts_probs=cuts_probs,
+                                                 verbose=verbose)
 
         compute_soft_predictions_children_popgen(node=node.right_child,
-                                          cuts=cuts,
-                                          weight=weight,
-                                          cuts_probs=cuts_probs,
-                                          verbose=verbose)
+                                                 cuts=cuts,
+                                                 weight=weight,
+                                                 cuts_probs=cuts_probs,
+                                                 verbose=verbose)
 
 
 def tangle_computation(cuts, agreement, verbose, max_clusters=None):
