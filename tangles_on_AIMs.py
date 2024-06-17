@@ -198,9 +198,7 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
 
-        ys_predicted, _ = utils.compute_hard_predictions(contracted_tree, cuts=bipartitions)
-        contracted_tree.calculate_membership(contracted_tree.root, None)
-        test = contracted_tree.C_ij(contracted_tree.root)
+        c_ij = contracted_tree.C_ij()
 
         # get number of characterizing SNPs per split (necessary as bipartitions have
         # been merged):
