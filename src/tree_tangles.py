@@ -477,14 +477,14 @@ class ContractedTangleTree(TangleTree):
 
     def C_ij(self):
         self.calculate_membership(self.root, None)
-        return self.helper_C_i_j(self.root)
+        return self.helper_C_ij(self.root)
 
     def helper_C_ij(self, node, c_ij=None):
         l = len(self.root.c)
         if c_ij is None:
             c_ij = np.zeros([l, l])
 
-        if node.left_child is None:
+        if node is None:
             return c_ij
 
         else:
