@@ -58,19 +58,19 @@ ancestral relationships using the 1000 Genomes data set.
 
 ## Setup
 
-Download the repository. 
+We recommend to set up a conda environment and install all needed packages as 
+specified in `conda_env.yml` via
+
+```
+conda env create -f conda_env.yml
+```
+
+Activate the conda environment and download the repository. 
 
 Navigate to the tangles directory and install the package using
 
 ```
 pip install .
-```
-
-We recommend to set up a conda environment and install all needed packages as 
-specified in `conda_environment.yml` via
-
-```
-conda env create -f conda_environment.yml
 ```
 
 ## Repository Overview

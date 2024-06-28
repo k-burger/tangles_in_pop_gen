@@ -1,0 +1,29 @@
+name: tangles_env
+channels:
+  - bioconda
+  - r
+  - http://statgen.org/wp-content/uploads/Softwares/pyplink
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - matplotlib
+  - msprime
+  - pandas
+  - scikit-learn
+  - networkx
+  - bitarray
+  - seaborn
+  - pydot
+  - setuptools
+  - tqdm
+  - ipython
+  - demesdraw
+  - pandas-plink
+  - plink
+  - stdpopsim
+  - scikit-allel
+  - bcftools
+  - jupyter
+  - conda-forge::ruff
+prefix: /home/klara/anaconda3/envs/tangles_env
