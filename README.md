@@ -58,6 +58,12 @@ ancestral relationships using the 1000 Genomes data set.
 
 ## Setup
 
+Clone the GitHub repository:
+
+```
+https://github.com/k-burger/tangles_in_pop_gen.git
+```
+
 We recommend to set up a conda environment and install all needed packages as 
 specified in `conda_env.yml` via
 
@@ -65,7 +71,11 @@ specified in `conda_env.yml` via
 conda env create -f conda_env.yml
 ```
 
-Activate the conda environment and download the repository. 
+Activate the conda environment
+
+```
+conda activate tangleGen_env
+```
 
 Navigate to the tangles directory and install the package using
 
