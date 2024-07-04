@@ -53,7 +53,17 @@ def plot_inferred_ancestry(
     ## create list of colors to plot from (from named colors or cyclic color palette):
     if nb_plots + 1 < 11:
         # color palette in publication:
-        cmap = sns.color_palette("deep").as_hex()
+        cmap = ['#029e73', '#0173b2', '#de8f05', '#d55e00', '#56b4e9', '#949494',
+                '#cc78bc', '#fbafe4', '#ece133', '#ca9161', '#004949', '#920000',
+                '#924900', '#490092', '#b66dff']
+
+        # colors for AIMs
+        cmap = ['#0173b2', '#de8f05', '#029e73', '#920000', '#924900',
+                '#b66dff', '#fbafe4', '#d55e00',
+                '#56b4e9',
+                '#949494',
+                '#ece133', '#ca9161', '#004949', '#490092', '#cc78bc'
+                ]
 
         # colors used for ADMIXTURE can be adapted to achieve a better compatibility
         # with tangles. This order of the colors is used for the different ADMIXTURE
