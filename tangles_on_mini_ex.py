@@ -138,99 +138,14 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         print("num_char_cuts_per_split:", num_char_cuts_per_split)
         # print("positions:", positions)
 
-        ## create vcf file with same properties as specified genotype matrix from
-        # minimal example:
-        mini_ex_vcf_path = "data/vcf/mini_ex_" + ADMIXTURE_filename + ".vcf"
-        with (open("data/vcf/" + ADMIXTURE_filename + ".vcf", 'r') as infile, open(
-            mini_ex_vcf_path, 'w') as outfile):
-            for line in infile:
-                # print(line)
-                if line.startswith(
-                        '#'):  # Schreibe Header-Zeilen direkt in die reduzierte Datei
-                    outfile.write(line)
-                else:
-                    parts = line.split('\t')  # Trenne die Zeile in Teile
-                    if parts[2] == str(0):
-                        parts[9] = '0|0'
-                        parts[10] = '0|0'
-                        parts[11] = '0|0'
-                        parts[12] = '1|0'
-                        parts[13] = '0|0'
-                        parts[14] = '0|0'
-                        parts[15] = '0|0'
-                        parts[16] = '0|0'
-                        parts[17] = '0|0'
-                        updated_line = '\t'.join(parts)
-                        outfile.write(updated_line + '\n')
-                    elif parts[2] == str(1):
-                        parts[9] = '0|1'
-                        parts[10] = '1|1'
-                        parts[11] = '0|0'
-                        parts[12] = '1|0'
-                        parts[13] = '0|0'
-                        parts[14] = '0|0'
-                        parts[15] = '0|0'
-                        parts[16] = '0|0'
-                        parts[17] = '0|0'
-                        updated_line = '\t'.join(parts)
-                        outfile.write(updated_line + '\n')
-                    elif parts[2] == str(2):
-                        parts[9] = '0|0'
-                        parts[10] = '0|0'
-                        parts[11] = '0|0'
-                        parts[12] = '0|0'
-                        parts[13] = '0|1'
-                        parts[14] = '1|1'
-                        parts[15] = '1|1'
-                        parts[16] = '1|1'
-                        parts[17] = '1|0'
-                        updated_line = '\t'.join(parts)
-                        outfile.write(updated_line + '\n')
-                    elif parts[2] == str(3):
-                        parts[9] = '0|0'
-                        parts[10] = '0|0'
-                        parts[11] = '0|0'
-                        parts[12] = '1|0'
-                        parts[13] = '0|0'
-                        parts[14] = '0|1'
-                        parts[15] = '0|0'
-                        parts[16] = '0|0'
-                        parts[17] = '0|0'
-                        updated_line = '\t'.join(parts)
-                        outfile.write(updated_line + '\n')
-                    elif parts[2] == str(4):
-                        parts[9] = '0|0'
-                        parts[10] = '0|0'
-                        parts[11] = '0|0'
-                        parts[12] = '0|0'
-                        parts[13] = '0|0'
-                        parts[14] = '0|0'
-                        parts[15] = '1|1'
-                        parts[16] = '1|1'
-                        parts[17] = '1|1'
-                        updated_line = '\t'.join(parts)
-                        outfile.write(updated_line + '\n')
-                    elif parts[2] == str(5):
-                        parts[9] = '1|1'
-                        parts[10] = '1|1'
-                        parts[11] = '1|1'
-                        parts[12] = '1|1'
-                        parts[13] = '0|0'
-                        parts[14] = '0|0'
-                        parts[15] = '0|0'
-                        parts[16] = '0|0'
-                        parts[17] = '0|0'
-                        updated_line = '\t'.join(parts)
-                        outfile.write(updated_line + '\n')
-
         # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
         # ADMIXTURE):
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    data_generation_mode, 4, char_cuts,
+                                                    data_generation_mode, 1, char_cuts,
                                                     num_char_cuts,
                                                     sorting_level="lowest",
                                                     plot_ADMIXTURE=plot_ADMIXTURE,
-                                                    ADMIXTURE_file_name=ADMIXTURE_filename,
+                                                    ADMIXTURE_file_name="mini_ex_n_9_rep_1_rho_0_theta_0.75_seed_4",
                                                     cost_fct=cost_fct_name)
 
 

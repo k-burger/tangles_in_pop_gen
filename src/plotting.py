@@ -79,7 +79,8 @@ def plot_dataset_graph(G, ys, colors, ax, cmap, add_colorbar, pos):
 
 
 def plot_dataset_metric(xs, cs, colors, eq_cuts, ax, cmap, add_colorbar, gt, counter):
-    cmap = sns.color_palette("deep").as_hex()
+    #cmap = sns.color_palette("deep").as_hex()
+    cmap = ['#0173b2', '#de8f05', '#029e73', '#920000']
     AIMs_colors = ['grey', cmap[0], cmap[1], cmap[1], cmap[2], cmap[2], cmap[3]]
     plt.style.use('ggplot')
     plt.ioff()

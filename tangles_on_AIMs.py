@@ -16,6 +16,7 @@ from src import utils
 from src.tree_tangles import (ContractedTangleTree, tangle_computation,
                               compute_soft_predictions_children_popgen)
 from src.utils import merge_doubles
+from sklearn.metrics import silhouette_score
 
 sys.path.append('..')
 
@@ -198,7 +199,37 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
 
-        c_ij = contracted_tree.C_ij()
+        # silhouette score
+        sihouette_score = silhouette_score(kNN.pairwise_distances, ys_predicted,
+                                           metric="precomputed")
+        print("silhouette score:", sihouette_score, agreement, kNN.k)
+
+        c_ij_precomputed = True
+        # calculate Dasgupta's measure D:
+        w_ij = 1 - kNN.pairwise_distances / np.max(kNN.pairwise_distances)
+        super_pop_membership = np.array(
+            ['AFR'] * 661 + ['EUR'] * 503 + ['SAS'] * 489 + ['EAS'] * 504)
+        # set entries of w_ij of individuals of same population to zero:
+        for i in range(n):
+            for j in range(i, n):
+                if super_pop_membership[i] == super_pop_membership[j]:
+                    w_ij[i, j] = 0
+                    w_ij[j, i] = 0
+        nb_pairs = ((n * (n - 1) / 2) - (661 * (661 - 1) / 2) - (503 * (503 - 1) / 2)
+                    - (489 * (489 - 1) / 2) - (504 * (504 - 1) / 2))
+        c_ij_filename = ("data/saved_kNN/c_ij_AIMs_no_AMR_a_" + str(agreement) +
+                         "_k_" + str(k) + "_p_" + str(pruning) + "_b_0_05")
+        if c_ij_precomputed:
+            with open(c_ij_filename, 'rb') as inp:
+                c_ij = pickle.load(inp)
+            print("c_ij loaded")
+        else:
+            c_ij = contracted_tree.C_ij()
+            with open(c_ij_filename, 'wb') as outp:
+                pickle.dump(c_ij, outp, pickle.HIGHEST_PROTOCOL)
+            print("c_ij calculation done.")
+        D = np.sum(np.triu(np.multiply(w_ij, c_ij), 1)) / nb_pairs
+        print("Dasgupta's measure:", D, c_ij_filename)
 
         # get number of characterizing SNPs per split (necessary as bipartitions have
         # been merged):
@@ -245,7 +276,7 @@ if __name__ == '__main__':
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
     cost_precomputed = True  # cost pre-computed or not
-    plot_ADMIXTURE = True  # compare tangles to ADMIXTURE or not
+    plot_ADMIXTURE = False  # compare tangles to ADMIXTURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 

@@ -15,6 +15,7 @@ from src import outsourced_cost_computation
 import pickle
 import time
 import reliability_factor
+from sklearn.metrics import silhouette_score
 
 """
 Simple script for use of the tangle framework on simulated data (simulation with 
@@ -167,6 +168,38 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         # the tangles tree, posititions indicate the position of the split in the tree.
         matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
+
+        # silhouette score
+        # sihouette_score = silhouette_score(kNN.pairwise_distances, ys_predicted, metric="precomputed")
+        # print("silhouette score:", sihouette_score, agreement, kNN.k)
+        #
+        # c_ij_precomputed = False
+        # c_ij_filename = ("data/saved_kNN/c_ij_" + data_generation_mode +
+        #                  "_migration_a_" + str(agreement) + "_k_" + str(k) + "_p_" +
+        #                  str(
+        #             pruning) + "_b_0_05")
+        # if c_ij_precomputed:
+        #     with open(c_ij_filename, 'rb') as inp:
+        #         c_ij = pickle.load(inp)
+        #     print("c_ij loaded")
+        # else:
+        #     c_ij = contracted_tree.C_ij()
+        #     with open(c_ij_filename, 'wb') as outp:
+        #         pickle.dump(c_ij, outp, pickle.HIGHEST_PROTOCOL)
+        #     print("c_ij calculation done.")
+        #
+        # # calculate Dasgupta's measure D:
+        # w_ij = 1 - kNN.pairwise_distances/np.max(kNN.pairwise_distances)
+        # # set entries of w_ij of individuals of same population to zero:
+        # for i in range(n):
+        #     for j in range(i, n):
+        #         if pop_membership[i] == pop_membership[j]:
+        #             w_ij[i, j] = 0
+        #             w_ij[j, i] = 0
+        # nb_pairs = (n*(n-1)/2) - 8*(100*(100-1)/2)
+        # D = np.sum(np.triu(np.multiply(w_ij,c_ij), 1))/nb_pairs
+        # print("Dasgupta's measure:", D, c_ij_filename)
+
         # get number of characterizing SNPs per split (necessary as bipartitions have
         # been merged):
         num_char_cuts_per_split = []
@@ -183,7 +216,8 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
         # ADMIXTURE):
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    data_generation_mode, 19, char_cuts,
+                                                    data_generation_mode, 19,
+                                                    char_cuts,
                                                     num_char_cuts,
                                                     sorting_level="lowest",
                                                     plot_ADMIXTURE=plot_ADMIXTURE,

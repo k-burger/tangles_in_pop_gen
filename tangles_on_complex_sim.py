@@ -228,9 +228,9 @@ if __name__ == '__main__':
     data_already_simulated = True
     # specify cost function: FST_kNN for FST-based cost function, HWE_kNN for
     # Hardy-Weinberg equilibrium based cost function:
-    cost_fct_name = "HWE_kNN"
+    cost_fct_name = "FST_kNN"
     cost_precomputed = True     # cost pre-computed or not
-    plot_ADMIXTURE = True       # compare tangles to ADMXITURE or not
+    plot_ADMIXTURE = False       # compare tangles to ADMXITURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
     data = simulate_with_demography.Simulated_Data_With_Demography(n, theta, rho, seed,

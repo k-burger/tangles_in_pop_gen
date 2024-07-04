@@ -44,6 +44,12 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement,
     if nb_plots+1 < 11:
         # color palette in publication:
         cmap = sns.color_palette("deep").as_hex()
+        cmap = ['#0173b2', '#de8f05', '#029e73', '#920000', '#b66dff', '#924900',
+                '#b66dff', '#fbafe4', '#d55e00',
+                '#56b4e9',
+                '#949494',
+                '#ece133', '#ca9161', '#004949', '#490092', '#cc78bc'
+                ]
         # colors used for ADMIXTURE can be adapted to achieve a better compatibility
         # with tangles. This order of the colors is used for the different ADMIXTURE
         # plots in the publication. Note, these orders are only meaningful for a
