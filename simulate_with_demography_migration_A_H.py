@@ -85,8 +85,10 @@ class Simulated_Data_With_Demography:
             multi_rho = rho
 
         # when using with migration between all population A to H, set scale to 8:
-        scale = 1
-        m_rate = 1      # scale factor for migration rate
+        scale = 8
+        # scale factor for migration rate, m_rate = 4 for intermediate migration,
+        # m_rate=8 for high and m_rate=1 for low:
+        m_rate = 4
 
         ## define demography for 8 populations:
         demography = msprime.Demography()
@@ -124,8 +126,14 @@ class Simulated_Data_With_Demography:
         demography.add_population_split(time=28 / (2 * c), derived=["ABCD", "EFGH"],
                                         ancestral="ABCDEFGH")
 
-        # set migration between populations A and E:
+        # set migration between populations A ato H:
         demography.set_symmetric_migration_rate(["A", "E"], m_rate*0.5/scale)
+        demography.set_symmetric_migration_rate(["A", "B"], m_rate*0.5/scale)
+        demography.set_symmetric_migration_rate(["D", "C"], m_rate*0.5/scale)
+        demography.set_symmetric_migration_rate(["C", "B"], m_rate*0.5/scale)
+        demography.set_symmetric_migration_rate(["E", "F"], m_rate*0.5/scale)
+        demography.set_symmetric_migration_rate(["F", "G"], m_rate*0.5/scale)
+        demography.set_symmetric_migration_rate(["G", "H"], m_rate*0.5/scale)
 
         ## plot demographic structure via demesdraw.tubes with customized colors and
         # demes positions:
@@ -145,8 +153,9 @@ class Simulated_Data_With_Demography:
                      'H': 22 / 5, 'EFG': 16.75 / 5, 'CD': 2.5 / 5, 'AB': 8.5 / 5,
                      'G': 19 / 5, 'EF': 14.5 / 5, 'B': 7 / 5, 'A': 10 / 5, 'E': 13 / 5,
                      'F': 16 / 5, 'D': 1 / 5, 'C': 4 / 5}
-        # set number of migration lines between populations with migration between A and E:
-        migration_lines = numpy.array([1, 1])
+        # set number of migration lines between populations with migraion between
+        # populations A to H:
+        migration_lines = numpy.array([4,4,3,3,2,2,2,2,1,1,1,1,1,1])
 
         customized_demesdraw.tubes(graph, positions=positions,
                                    num_lines_per_migration=migration_lines,
