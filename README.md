@@ -120,6 +120,8 @@ Scripts for supplemental plots:
   many SNPs and reduced time intervals between population splits.
 + `tangleGen_on_1kG_chr22.py`: script to run tangleGen on full chromosome 22 from 1000 
   Genomes Project Data (Phase 3).
++ `plot_soft_clustering_with_AMR.py`: plots the soft clustering with sorting for 
+  AIMs including AMR populations.
 
 
 
