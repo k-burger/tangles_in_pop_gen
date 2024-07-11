@@ -15,8 +15,6 @@ from src import outsourced_cost_computation
 import pickle
 import time
 import reliability_factor
-from sklearn.metrics import silhouette_score
-
 """
 Simple script for use of tangleGen on simulated data (simulation with significant 
 migration between populations A to H). The execution is divided in the following steps
@@ -32,8 +30,7 @@ migration between populations A to H). The execution is divided in the following
 
 def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
                        data_generation_mode, cost_fct_name, cost_precomputed=False,
-                       output_directory='', plot=True, plot_ADMIXTURE=False,
-                       ADMIXTURE_filename=""):
+                       output_directory='', plot=True):
     # get genotype matrix xs and mutation idx
     xs = np.transpose(sim_data.G[0])  # diploid genotype matrix
     mutations_in_sim = np.arange(xs.shape[1])
@@ -169,37 +166,6 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
 
-        # silhouette score
-        # sihouette_score = silhouette_score(kNN.pairwise_distances, ys_predicted, metric="precomputed")
-        # print("silhouette score:", sihouette_score, agreement, kNN.k)
-        #
-        # c_ij_precomputed = False
-        # c_ij_filename = ("data/saved_kNN/c_ij_" + data_generation_mode +
-        #                  "_migration_a_" + str(agreement) + "_k_" + str(k) + "_p_" +
-        #                  str(
-        #             pruning) + "_b_0_05")
-        # if c_ij_precomputed:
-        #     with open(c_ij_filename, 'rb') as inp:
-        #         c_ij = pickle.load(inp)
-        #     print("c_ij loaded")
-        # else:
-        #     c_ij = contracted_tree.C_ij()
-        #     with open(c_ij_filename, 'wb') as outp:
-        #         pickle.dump(c_ij, outp, pickle.HIGHEST_PROTOCOL)
-        #     print("c_ij calculation done.")
-        #
-        # # calculate Dasgupta's measure D:
-        # w_ij = 1 - kNN.pairwise_distances/np.max(kNN.pairwise_distances)
-        # # set entries of w_ij of individuals of same population to zero:
-        # for i in range(n):
-        #     for j in range(i, n):
-        #         if pop_membership[i] == pop_membership[j]:
-        #             w_ij[i, j] = 0
-        #             w_ij[j, i] = 0
-        # nb_pairs = (n*(n-1)/2) - 8*(100*(100-1)/2)
-        # D = np.sum(np.triu(np.multiply(w_ij,c_ij), 1))/nb_pairs
-        # print("Dasgupta's measure:", D, c_ij_filename)
-
         # get number of characterizing SNPs per split (necessary as bipartitions have
         # been merged):
         num_char_cuts_per_split = []
@@ -213,15 +179,12 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         end_tangles_1 = time.time()
         print("time needed for tangles:", end_tangles_1 - start_tangles_1)
 
-        # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
-        # ADMIXTURE):
+        # plot inferred ancestry:
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    data_generation_mode, 19,
+                                                    data_generation_mode, seed,
                                                     char_cuts,
                                                     num_char_cuts,
                                                     sorting_level="lowest",
-                                                    plot_ADMIXTURE=plot_ADMIXTURE,
-                                                    ADMIXTURE_file_name=ADMIXTURE_filename,
                                                     cost_fct=cost_fct_name)
 
 
@@ -242,7 +205,6 @@ if __name__ == '__main__':
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
     cost_precomputed = False  # cost pre-computed or not
-    plot_ADMIXTURE = False  # compare tangles to ADMXITURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
     data = Simulated_Data_With_Demography(n, theta, rho, migration_rate_multiplier,
@@ -253,16 +215,11 @@ if __name__ == '__main__':
     else:
         data.load_data()
         print("Data has been loaded.")
-
-    # extract vcf filename for ADMIXTURE:
-    ADMIXTURE_filename = data.vcf_filename
     output_directory = Path('output_tangles_in_pop_gen')
 
     tangles_in_pop_gen(data, agreement, seed, k, pruning, data.indv_pop,
                        data_generation_mode, cost_fct_name,
                        cost_precomputed=cost_precomputed,
-                       output_directory=output_directory, plot=True,
-                       plot_ADMIXTURE=plot_ADMIXTURE,
-                       ADMIXTURE_filename=ADMIXTURE_filename)
+                       output_directory=output_directory, plot=True)
 
     print("all done.")

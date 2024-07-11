@@ -24,7 +24,6 @@ The script is divided in the following steps
     membership such that individuals with similar soft clustering are grouped together
     4. Create a bar plot for each level in the soft clustering. This displays the 
     inferred ancestry.
-    5. If demanded, compute and plot ADMIXTURE for comparison.
 """
 
 
@@ -37,8 +36,6 @@ def plot_inferred_ancestry(
     char_cuts=[],
     num_char_cuts=[],
     sorting_level="lowest",
-    plot_ADMIXTURE=False,
-    ADMIXTURE_file_name="",
     cost_fct="",
 ):
     n = np.array(matrices[1]).shape[0]  # number of indv
@@ -65,66 +62,6 @@ def plot_inferred_ancestry(
                 '#ece133', '#ca9161', '#004949', '#490092', '#cc78bc'
                 ]
 
-        # colors used for ADMIXTURE can be adapted to achieve a better compatibility
-        # with tangles. This order of the colors is used for the different ADMIXTURE
-        # plots in the publication. Note, these orders are only meaningful for a
-        # specific seed.
-        cmap2 = plt.get_cmap("tab20")
-        # minimal example ADMIXTURE
-        # ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[2], cmap[1], cmap[0]]]
-        # easy sim ADMIXTURE
-        ADMIXTURE_colors = [
-            [cmap[1], cmap[0]],
-            [cmap[1], cmap[2], cmap[0]],
-            [cmap[3], cmap[1], cmap[0], cmap[2]],
-            [cmap[1], cmap[4], cmap[3], cmap[0], cmap[2]],
-            [cmap[7], cmap[2], cmap[9], cmap[3], cmap[0], cmap[1]],
-            [cmap[2], cmap[1], cmap[4], cmap[0], cmap[3], cmap[7], cmap[6]],
-            [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3], cmap[6], cmap[5]],
-        ]
-        # easy sim ADMIXTURE K=12
-        # ADMIXTURE_colors = [[cmap[1], cmap[0]],
-        #                     [cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[3], cmap[1], cmap[0], cmap[2]],
-        #                     [cmap[1], cmap[4], cmap[3], cmap[0], cmap[2]],
-        #                     [cmap[7], cmap[2], cmap[9], cmap[3], cmap[0], cmap[1]],
-        #                     [cmap[2], cmap[1], cmap[4], cmap[0], cmap[3], cmap[7],
-        #                      cmap[6]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8], cmap[9]],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8], cmap[9], cmap2(1)],
-        #                     [cmap[1], cmap[0], cmap[2], cmap[4], cmap[7], cmap[3],
-        #                      cmap[6], cmap[5], cmap[8], cmap[9], cmap2(1), cmap2(3)]
-        #                     ]
-        # complex sim ADMIXTURE
-        # ADMIXTURE_colors = [[cmap[4], cmap[0]],
-        #                     [cmap[4], cmap[0], cmap[1]],
-        #                     [cmap[1], cmap[4], cmap[2], cmap[0]],
-        #                     [cmap[4], cmap[3], cmap[0], cmap[1], cmap[2]],
-        #                     [cmap[4], cmap[0], cmap[1], cmap[5], cmap[3], cmap[2]],
-        #                     [cmap[0], cmap[5], cmap[2], cmap[3], cmap[1], cmap[6],
-        #                      cmap[4]],
-        #                     [cmap[0], cmap[6], cmap[1], cmap[2], cmap[3], cmap[5],
-        #                      cmap[7], cmap[4]]]
-
-        # IMs no AMR ADMIXTURE
-        # ADMIXTURE_colors = [[cmap[1], cmap[0]], [cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[3], cmap[1], cmap[2], cmap[0]]]
-        # complex sim FST
-        # cmap = [cmap[4], cmap[0], cmap[1], cmap[3], cmap[7], cmap[2], cmap[5]]
-        # ADMIXTURE aims higher K:
-        # ADMIXTURE_colors = [[cmap[1], cmap[0]],
-        #                     [cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[3], cmap[1], cmap[2], cmap[0]],
-        #                     [cmap[2], cmap[1], cmap[4], cmap[3], cmap[0]],
-        #                     [cmap[5], cmap[1], cmap[0], cmap[4], cmap[2], cmap[3]],
-        #                     [cmap[2], cmap[5], cmap[0], cmap[3], cmap[4], cmap[1],
-        #                      cmap[6]]]
     elif nb_plots + 1 < 24:
         c = sns.color_palette("husl", 24)  # choose color palette
         # change order of colors to increase color contrast:
@@ -483,192 +420,6 @@ def plot_inferred_ancestry(
         format="jpeg",
     )
     plt.show()
-
-    ## if demanded, compute and plot ADMIXTURE for comparison:
-    if plot_ADMIXTURE:
-        # K cannot exceed 13 to reduce run time. If needed, adapt this:
-        if nb_plots > 12:
-            print("restricted number of ADMIXTURE plots to 12.")
-            nb_plots = 12
-        if ADMIXTURE_file_name == "":
-            warnings.warn("Specify file name for ADMIXTURE!", stacklevel=1)
-            return
-
-        # create nb_plots many ADMIXTURE plots, ADMIXTURE is computed on the fly:
-        fig, axs = plt.subplots(nb_plots, figsize=(50, 30))  # 4015 mini ex 5030 sim
-        # 5020 aims
-        fig.tight_layout()
-        for subplot in axs:
-            subplot.set_facecolor("white")
-            # subplot.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-            subplot.set_yticks([])
-            subplot.set_xticks([])
-            if data_generation_mode == "readVCF":
-                subplot.set_xticks(
-                    [
-                        54,
-                        158,
-                        264,
-                        363,
-                        455,
-                        535,
-                        613,
-                        711,
-                        810,
-                        905,
-                        1004,
-                        1111,
-                        1216,
-                        1315,
-                        1406,
-                        1500,
-                        1602,
-                        1705,
-                        1808,
-                        1913,
-                        2012,
-                        2108,
-                    ]
-                )
-                subplot.set_xticklabels([])
-            else:
-                subplot.set_xticks(np.cumsum(pop_sizes) - pop_sizes / 2 - 0.5)
-                subplot.set_xticklabels([])  # 50 for mini ex
-
-        # track time for ADMIXTURE:
-        times = np.zeros(nb_plots)
-
-        # ADMIXTURE stacked bar plot:
-        for j in range(0, nb_plots):
-            K = j + 2  # set number of ancestral populations to be indetified
-            start_time = time.time()  # track time
-            # run ADMIXTURE for specified K and seed:
-            subprocess.run(
-                [
-                    "bash",
-                    "admixture/P_Q/admixture_loop.sh",
-                    ADMIXTURE_file_name,
-                    str(K),
-                    str(seed),
-                ]
-            )
-            # load resulting Q matrix:
-            with open(
-                "admixture/P_Q/" + ADMIXTURE_file_name + "." + str(K) + ".Q"
-            ) as f:
-                Q = np.loadtxt(f, dtype=str, delimiter="\n")
-            # transform Q into list
-            Q = [list(map(float, q.split())) for q in Q]
-            Q = np.array(Q).T
-            Q = Q.tolist()
-            end_time = time.time()  # stop time needed
-            times[j] = end_time - start_time  # save time needed
-
-            # For comparability, rearrange indv in Q in the same way as for the
-            # stacked bar chart of tangles:
-            Q_sorted = []
-            for m in range(len(Q)):
-                Q_sorted.append([Q[m][i] for i in indv_sorted])
-
-            # create stacked bar plot:
-            for m in range(len(Q)):
-                axs[j].bar(
-                    indv,
-                    Q_sorted[m],
-                    bottom=np.sum(Q_sorted[:m], axis=0),
-                    color=ADMIXTURE_colors[j][m],
-                    width=1,
-                )
-
-            # vertical black lines to separate geographical populations:
-            for pos in pos_pop_sep[:-1]:
-                axs[j].axvline(x=pos, color="black", linestyle="-", linewidth=2)
-            # set limits for x and y-axis:
-            axs[j].set_xlim([-0.5, n - 0.5])
-            axs[j].set_ylim([0, 1])
-
-        # white space between stacked bar plots:
-        plt.subplots_adjust(wspace=0, hspace=0.05, bottom=0.05)  # bottom 0.1 mini ex
-        axs[j].set_xticks([])
-
-        # label of x-axis on most fine-grained level:
-        if data_generation_mode == "readVCF":
-            axs[j].set_xticks(
-                [
-                    54,
-                    158,
-                    264,
-                    363,
-                    445,
-                    535,
-                    628,
-                    711,
-                    810,
-                    905,
-                    1004,
-                    1111,
-                    1216,
-                    1315,
-                    1406,
-                    1500,
-                    1602,
-                    1705,
-                    1808,
-                    1913,
-                    2012,
-                    2108,
-                ]
-            )
-            axs[j].set_xticklabels(
-                [
-                    "YRI",
-                    "LWK",
-                    "GWD",
-                    "MSL",
-                    "ESN",
-                    "ASW",
-                    "ACB",
-                    "FIN",
-                    "CEU",
-                    "GBR",
-                    "TSI",
-                    "IBS",
-                    "GIH",
-                    "PJL",
-                    "BEB",
-                    "STU",
-                    "ITU",
-                    "CHB",
-                    "JPT",
-                    "CHS",
-                    "CDX",
-                    "KHV",
-                ],
-                fontsize=60,
-            )
-        else:
-            axs[j].set_xticks(np.cumsum(pop_sizes) - pop_sizes / 2 - 0.5)
-            axs[j].set_xticklabels(
-                list(string.ascii_uppercase[:nb_pop]), fontsize=70
-            )  # 50 for mini ex
-
-        # save resulting figure as jpeg:
-        plt.savefig(
-            "plots/ADMIXTURE_plot_"
-            + data_generation_mode
-            + "_n_"
-            + str(n)
-            + "_a_"
-            + str(agreement)
-            + "_seed_"
-            + str(seed)
-            + "_"
-            + cost_fct
-            + "_colors_modified.jpeg",
-            format="jpeg",
-        )
-        plt.show()
-        # print("run time for ADMIXTURE without plot:", np.sum(times))
 
 
 # Function for secondary sorting of populations

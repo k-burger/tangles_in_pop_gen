@@ -5,7 +5,6 @@ sys.path.append('..')
 from src import cost_functions, data_types
 from src import utils
 import numpy as np
-import networkx as nx
 from src.tree_tangles import ContractedTangleTree, tangle_computation, compute_soft_predictions_children_popgen
 from src.utils import merge_doubles
 import simulate_with_demography
@@ -14,10 +13,7 @@ import compute_kNN
 import reliability_factor
 from src import outsourced_cost_computation
 import pickle
-import time
 import psutil
-import pandas as pd
-import matplotlib.pyplot as plt
 
 """
 Simple script for use of tangleGen on simulated data (simulation with many SNPs and 
@@ -34,9 +30,7 @@ execution is divided in the following steps
 
 def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
                        data_generation_mode, cost_fct_name, cost_precomputed=False,
-                       output_directory='', plot=True,
-                       plot_ADMIXTURE=False,
-                       ADMIXTURE_filename = ""):
+                       output_directory='', plot=True):
     # get genotype matrix xs and mutation idx
     xs = np.transpose(sim_data.G[0])  # diploid genotype matrix
     mutations_in_sim = np.arange(xs.shape[1])
@@ -205,14 +199,12 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         print("num_char_cuts_per_split:", num_char_cuts_per_split)
         #print("positions:", positions)
 
-        # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
-        # ADMIXTURE):
+        # plot inferred ancestry:
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    data_generation_mode, 42, char_cuts,
+                                                    data_generation_mode, seed,
+                                                    char_cuts,
                                                     num_char_cuts,
                                                     sorting_level="lowest",
-                                                    plot_ADMIXTURE=plot_ADMIXTURE,
-                                                    ADMIXTURE_file_name=ADMIXTURE_filename,
                                                     cost_fct=cost_fct_name)
 
 if __name__ == '__main__':
@@ -230,7 +222,6 @@ if __name__ == '__main__':
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
     cost_precomputed = True     # cost pre-computed or not
-    plot_ADMIXTURE = False       # compare tangles to ADMXITURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
     data = simulate_with_demography.Simulated_Data_With_Demography(n, theta, rho, seed,
@@ -241,15 +232,11 @@ if __name__ == '__main__':
     else:
         data.load_data()
         print("Data has been loaded.")
-
-    ADMIXTURE_filename = data.vcf_filename
     output_directory = Path('output_tangles_in_pop_gen')
 
     tangles_in_pop_gen(data, agreement, seed, k, pruning, data.indv_pop,
                        data_generation_mode, cost_fct_name,
                        cost_precomputed=cost_precomputed,
-                       output_directory=output_directory, plot=True,
-                       plot_ADMIXTURE=plot_ADMIXTURE,
-                       ADMIXTURE_filename=ADMIXTURE_filename)
+                       output_directory=output_directory, plot=True)
 
     print("all done.")

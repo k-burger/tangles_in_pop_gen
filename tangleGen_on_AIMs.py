@@ -3,10 +3,8 @@ import sys
 import time
 from functools import partial
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
-
 import compute_kNN
 import plot_soft_clustering
 import read_vcf
@@ -16,8 +14,6 @@ from src import utils
 from src.tree_tangles import (ContractedTangleTree, tangle_computation,
                               compute_soft_predictions_children_popgen)
 from src.utils import merge_doubles
-from sklearn.metrics import silhouette_score
-
 sys.path.append('..')
 
 """
@@ -35,10 +31,9 @@ steps
 """
 
 
-def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
+def tangles_in_pop_gen(sim_data, agreement, k, pruning, pop_membership,
                        data_generation_mode, cost_fct_name, cost_precomputed=False,
-                       output_directory='', plot=True, plot_ADMIXTURE=False,
-                       ADMIXTURE_filename=""):
+                       output_directory='', plot=True):
     # get genotype matrix xs and mutation idx
     xs = np.transpose(sim_data.G[0])  # diploid genotype matrix
     mutations_in_sim = np.arange(xs.shape[1])
@@ -200,38 +195,6 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         matrices, char_cuts, positions = contracted_tree.to_matrix()
         print("char cuts:", char_cuts)
 
-        # silhouette score
-        sihouette_score = silhouette_score(kNN.pairwise_distances, ys_predicted,
-                                           metric="precomputed")
-        print("silhouette score:", sihouette_score, agreement, kNN.k)
-
-        c_ij_precomputed = True
-        # calculate Dasgupta's measure D:
-        w_ij = 1 - kNN.pairwise_distances / np.max(kNN.pairwise_distances)
-        super_pop_membership = np.array(
-            ['AFR'] * 661 + ['EUR'] * 503 + ['SAS'] * 489 + ['EAS'] * 504)
-        # set entries of w_ij of individuals of same population to zero:
-        for i in range(n):
-            for j in range(i, n):
-                if super_pop_membership[i] == super_pop_membership[j]:
-                    w_ij[i, j] = 0
-                    w_ij[j, i] = 0
-        nb_pairs = ((n * (n - 1) / 2) - (661 * (661 - 1) / 2) - (503 * (503 - 1) / 2)
-                    - (489 * (489 - 1) / 2) - (504 * (504 - 1) / 2))
-        c_ij_filename = ("data/saved_kNN/c_ij_AIMs_no_AMR_a_" + str(agreement) +
-                         "_k_" + str(k) + "_p_" + str(pruning) + "_b_0_05")
-        if c_ij_precomputed:
-            with open(c_ij_filename, 'rb') as inp:
-                c_ij = pickle.load(inp)
-            print("c_ij loaded")
-        else:
-            c_ij = contracted_tree.C_ij()
-            with open(c_ij_filename, 'wb') as outp:
-                pickle.dump(c_ij, outp, pickle.HIGHEST_PROTOCOL)
-            print("c_ij calculation done.")
-        D = np.sum(np.triu(np.multiply(w_ij, c_ij), 1)) / nb_pairs
-        print("Dasgupta's measure:", D, c_ij_filename)
-
         # get number of characterizing SNPs per split (necessary as bipartitions have
         # been merged):
         num_char_cuts_per_split = []
@@ -244,19 +207,16 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         # print("positions:", positions)
 
         # plot soft predictions
-        plotting.plot_soft_predictions(data=data,
-                                       contracted_tree=contracted_tree,
-                                       eq_cuts=bipartitions.equations,
-                                       path=output_directory / 'soft_clustering')
+        # plotting.plot_soft_predictions(data=data,
+        #                                contracted_tree=contracted_tree,
+        #                                eq_cuts=bipartitions.equations,
+        #                                path=output_directory / 'soft_clustering')
 
-        # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
-        # ADMIXTURE):
+        # plot inferred ancestry:
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    data_generation_mode, seed,
+                                                    data_generation_mode,
                                                     char_cuts, num_char_cuts,
                                                     sorting_level="lowest",
-                                                    plot_ADMIXTURE=plot_ADMIXTURE,
-                                                    ADMIXTURE_file_name=ADMIXTURE_filename,
                                                     cost_fct=cost_fct_name)
 
 
@@ -268,7 +228,6 @@ if __name__ == '__main__':
     agreement = 225  # agreement parameter
     k = 40  # number of neighbours for k-nearest neighbour
     pruning = 0  # pruning parameter
-    seed = 29  # seed for ADMIXTURE
     data_generation_mode = 'readVCF'
     data_set = 'AIMs'
     # specify if data can be loaded or needs to be initially processed:
@@ -277,7 +236,6 @@ if __name__ == '__main__':
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
     cost_precomputed = False  # cost pre-computed or not
-    plot_ADMIXTURE = False  # compare tangles to ADMIXTURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 
@@ -289,16 +247,11 @@ if __name__ == '__main__':
         data.load_vcf()
     else:
         data.read_vcf()
-
-    # extract vcf filename for ADMIXTURE:
-    ADMIXTURE_filename = data.vcf_filename
     output_directory = Path('output_tangles_in_pop_gen')
 
-    tangles_in_pop_gen(data, agreement, seed, k, pruning, data.indv_pop,
+    tangles_in_pop_gen(data, agreement, k, pruning, data.indv_pop,
                        data_generation_mode, cost_fct_name,
                        cost_precomputed=cost_precomputed,
-                       output_directory=output_directory, plot=True,
-                       plot_ADMIXTURE=plot_ADMIXTURE,
-                       ADMIXTURE_filename=ADMIXTURE_filename)
+                       output_directory=output_directory, plot=True)
 
     print("All done.")

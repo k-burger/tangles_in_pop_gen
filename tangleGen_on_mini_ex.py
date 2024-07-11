@@ -9,7 +9,6 @@ import numpy as np
 from src.tree_tangles import (ContractedTangleTree, tangle_computation,
                               compute_soft_predictions_children_popgen)
 from src.utils import merge_doubles
-import simulate_with_demography_mini_ex
 import compute_kNN
 import plot_soft_clustering
 import pickle
@@ -27,10 +26,9 @@ publication. The execution is divided in the following steps
 """
 
 
-def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
+def tangles_in_pop_gen(agreement, k, pruning,
                        data_generation_mode, cost_fct_name, cost_precomputed=False,
-                       output_directory='', plot=True, plot_ADMIXTURE=False,
-                       ADMIXTURE_filename=""):
+                       output_directory='', plot=True):
     ## specify genotype matrix from minimal example:
     xs = np.array(
         [[0, 1, 0, 0, 0, 2], [0, 2, 0, 0, 0, 2], [0, 0, 0, 0, 0, 2], [1, 1, 0, 1, 0, 2],
@@ -46,7 +44,7 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
     ## compute kNN for cost computation:
     kNN_precomputed = False  # specify if kNN already pre-computed or not
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
-        nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
+        nb_mut) + "_k_" + str(k))
     if kNN_precomputed == False:
         kNN = compute_kNN.KNearestNeighbours(xs, k, filename=kNN_filename,
                                              filepath="data/saved_kNN/")
@@ -69,7 +67,7 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
     cost_function = getattr(cost_functions, cost_fct_name)
     saved_bipartitions_filename = (
                 str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
-            nb_mut) + "_" + str(cost_fct_name) + "_seed_" + str(seed))
+            nb_mut) + "_" + str(cost_fct_name))
     if cost_precomputed == False:
         bipartitions = utils.compute_cost_and_order_cuts(bipartitions,
                                                          partial(cost_function, data.xs,
@@ -138,54 +136,30 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         print("num_char_cuts_per_split:", num_char_cuts_per_split)
         # print("positions:", positions)
 
-        # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
-        # ADMIXTURE):
+        # plot inferred ancestry:
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    data_generation_mode, 1, char_cuts,
+                                                    data_generation_mode,
+                                                    char_cuts,
                                                     num_char_cuts,
                                                     sorting_level="lowest",
-                                                    plot_ADMIXTURE=plot_ADMIXTURE,
-                                                    ADMIXTURE_file_name="mini_ex_n_9_rep_1_rho_0_theta_0.75_seed_4",
                                                     cost_fct=cost_fct_name)
 
 
 if __name__ == '__main__':
-    n = 9  # number of diploid individuals
-    rho = 0  # recombination rate in the sim, when using vcf this parameter is irrelevant
-    theta = 0.75  # mutation rate in sim, when using vcf this parameter s irrelevant
-    agreement = 2  # agreement parameter
-    k = 2  # number of neighbours for k-nearest neighbour
-    pruning = 0  # pruning parameter
-    seed = 4  # seed for simulation
+    agreement = 2   # agreement parameter
+    k = 2           # number of neighbours for k-nearest neighbour
+    pruning = 0     # pruning parameter
     data_generation_mode = 'sim'
-    # specify if data can be loaded or needs to be simulated:
-    data_already_simulated = True
     # specify cost function: FST_kNN for FST-based cost function, HWE_kNN for
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
-    cost_precomputed = True  # cost pre-computed or not
-    plot_ADMIXTURE = True  # compare tangles to ADMXITURE or not
+    cost_precomputed = False  # cost pre-computed or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
-    # saved/loaded.
-    data = simulate_with_demography_mini_ex.Simulated_Data_With_Demography(n, theta,
-                                                                           rho, seed,
-                                                                           filepath=filepath)
-
-    if data_already_simulated == False:
-        data.sim_data()
-        print("Data has been simulated.")
-    else:
-        data.load_data()
-        print("Data has been loaded.")
-
-    ADMIXTURE_filename = data.vcf_filename
     output_directory = Path('output_tangles_in_pop_gen')
 
-    tangles_in_pop_gen(data, agreement, seed, k, pruning, data.indv_pop,
+    tangles_in_pop_gen(agreement, k, pruning,
                        data_generation_mode, cost_fct_name,
                        cost_precomputed=cost_precomputed,
-                       output_directory=output_directory, plot=True,
-                       plot_ADMIXTURE=plot_ADMIXTURE,
-                       ADMIXTURE_filename=ADMIXTURE_filename)
+                       output_directory=output_directory, plot=True)
 
     print("all done.")

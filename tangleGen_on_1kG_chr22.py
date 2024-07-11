@@ -39,10 +39,9 @@ Save vcf file in data/vcf/
 """
 
 
-def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
+def tangles_in_pop_gen(sim_data, agreement, k, pruning, pop_membership,
                        data_generation_mode, cost_fct_name, cost_precomputed=False,
-                       output_directory='', plot=True, plot_ADMIXTURE=False,
-                       ADMIXTURE_filename=""):
+                       output_directory='', plot=True):
     # get genotype matrix xs and mutation idx
     xs = np.transpose(sim_data.G[0])  # diploid genotype matrix
     mutations_in_sim = np.arange(xs.shape[1])
@@ -128,7 +127,7 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
     ## compute kNN for cost computation:
     kNN_precomputed = True  # specify if kNN already pre-computed or not
     kNN_filename = (str(data_generation_mode) + "_n_" + str(n) + "_sites_" + str(
-        nb_mut) + "_" + "_seed_" + str(seed) + "_k_" + str(k))
+        nb_mut) + "_k_" + str(k))
     if kNN_precomputed == False:
         kNN = compute_kNN.KNearestNeighbours(xs, k, filename=kNN_filename,
                                              filepath="data/saved_kNN/")
@@ -236,14 +235,11 @@ def tangles_in_pop_gen(sim_data, agreement, seed, k, pruning, pop_membership,
         print("num_char_cuts_per_split:", num_char_cuts_per_split)
         # print("positions:", positions)
 
-        # plot inferred ancestry and if specified also ADMIXTURE (seed is seed for
-        # ADMIXTURE):
+        # plot inferred ancestry:
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
-                                                    data_generation_mode, seed,
+                                                    data_generation_mode,
                                                     char_cuts, num_char_cuts,
                                                     sorting_level="lowest",
-                                                    plot_ADMIXTURE=plot_ADMIXTURE,
-                                                    ADMIXTURE_file_name=ADMIXTURE_filename,
                                                     cost_fct=cost_fct_name)
 
 
@@ -254,7 +250,6 @@ if __name__ == '__main__':
     agreement = 200  # agreement parameter
     k = 40  # number of neighbours for k-nearest neighbour
     pruning = 0  # pruning parameter
-    seed = 40  # seed for ADMIXTURE
     data_generation_mode = 'readVCF'
     data_set = 'chr22'
     # specify if data can be loaded or needs to be initially processed:
@@ -263,7 +258,6 @@ if __name__ == '__main__':
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "HWE_kNN"
     cost_precomputed = True  # cost pre-computed or not
-    plot_ADMIXTURE = False  # compare tangles to ADMIXTURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 
@@ -275,16 +269,11 @@ if __name__ == '__main__':
         data.load_vcf()
     else:
         data.read_vcf()
-
-    # extract vcf filename for ADMIXTURE:
-    ADMIXTURE_filename = data.vcf_filename
     output_directory = Path('output_tangles_in_pop_gen')
 
-    tangles_in_pop_gen(data, agreement, seed, k, pruning, data.indv_pop,
+    tangles_in_pop_gen(data, agreement, k, pruning, data.indv_pop,
                        data_generation_mode, cost_fct_name,
                        cost_precomputed=cost_precomputed,
-                       output_directory=output_directory, plot=True,
-                       plot_ADMIXTURE=plot_ADMIXTURE,
-                       ADMIXTURE_filename=ADMIXTURE_filename)
+                       output_directory=output_directory, plot=True)
 
     print("all done.")
