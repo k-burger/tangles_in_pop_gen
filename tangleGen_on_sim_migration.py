@@ -18,8 +18,8 @@ import reliability_factor
 from sklearn.metrics import silhouette_score
 
 """
-Simple script for use of the tangle framework on simulated data (simulation with 
-well-differentiated populations). The execution is divided in the following steps
+Simple script for use of tangleGen on simulated data (simulation with significant 
+migration between populations A to H). The execution is divided in the following steps
 
     1. Load/simulate the dataset
     2. Find the cuts and compute the costs

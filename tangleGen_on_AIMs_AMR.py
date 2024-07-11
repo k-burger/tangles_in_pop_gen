@@ -20,8 +20,9 @@ from src.utils import merge_doubles
 sys.path.append('..')
 
 """
-Simple script for use of the tangle framework on Kidds AIMs for individuals from 1kG 
-project phase 3, AMR populations included. The execution is divided in the following 
+Simple script for use of tangleGen on Kidds AIMs for individuals from 1kG 
+project phase 3, AMR populations included. The corresponding data set is 
+saved in data/vcf/AIMs_kidd_with_AMR.vcf. The execution is divided in the following 
 steps
 
     1. Load/simulate the dataset

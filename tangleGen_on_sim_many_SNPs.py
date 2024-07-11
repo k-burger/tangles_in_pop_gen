@@ -20,7 +20,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 """
-Simple script for use of the tangle framework on simulated data (simulation with 
+Simple script for use of tangleGen on simulated data (simulation with many SNPs and 
 shorten coalescent times to achieve significant incomplete lineage sorting). The 
 execution is divided in the following steps
 

@@ -16,7 +16,7 @@ import pickle
 import reliability_factor
 
 """
-Simple script for use of the tangle framework on the minimal example from the 
+Simple script for use of tangleGen on the minimal example from the 
 publication. The execution is divided in the following steps
     1. Specify genotype matrix
     2. Find the cuts and compute the costs

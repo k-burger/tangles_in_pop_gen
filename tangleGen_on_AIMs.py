@@ -21,8 +21,9 @@ from sklearn.metrics import silhouette_score
 sys.path.append('..')
 
 """
-Simple script for use of the tangle framework on Kidds AIMs for individuals from 1kG 
-project phase 3, AMR populations excluded. The execution is divided in the following 
+Simple script for use of tangleGen on Kidds AIMs panel for individuals 
+from 1kG project phase 3, AMR populations excluded. The corresponding data set is 
+saved in data/vcf/AIMs_kidd_no_AMR.vcf. The execution is divided in the following 
 steps
 
     1. Load/simulate the dataset
@@ -30,7 +31,7 @@ steps
     3. For each cut compute the tangles by expanding on the
           previous ones if it is consistent. If its not possible stop
     4. Postprocess in soft and hard clustering
-    5. plot soft clustering
+    5. plot soft clustering   
 """
 
 

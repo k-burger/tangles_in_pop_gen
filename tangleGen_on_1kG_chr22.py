@@ -22,7 +22,7 @@ from src.utils import merge_doubles
 sys.path.append('..')
 
 """
-Simple script for use of the tangleGen framework on 1kG project phase 3, chr22. The 
+Simple script for use of tangleGen on 1kG project phase 3, chr22. The 
 execution is divided in the following steps
 
     1. Load/simulate the dataset
