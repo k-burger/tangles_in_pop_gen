@@ -1,13 +1,10 @@
 from __future__ import annotations
 from typing import Dict, Mapping, List, Tuple
-
 import demes
 import numpy as np
 import matplotlib
 import matplotlib.patheffects
-
-import demesdraw_utils
-
+from src import demesdraw_utils
 
 class Tube:
     """
