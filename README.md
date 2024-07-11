@@ -111,7 +111,6 @@ Other scripts for reproducing plots from the publication:
   publication).
 + `simulate_with_demography_migration_A_H.py`: simulation script to run 
   tangleGen_on_sim_migration.py.
-+ `simulate_with_demography_mini_ex.py`: simulation script to run tangleGen_on_sim_mini_ex.py.
 
 Scripts for supplemental plots:
 + `tangleGen_on_AIMs_AMR.py`: script to run tangleGen on 1000 Genomes data based on 
