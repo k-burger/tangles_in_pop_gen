@@ -139,8 +139,6 @@ def tangles_in_pop_gen(agreement, k, pruning,
         # plot inferred ancestry:
         plot_soft_clustering.plot_inferred_ancestry(matrices, pop_membership, agreement,
                                                     data_generation_mode,
-                                                    char_cuts,
-                                                    num_char_cuts,
                                                     sorting_level="lowest",
                                                     cost_fct=cost_fct_name)
 

@@ -202,7 +202,6 @@ def tangles_in_pop_gen(sim_data, agreement, k, pruning, pop_membership,
         plot_soft_clustering_with_AMR.plot_inferred_ancestry(matrices, pop_membership,
                                                              agreement,
                                                              data_generation_mode,
-                                                             char_cuts, num_char_cuts,
                                                              sorting_level="lowest",
                                                              cost_fct=cost_fct_name)
 
@@ -221,7 +220,7 @@ if __name__ == '__main__':
     # specify cost function: FST_kNN for FST-based cost function, HWE_kNN for
     # Hardy-Weinberg equilibrium based cost function:
     cost_fct_name = "FST_kNN"
-    cost_precomputed = False  # cost pre-computed or not
+    cost_precomputed = True  # cost pre-computed or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
 
