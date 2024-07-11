@@ -77,12 +77,6 @@ Activate the conda environment
 conda activate tangleGen_env
 ```
 
-Navigate to the tangles directory and install the package using
-
-```
-pip install .
-```
-
 ## Repository Overview
 
 The repository is organized as follows:
@@ -96,15 +90,38 @@ The repository is organized as follows:
 + the directory `plots` contains all generated plots. 
 
 Besides this, the following scripts are central:
-- `demo.ipynb`: tangleGen demo for the 1000 Genomes project.
-- `read_vcf`: read and pre-process vcf files.
-- `simulate_with_demography`: simulates phylogenetic data with an underlying 
-  demography. With this script, all simulations of the publication are conducted.
-- `compute_kNN.py`: pre-computes k-nearest neighbours for the cost computation.
-- `reliability_factor.py`: computes the reliabilty factors of the cuts for the soft 
++ `demo.ipynb`: tangleGen demo for the 1000 Genomes project.
++ `read_vcf`: read and pre-process vcf files.
++ `simulate_with_demography`: simulates phylogenetic data with an underlying 
+  demography. This is the essential script for all simulations performed for the 
+  publication.
++ `compute_kNN.py`: pre-computes k-nearest neighbours for the cost computation.
++ `reliability_factor.py`: computes the reliabilty factors of the cuts for the soft 
   clustering.
-- `plot_soft_clustering.py`: plots the soft clustering.
-- `tangles_env.yml`: conda environment to run tangles and Tadmixture.
++ `plot_soft_clustering.py`: plots the soft clustering.
++ `conda_env.yml`: conda environment to run tangleGen and Tangles.
+
+Other scripts for reproducing plots from the publication:
++ `tangleGen_on_sim.py`: script to run tangleGen on simulation (Fig. 4 in publication).
++ `tangleGen_on_sim_migration.py`: script to run tangleGen on simulation with 
+  significant migration between populations A to H (Fig. 5 in publication).
++ `tangleGen_on_AIMs.py`: script to run tangleGen on 1000 Genomes data based on 
+  Kidd's AIMs panel (Fig. 6 in publication).
++ `tangleGen_on_mini_ex.py`: script to run tangleGen on minimal example (Fig. 3 in 
+  publication).
++ `simulate_with_demography_migration_A_H.py`: simulation script to run 
+  tangleGen_on_sim_migration.py.
++ `simulate_with_demography_mini_ex.py`: simulation script to run tangleGen_on_sim_mini_ex.py.
+
+Scripts for supplemental plots:
++ `tangleGen_on_AIMs_AMR.py`: script to run tangleGen on 1000 Genomes data based on 
+  Kidd's AIMs panel including AMR.
++ `tangleGen_on_sim_many_SNPs.py`: script to run tangleGen on simulated data with 
+  many SNPs and reduced time intervals between population splits.
++ `tangleGen_on_1kG_chr22.py`: script to run tangleGen on full chromosome 22 from 1000 
+  Genomes Project Data (Phase 3).
+
+
 
 ## How to Run tangleGen
 To infer ancestries with tangleGen, a script needs to contain the following modules:

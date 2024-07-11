@@ -1,28 +1,28 @@
 import pickle
 import warnings
-import customized_demesdraw
+
+import demesdraw
 import matplotlib.pyplot as plt
 import msprime
 import numpy
+import seaborn as sns
 from IPython.display import SVG
 
 """
-Script to simulate data with an underlying demographic structure (8 populations) as 
-shown in the publication. The resulting genotype matrix is saved in an vcf file. 
+Script to simulate data with an underlying demographic structure (3 populations).The 
+resulting genotype matrix is saved in an vcf file. 
 """
 
 
 class Simulated_Data_With_Demography:
-    def __init__(self, n_diploid, theta, rho, migration_rate_multi, seed,
-                 save_G=True, print_ts=False, save_ts=True, filepath="", SFS=[],
-                 total_tree_length=[], G=[], true_thetas=[], true_rhos=[],
-                 ts=[], indv_pop=[], vcf_filename=[]):
+    def __init__(self, n_diploid, theta, rho, seed, save_G=True, print_ts=False,
+                 save_ts=True, filepath="", SFS=[], total_tree_length=[], G=[],
+                 true_thetas=[], true_rhos=[], ts=[], indv_pop=[], vcf_filename=[]):
         # parameters that need to be set and are not a result of the simulation:
         self.n = n_diploid
         self.rep = 1
         self.theta = theta
         self.rho = rho
-        self.migration_rate_multi = migration_rate_multi
         self.seed = seed
         self.save_G = save_G
         self.save_ts = save_ts
@@ -86,101 +86,29 @@ class Simulated_Data_With_Demography:
             rho = self.rho * numpy.ones(self.rep)
             multi_rho = rho
 
-        # when using with migration between all population A to H, set scale to 8:
-        scale = 8
-
-        ## define demography for 8 populations:
+        ## define demography for 3 populations:
         demography = msprime.Demography()
-        demography.add_population(name="A", initial_size=0.25*scale)
-        demography.add_population(name="B", initial_size=0.25*scale)
-        demography.add_population(name="C", initial_size=0.25*scale)
-        demography.add_population(name="D", initial_size=0.25*scale)
-        demography.add_population(name="E", initial_size=0.25*scale)
-        demography.add_population(name="F", initial_size=0.25*scale)
-        demography.add_population(name="G", initial_size=0.25*scale)
-        demography.add_population(name="H", initial_size=0.25*scale)
-        demography.add_population(name="AB", initial_size=0.25*scale)
-        demography.add_population(name="CD", initial_size=0.25*scale)
-        demography.add_population(name="ABCD", initial_size=0.25*scale)
-        demography.add_population(name="EF", initial_size=0.25*scale)
-        demography.add_population(name="EFG", initial_size=0.25*scale)
-        demography.add_population(name="EFGH", initial_size=0.25*scale)
-        demography.add_population(name="ABCDEFGH", initial_size=0.25*scale)
-
-        # this parameter rescales the coalescent times: c=7 to achieve
-        # well-differentiated populations, c=70 for significant incomplete lineage
-        # sorting:
-        c = 7/scale
-
+        demography.add_population(name="A", initial_size=0.25)
+        demography.add_population(name="B", initial_size=0.25)
+        demography.add_population(name="C", initial_size=0.25)
+        demography.add_population(name="BC", initial_size=0.25)
+        demography.add_population(name="ABC", initial_size=0.25)
         # define population splits and times:
-        demography.add_population_split(time=2 / c, derived=["A", "B"], ancestral="AB")
-        demography.add_population_split(time=4 / c, derived=["E", "F"], ancestral="EF")
-        demography.add_population_split(time=6 / c, derived=["C", "D"], ancestral="CD")
-        demography.add_population_split(time=8 / c, derived=["EF", "G"],
-                                        ancestral="EFG")
-        demography.add_population_split(time=10 / c, derived=["AB", "CD"],
-                                        ancestral="ABCD")
-        demography.add_population_split(time=12 / c, derived=["EFG", "H"],
-                                        ancestral="EFGH")
-        demography.add_population_split(time=28 / (2 * c), derived=["ABCD", "EFGH"],
-                                        ancestral="ABCDEFGH")
-
-        # set migration between populations A ato H:
-        demography.set_symmetric_migration_rate(["A", "E"],
-                                                self.migration_rate_multi*0.5/scale)
-        demography.set_symmetric_migration_rate(["A", "B"],
-                                                self.migration_rate_multi*0.5/scale)
-        demography.set_symmetric_migration_rate(["D", "C"],
-                                                self.migration_rate_multi*0.5/scale)
-        demography.set_symmetric_migration_rate(["C", "B"],
-                                                self.migration_rate_multi*0.5/scale)
-        demography.set_symmetric_migration_rate(["E", "F"],
-                                                self.migration_rate_multi*0.5/scale)
-        demography.set_symmetric_migration_rate(["F", "G"],
-                                                self.migration_rate_multi*0.5/scale)
-        demography.set_symmetric_migration_rate(["G", "H"],
-                                                self.migration_rate_multi*0.5/scale)
+        demography.add_population_split(time=1, derived=["B", "C"], ancestral="BC")
+        demography.add_population_split(time=2, derived=["A", "BC"], ancestral="ABC")
 
         ## plot demographic structure via demesdraw.tubes with customized colors and
         # demes positions:
+        palette_hex = sns.color_palette("deep").as_hex()
+        deme_colors = {"A": palette_hex[1], "B": palette_hex[2], "C": palette_hex[0],
+                       "BC": palette_hex[3], "ABC": palette_hex[4]}
         graph = msprime.Demography.to_demes(demography)
-        fig, ax = plt.subplots(figsize=(10, 6))
-        cmap = ['#029e73', '#0173b2', '#de8f05', '#d55e00', '#56b4e9', '#949494',
-                '#cc78bc', '#fbafe4', '#ece133', '#ca9161', '#004949', '#920000',
-                '#924900', '#490092', '#b66dff']
-        cmap2 = ['#4dbb9d', '#99d8c7', '#4d9dc9', '#e7b050', '#e18e4c', '#88caef', '#b2d5e7']
-        demes_colors = {'A': cmap[6], 'B': cmap[3], 'C': cmap[5],
-                        'D': cmap[0], 'E': cmap[7], 'F': cmap[4],
-                        'G': cmap[2], 'H': cmap[1], 'AB': cmap2[4],
-                        'CD': cmap2[0], 'EF': cmap2[5],
-                        'EFG': cmap2[3], 'ABCD': cmap2[1],
-                        'EFGH': cmap2[2], 'ABCDEFGH': cmap2[6]}
-        positions = {'ABCDEFGH': 11 / 5, 'ABCD': 5.5 / 5, 'EFGH': 19.375 / 5,
-                     'H': 22 / 5, 'EFG': 16.75 / 5, 'CD': 2.5 / 5, 'AB': 8.5 / 5,
-                     'G': 19 / 5, 'EF': 14.5 / 5, 'B': 7 / 5, 'A': 10 / 5, 'E': 13 / 5,
-                     'F': 16 / 5, 'D': 1 / 5, 'C': 4 / 5}
-        # set number of migration lines between populations with migraion between
-        # populations A to H:
-        migration_lines = numpy.array([4,4,3,3,2,2,2,2,1,1,1,1,1,1])
-
-        customized_demesdraw.tubes(graph, positions=positions,
-                                   num_lines_per_migration=migration_lines,
-                           seed=19,
-                        colours=demes_colors, fill=True)
+        fig, ax = plt.subplots()  # use plt.rcParams["figure.figsize"]
+        demesdraw.tubes(graph, seed=1, colours=deme_colors)
         filename_short = (self.filepath + "demographic_structure_n_" + str(self.n))
-        plt.tick_params(axis='y', labelsize=15)
-        plt.tick_params(axis='x', labelsize=15)
-        #plt.axis('off')
-        plt.gca().spines['left'].set_visible(False)
-        plt.yticks([])  # y-Achsenticks entfernen
-        plt.ylabel('')
-
-        # plt.ylabel('time ago (generations)', fontsize=14)
+        ax.get_yaxis().set_visible(False)
         plt.savefig(filename_short + '.pdf')
         plt.show()
-
-        # set constant population size for 8 simulated populations:
-        size = self.n // 8
 
         # simulate data with the specified demographic structure:
         for i in range(0, self.rep):
@@ -188,13 +116,13 @@ class Simulated_Data_With_Demography:
             rng = numpy.random.default_rng(seed_vec[i])
             seeds = rng.integers(1, 2 ** 31 - 1, size=2)
             # simulate tree sequence:
-            ts = msprime.sim_ancestry(
-                samples={"A": size, "B": size, "C": size, "D": size, "E": size,
-                         "F": size, "G": size, "H": size}, sequence_length=1,
-                discrete_genome=False, recombination_rate=rho[i] / scale,
-                random_seed=seeds[0], demography=demography, ploidy=2)
+            ts = msprime.sim_ancestry(samples={"A": 4, "B": 3, "C": 2},
+                                      sequence_length=1, discrete_genome=False,
+                                      recombination_rate=rho[i] / 1,
+                                      random_seed=seeds[0], demography=demography,
+                                      ploidy=2)
             # simulate mutations:
-            tree_sequence = msprime.sim_mutations(ts, rate=theta[i] / scale,
+            tree_sequence = msprime.sim_mutations(ts, rate=theta[i] / 1,
                                                   random_seed=seeds[1],
                                                   discrete_genome=False)
             # print("ts.individuals_population:", tree_sequence.individuals_population)
@@ -217,8 +145,8 @@ class Simulated_Data_With_Demography:
 
             ## compute properties of simulation as genotype matrix, SFS,... and save
             # them:
-            num_mutations.append(tree_sequence.num_mutations)  # nb of mutations
-            print("num_mutations:", num_mutations)
+            num_mutations.append(tree_sequence.num_mutations)
+            # print("num_mutations:", num_mutations)
             # tree length and number of trees:
             m = 0
             for tree in tree_sequence.trees():
@@ -347,23 +275,30 @@ class Simulated_Data_With_Demography:
 use_this_script_for_sim = False
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
-    n = 800  # sample size
-    theta = 100  # theta=int for constant theta in rep simulations,
+    n = 9  # sample size
+    rep = 1  # number of repetitions during simulation
+    theta = 1  # theta=int for constant theta in rep simulations,
     # theta='rand' for random theta in (0,100) in every simulation
-    rho = 100  # rho=int for constant theta in rep simulations, rho='rand'
+    rho = 0  # rho=int for constant theta in rep simulations, rho='rand'
     # for random theta in (0,100) in every simulation
     seed = 42  # starting seed for simulation (based on this seed, multiple
     # seeds will be generated)
+    save_G = True  # set True to save genotype matrix during simulation, False otherwise
+    print_ts = True  # set True if ts should be printed during simulation, this is
+    # only possible if rep==1. For large data sets, this step slows down the program noticeably.
+    save_ts = True  # set True to save the tree sequence during simulation, False otherwise
     filepath = "data/with_demography/"
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
 
     ## This generates the data object and either simulates the properties or loads if it already exists.
-    data = Simulated_Data_With_Demography(n, theta, rho, seed, filepath=filepath)
+    data = Simulated_Data_With_Demography(n, theta, rho, seed, save_G=save_G,
+                                          print_ts=print_ts, save_ts=save_ts,
+                                          filepath=filepath)
     if data_already_simulated == False:
         data.sim_data()
     else:
         data.load_data()
 
-    #print("G:", data.G)
+    print("G:", data.G)
 
     # print("simulation done.")
