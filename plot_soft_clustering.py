@@ -469,7 +469,7 @@ def plot_inferred_ancestry(
 
     # save resulting figure as jpeg:
     plt.savefig(
-        "plots/tangles_plot_"
+        "plots/tangleGen_plot_"
         + data_generation_mode
         + "_n_"
         + str(n)

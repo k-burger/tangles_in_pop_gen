@@ -253,7 +253,7 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement,
                                  'KHV', 'MXL', 'PUR', 'CLM', 'PEL'], fontsize=50)
 
     # save resulting figure as jpeg:
-    plt.savefig('plots/tangles_plot_'+ data_generation_mode +'_n_' +str(n)
+    plt.savefig('plots/tangleGen_plot_'+ data_generation_mode +'_n_' +str(n)
                 +'_a_' + str(agreement)+ '_seed_' + str(seed) + "_" + cost_fct
                 + '.jpeg', format = 'jpeg')
     plt.show()
