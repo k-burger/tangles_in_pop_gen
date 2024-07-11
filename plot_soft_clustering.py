@@ -104,23 +104,23 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
         #                      cmap[9], cmap[2], cmap[7], cmap[4], cmap[10], cmap[1]]]
 
         # complex sim ADMIXTURE K=12
-        # ADMIXTURE_colors = [[cmap[4], cmap[0]],
-        #                      [cmap[4], cmap[0], cmap[1]],
-        #                      [cmap[1], cmap[4], cmap[2], cmap[0]],
-        #                      [cmap[4], cmap[3], cmap[0], cmap[1], cmap[2]],
-        #                      [cmap[4], cmap[0], cmap[1], cmap[5], cmap[3], cmap[2]],
-        #                      [cmap[0], cmap[5], cmap[2], cmap[3], cmap[1], cmap[6],
-        #                       cmap[4]],
-        #                      [cmap[0], cmap[6], cmap[1], cmap[2], cmap[3], cmap[5],
-        #                       cmap[7], cmap[4]],
-        #                      [cmap[6], cmap[5], cmap[1], cmap[2], cmap[0], cmap[4],
-        #                       cmap[9], cmap[3], cmap[7]],
-        #                      [cmap[2], cmap[8], cmap[0], cmap[6], cmap[10], cmap[5],
-        #                       cmap[4], cmap[1], cmap[3], cmap[7]],
-        #                      [cmap[2], cmap[6], cmap[8], cmap[10], cmap[11], cmap[1],
-        #                       cmap[3], cmap[0], cmap[13], cmap[7], cmap[4]],
-        #                      [cmap[7], cmap[2], cmap[6], cmap[3], cmap[10], cmap[12],
-        #                       cmap[13], cmap[0], cmap[4], cmap[1], cmap[8], cmap[5]]]
+        ADMIXTURE_colors = [[cmap[4], cmap[0]],
+                             [cmap[4], cmap[0], cmap[1]],
+                             [cmap[1], cmap[4], cmap[2], cmap[0]],
+                             [cmap[4], cmap[3], cmap[0], cmap[1], cmap[2]],
+                             [cmap[4], cmap[0], cmap[1], cmap[5], cmap[3], cmap[2]],
+                             [cmap[0], cmap[5], cmap[2], cmap[3], cmap[1], cmap[6],
+                              cmap[4]],
+                             [cmap[0], cmap[6], cmap[1], cmap[2], cmap[3], cmap[5],
+                              cmap[7], cmap[4]],
+                             [cmap[6], cmap[5], cmap[1], cmap[2], cmap[0], cmap[4],
+                              cmap[9], cmap[3], cmap[7]],
+                             [cmap[2], cmap[8], cmap[0], cmap[6], cmap[10], cmap[5],
+                              cmap[4], cmap[1], cmap[3], cmap[7]],
+                             [cmap[2], cmap[6], cmap[8], cmap[10], cmap[11], cmap[1],
+                              cmap[3], cmap[0], cmap[13], cmap[7], cmap[4]],
+                             [cmap[7], cmap[2], cmap[6], cmap[3], cmap[10], cmap[12],
+                              cmap[13], cmap[0], cmap[4], cmap[1], cmap[8], cmap[5]]]
 
         # complex sim ADMIXTURE
         # ADMIXTURE_colors = [[cmap[4], cmap[0]],
@@ -352,10 +352,11 @@ def plot_inferred_ancestry(matrices, pop_membership, agreement, data_generation_
     #                    [cmap[0], cmap[5], cmap[3], cmap[4], cmap[2],
     #                     cmap[1]]]
 
-    cmap = ['#0173b2', '#de8f05', '#029e73', '#920000']
-    colors_per_plot = [[cmap[0], cmap[1]],
-                       [cmap[0], cmap[1], cmap[2]],
-                       [cmap[0], cmap[1], cmap[2], cmap[3]]]
+    # tangleGen colors for AIMs:
+    # cmap = ['#0173b2', '#de8f05', '#029e73', '#920000']
+    # colors_per_plot = [[cmap[0], cmap[1]],
+    #                    [cmap[0], cmap[1], cmap[2]],
+    #                    [cmap[0], cmap[1], cmap[2], cmap[3]]]
 
     ## Sorting individuals within predefined populations according to their membership
     # in the main cluster of the population in the lowest level:

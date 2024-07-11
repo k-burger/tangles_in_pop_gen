@@ -8,7 +8,7 @@ import numpy as np
 from src.tree_tangles import ContractedTangleTree, tangle_computation, \
     compute_soft_predictions_children_popgen
 from src.utils import merge_doubles
-import simulate_with_demography
+from simulate_with_demography_migration_A_H import Simulated_Data_With_Demography
 import plot_soft_clustering
 import compute_kNN
 from src import outsourced_cost_computation
@@ -229,9 +229,11 @@ if __name__ == '__main__':
     n = 800  # number of diploid individuals
     rho = 100  # recombination rate in the sim, when using vcf this parameter is irrelevant
     theta = 100  # mutation rate in sim, when using vcf this parameter s irrelevant
-    agreement = 50  # agreement parameter
+    migration_rate_multiplier = 4    # scale factor for migration rate (1 for low,
+                                     # 4 for intermediate and 8 for high)
+    agreement = 30  # agreement parameter
     k = 40  # number of neighbours for k-nearest neighbour
-    pruning = 0  # pruning parameter
+    pruning = 2  # pruning parameter
     seed = 42  # seed for simulation
     data_generation_mode = 'sim'
     # specify if data can be loaded or needs to be simulated:
@@ -243,8 +245,8 @@ if __name__ == '__main__':
     plot_ADMIXTURE = False  # compare tangles to ADMXITURE or not
     filepath = "data/with_demography/"  # filepath to the folder where the data is to be
     # saved/loaded.
-    data = simulate_with_demography.Simulated_Data_With_Demography(n, theta, rho, seed,
-                                                                   filepath=filepath)
+    data = Simulated_Data_With_Demography(n, theta, rho, migration_rate_multiplier,
+                                          seed, filepath=filepath)
     if data_already_simulated == False:
         data.sim_data()
         print("Data has been simulated.")
