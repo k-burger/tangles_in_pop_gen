@@ -1,6 +1,6 @@
 import pickle
 import warnings
-import customized_demesdraw
+from src import customized_demesdraw
 import matplotlib.pyplot as plt
 import msprime
 import numpy
@@ -159,8 +159,8 @@ class Simulated_Data_With_Demography:
         #migration_lines = numpy.array([1,1])
         customized_demesdraw.tubes(graph, positions=positions,
                                    num_lines_per_migration=migration_lines,
-                           seed=19,
-                        colours=demes_colors, fill=True)
+                                   seed=19,
+                                   colours=demes_colors, fill=True)
         filename_short = (self.filepath + "demographic_structure_n_" + str(self.n))
         plt.tick_params(axis='y', labelsize=15)
         plt.tick_params(axis='x', labelsize=15)
