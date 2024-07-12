@@ -161,7 +161,7 @@ class Simulated_Data_With_Demography:
                                    num_lines_per_migration=migration_lines,
                                    seed=19,
                                    colours=demes_colors, fill=True)
-        filename_short = (self.filepath + "demographic_structure_n_" + str(self.n))
+        filename_short = ("plots/demographic_structure")
         plt.tick_params(axis='y', labelsize=15)
         plt.tick_params(axis='x', labelsize=15)
         #plt.axis('off')
@@ -170,7 +170,12 @@ class Simulated_Data_With_Demography:
         plt.ylabel('')
 
         # plt.ylabel('time ago (generations)', fontsize=14)
-        plt.savefig(filename_short + '.pdf')
+        plt.savefig(filename_short + ".jpeg", format = 'jpeg', dpi=300)
+        plt.close()
+        # show saved image:
+        image = plt.imread(filename_short + ".jpeg")
+        plt.imshow(image)
+        plt.axis('off')
         plt.show()
 
         # set constant population size for 8 simulated populations:
@@ -338,7 +343,7 @@ class Simulated_Data_With_Demography:
                 stacklevel=1)
 
 
-use_this_script_for_sim = True
+use_this_script_for_sim = False
 if use_this_script_for_sim == True:
     ## This is the infomation needed in any script that wants to use the data object class:
     n = 800  # sample size
