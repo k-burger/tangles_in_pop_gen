@@ -167,7 +167,7 @@ class Simulated_Data_With_Demography:
                                    num_lines_per_migration=migration_lines,
                                    seed=19,
                                    colours=demes_colors, fill=True)
-        filename_short = (self.filepath + "demographic_structure_n_" + str(self.n))
+        filename_short = ("plots/demographic_structure_migration_A_H")
         plt.tick_params(axis='y', labelsize=15)
         plt.tick_params(axis='x', labelsize=15)
         #plt.axis('off')
@@ -176,7 +176,12 @@ class Simulated_Data_With_Demography:
         plt.ylabel('')
 
         # plt.ylabel('time ago (generations)', fontsize=14)
-        plt.savefig(filename_short + '.pdf')
+        plt.savefig(filename_short + ".jpeg", format='jpeg', dpi=300)
+        plt.close()
+        # show saved image:
+        image = plt.imread(filename_short + ".jpeg")
+        plt.imshow(image)
+        plt.axis('off')
         plt.show()
 
         # set constant population size for 8 simulated populations:
@@ -351,6 +356,8 @@ if use_this_script_for_sim == True:
     theta = 100  # theta=int for constant theta in rep simulations,
     # theta='rand' for random theta in (0,100) in every simulation
     rho = 100  # rho=int for constant theta in rep simulations, rho='rand'
+    # scale factor for migration rate
+    migration_rate_multi = 4    # 1 for low, 4 for intermediate and 8 for high
     # for random theta in (0,100) in every simulation
     seed = 42  # starting seed for simulation (based on this seed, multiple
     # seeds will be generated)
@@ -358,7 +365,8 @@ if use_this_script_for_sim == True:
     data_already_simulated = False  # True or False, states if data object should be simulated or loaded
 
     ## This generates the data object and either simulates the properties or loads if it already exists.
-    data = Simulated_Data_With_Demography(n, theta, rho, seed, filepath=filepath)
+    data = Simulated_Data_With_Demography(n, theta, rho, migration_rate_multi, seed,
+                                          filepath=filepath)
     if data_already_simulated == False:
         data.sim_data()
     else:
